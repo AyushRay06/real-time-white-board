@@ -1,8 +1,13 @@
 "use client"
 
-import { ClerkProvider, useAuth } from "@clerk/nextjs"
+import { ClerkProvider, SignInButton, useAuth } from "@clerk/nextjs"
 import { ConvexProviderWithClerk } from "convex/react-clerk"
-import { AuthLoading, Authenticated, ConvexReactClient } from "convex/react"
+import {
+  AuthLoading,
+  Authenticated,
+  ConvexReactClient,
+  Unauthenticated,
+} from "convex/react"
 import { Loading } from "@/components/auth/loading"
 
 interface ConvexClientProviderProps {
@@ -18,9 +23,12 @@ export const ConvexClientProvider = ({
 }: ConvexClientProviderProps) => {
   return (
     //need to add <Authenticated></Authenticated> on {childeren} for now having an erroe so removed
-    <ClerkProvider>
+    <ClerkProvider publishableKey="pk_test_ZXBpYy1sZW11ci04My5jbGVyay5hY2NvdW50cy5kZXYk">
       <ConvexProviderWithClerk useAuth={useAuth} client={convex}>
-        {children}
+        <Unauthenticated>
+          <SignInButton />
+        </Unauthenticated>
+        <Authenticated>{children}</Authenticated>
         <AuthLoading>
           <Loading />
         </AuthLoading>
