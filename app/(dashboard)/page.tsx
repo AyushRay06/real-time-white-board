@@ -1,13 +1,13 @@
 import { UserButton } from "@clerk/nextjs"
 import Image from "next/image"
+import { EmptyOrg } from "./_components/empty-org"
 
-const Dashboard = () => {
+const DashboardPage = () => {
   return (
-    <div>
-      <div>This is a screen for authenticated users only </div>
-      <UserButton />
+    <div className="flex-1 h-[calc(100%-80px)] p-6">
+      <EmptyOrg />
     </div>
   )
 }
 
-export default Dashboard
+export default DashboardPage
