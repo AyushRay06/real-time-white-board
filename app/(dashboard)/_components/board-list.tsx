@@ -1,5 +1,6 @@
 "use client"
 
+import { Button } from "@/components/ui/button"
 import { EmptySearch } from "./empty-search"
 
 interface BoardListProps {
@@ -43,8 +44,8 @@ export const BoardList = ({ orgId, query }: BoardListProps) => {
         <EmptySearch
           src="/boardlist.png"
           alt="no Board list"
-          desc1="No Board List Found"
-          desc2="Add Board to create and edit Stuff together."
+          desc1="Create your first Board"
+          desc2="Start by creating a board for your organization."
         />
       </div>
     )
