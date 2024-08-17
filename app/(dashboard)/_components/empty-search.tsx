@@ -6,7 +6,7 @@ import { useMutation } from "convex/react"
 
 import { api } from "@/convex/_generated/api"
 import { useOrganization } from "@clerk/nextjs"
-import { title } from "process"
+import { useApiMutation } from "@/hooks/use-api-mutaion"
 
 interface EmptySearchProps {
   src: string
@@ -17,12 +17,12 @@ interface EmptySearchProps {
 
 export const EmptySearch = ({ src, alt, desc1, desc2 }: EmptySearchProps) => {
   const { organization } = useOrganization()
-  const create = useMutation(api.board.create)
+  const { mutate, pending } = useApiMutation(api.board.create)
 
   const onClick = () => {
     if (!organization) return
 
-    create({
+    mutate({
       orgId: organization.id,
       title: "Untitled",
     })
@@ -34,7 +34,7 @@ export const EmptySearch = ({ src, alt, desc1, desc2 }: EmptySearchProps) => {
       <h2 className="text-3xl font-semibold my-4">{desc1}</h2>
       <p className="text-lg text-muted-foreground">{desc2}</p>
       <div className="pt-6">
-        <Button onClick={onClick} size="lg">
+        <Button disabled={pending} onClick={onClick} size="lg">
           Create Organization
         </Button>
       </div>
