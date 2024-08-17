@@ -5,6 +5,7 @@ import { api } from "@/convex/_generated/api"
 import { Button } from "@/components/ui/button"
 import { EmptySearch } from "./empty-search"
 import { Boardcard } from "./board-card"
+import { NewBoardButton } from "./new-boardbutton"
 
 interface BoardListProps {
   orgId: string
@@ -59,8 +60,11 @@ export const BoardList = ({ orgId, query }: BoardListProps) => {
   }
   return (
     <div>
-      <h2>{query.favourites ? "Favourite Boards" : "Team Boards"}</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-col-4 lg:grid-col-4 xl:grid-col-5 2xl:grid-cols-6 gap-5 mt-8 pb-10">
+      <h2 className="text-2xl font-extralight">
+        {query.favourites ? "Favourite Boards" : "Team Boards"}
+      </h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-5 mt-8 pb-10">
+        <NewBoardButton orgId={orgId} />
         {data?.map((board) => (
           <Boardcard
             key={board._id}

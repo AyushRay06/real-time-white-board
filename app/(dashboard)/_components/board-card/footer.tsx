@@ -1,4 +1,6 @@
+import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { Star } from "lucide-react"
 
 interface FooterProps {
   title: string
@@ -22,6 +24,24 @@ export const Footer = ({
       <p className="opacity-0 hover:opacity-100 transition text-muted-foreground truncate">
         {authorLabel},{createdAtLabel}
       </p>
+      <div>
+        <Button
+          variant="ghost"
+          disabled={disabled}
+          onClick={onClick}
+          className={cn(
+            "opacity-0 group-hover:opacity-100 transition absolute top-3 right-3 text-muted-foreground hover:text-pink-600",
+            disabled && "cursor-not-allowed opacity-75"
+          )}
+        >
+          <Star
+            className={cn(
+              "h-4 w-4",
+              isFavourite && "fill-pink-600 text-red-600"
+            )}
+          />
+        </Button>
+      </div>
     </div>
   )
 }
