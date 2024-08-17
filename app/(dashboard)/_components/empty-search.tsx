@@ -7,6 +7,7 @@ import { useMutation } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { useOrganization } from "@clerk/nextjs"
 import { useApiMutation } from "@/hooks/use-api-mutaion"
+import { toast } from "sonner"
 
 interface EmptySearchProps {
   src: string
@@ -26,6 +27,10 @@ export const EmptySearch = ({ src, alt, desc1, desc2 }: EmptySearchProps) => {
       orgId: organization.id,
       title: "Untitled",
     })
+      .then((id) => {
+        toast.success("Board Created")
+      })
+      .catch(() => toast.error("Failed to create Board"))
   }
 
   return (
