@@ -15,9 +15,11 @@ export const NewBoardButton = ({ disabled, orgId }: NewBoardButtonProps) => {
     mutate({
       orgId,
       title: "Untitled",
-    }).then((id) => {
-      toast.success("Board created.")
     })
+      .then((id) => {
+        toast.success("Board created.")
+      })
+      .catch(() => toast.error("Failed To Create Board"))
   }
   return (
     <button
@@ -25,7 +27,8 @@ export const NewBoardButton = ({ disabled, orgId }: NewBoardButtonProps) => {
       onClick={onClick}
       className={cn(
         "col-span-1 aspect-[100/127] bg-slate-300 rounded-lg hover:bg-slate-400 flex flex-col items-center justify-center py-6",
-        (pending || disabled) && "opacity-75"
+        (pending || disabled) &&
+          "opacity-75 hover:bg-slate-300 cursor-not-allowed"
       )}
     >
       <div />
