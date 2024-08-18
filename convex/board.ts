@@ -55,6 +55,7 @@ export const remove = mutation({
     await ctx.db.delete(args.id)
   },
 })
+
 export const update = mutation({
   args: {
     id: v.id("boards"),
@@ -67,14 +68,18 @@ export const update = mutation({
       throw new Error("Unauthorized")
     }
 
-    if(!title){
+    if (!title) {
       throw new Error("Title is required")
     }
 
-    if(title.length>24){
+    if (title.length > 24) {
       throw new Error("Title cannot be longer than 24 characters")
     }
 
-    await ctx.db.(args.id)
+    const board = await ctx.db.patch(args.id, {
+      title: args.title,
+    })
+
+    return board
   },
 })
