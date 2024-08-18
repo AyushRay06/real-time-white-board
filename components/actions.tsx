@@ -11,6 +11,8 @@ import { Delete, Edit, Link, Trash } from "lucide-react"
 import { toast } from "sonner"
 import { useApiMutation } from "@/hooks/use-api-mutaion"
 import { api } from "@/convex/_generated/api"
+import { ConfirmAlert } from "./confirm-alert"
+import { Button } from "./ui/button"
 
 interface ActionsProps {
   children: React.ReactNode
@@ -57,10 +59,21 @@ export const Actions = ({
             <Link className="h-4 w-4 mr-2" />
             Copy Board Link
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={onDelete} className="p-3 cursor-pointer">
-            <Trash className="h-4 w-4 mr-2" />
-            Delete
-          </DropdownMenuItem>
+          <ConfirmAlert
+            header="Delete Board?"
+            description="If you delete all the data related to the Board will get deleted!"
+            onConfirm={onDelete}
+            disabled={pending}
+          >
+            <Button
+              variant="ghost"
+              //onClick={onDelete}
+              className="p-3 cursor-pointer text-sm w-full justify-start font-normal"
+            >
+              <Trash className="h-4 w-4 mr-2" />
+              Delete
+            </Button>
+          </ConfirmAlert>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
