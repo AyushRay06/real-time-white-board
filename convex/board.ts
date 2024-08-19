@@ -1,7 +1,6 @@
 import { error } from "console"
 import { mutation } from "./_generated/server"
 import { v } from "convex/values"
-import { title } from "process"
 
 const images = [
   "/placeholders/1.svg",
@@ -63,7 +62,7 @@ export const update = mutation({
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
-
+    const title = args.title.trim()
     if (!identity) {
       throw new Error("Unauthorized")
     }

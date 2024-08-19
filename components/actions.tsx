@@ -7,12 +7,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu"
-import { Delete, Edit, Link, Trash } from "lucide-react"
+import { Delete, Edit, Link, Pencil, Trash } from "lucide-react"
 import { toast } from "sonner"
 import { useApiMutation } from "@/hooks/use-api-mutaion"
 import { api } from "@/convex/_generated/api"
 import { ConfirmAlert } from "./confirm-alert"
 import { Button } from "./ui/button"
+import { useRenameModal } from "@/store/use-rename-modal"
 
 interface ActionsProps {
   children: React.ReactNode
@@ -30,6 +31,7 @@ export const Actions = ({
   title,
 }: ActionsProps) => {
   //for deletion of board
+  const { onOpen } = useRenameModal()
   const { mutate, pending } = useApiMutation(api.board.remove)
 
   const onDelete = () => {
@@ -58,6 +60,10 @@ export const Actions = ({
           <DropdownMenuItem onClick={onCopyLink} className="p-3 cursor-pointer">
             <Link className="h-4 w-4 mr-2" />
             Copy Board Link
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={onCopyLink} className="p-3 cursor-pointer">
+            <Pencil className="h-4 w-4 mr-2" />
+            Rename
           </DropdownMenuItem>
           <ConfirmAlert
             header="Delete Board?"
