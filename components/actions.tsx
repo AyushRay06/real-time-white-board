@@ -61,7 +61,10 @@ export const Actions = ({
             <Link className="h-4 w-4 mr-2" />
             Copy Board Link
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={onCopyLink} className="p-3 cursor-pointer">
+          <DropdownMenuItem
+            onClick={() => onOpen(id, title)}
+            className="p-3 cursor-pointer"
+          >
             <Pencil className="h-4 w-4 mr-2" />
             Rename
           </DropdownMenuItem>
