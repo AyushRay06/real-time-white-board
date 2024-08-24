@@ -1,6 +1,5 @@
 import { v } from "convex/values"
 import { defineSchema, defineTable } from "convex/server"
-import { title } from "process"
 
 export default defineSchema({
   boards: defineTable({
@@ -15,4 +14,14 @@ export default defineSchema({
       searchField: "title",
       filterFields: ["orgId"],
     }),
+
+  userFavourites: defineTable({
+    orgId: v.string(),
+    userId: v.string(),
+    boardId: v.id("boards"),
+  })
+    .index("by_board", ["boardId"])
+    .index("by_user_org", ["userId", "orgId"])
+    .index("by_user_board", ["userId", "boardId"])
+    .index("by_user_board_org", ["userId", "boardId", "orgId"]),
 })
