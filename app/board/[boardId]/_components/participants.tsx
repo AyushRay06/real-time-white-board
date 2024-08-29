@@ -3,8 +3,9 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { useOthers, useSelf } from "@liveblocks/react/suspense"
 
 import { UserAvatar } from "./user-avater"
+import { connectionIdToColor } from "@/lib/utils"
 
-const MAX_SHOWN_USERS = 2
+const MAX_SHOWN_USERS = 1
 
 export const Participants = () => {
   const users = useOthers()
@@ -17,6 +18,7 @@ export const Participants = () => {
         {users.slice(0, MAX_SHOWN_USERS).map(({ connectionId, info }) => {
           return (
             <UserAvatar
+              borderColor={connectionIdToColor(connectionId)}
               key={connectionId}
               src={info?.picture}
               name={info?.name}
@@ -26,9 +28,17 @@ export const Participants = () => {
         })}
         {currentUsers && (
           <UserAvatar
+            borderColor={connectionIdToColor(currentUsers.connectionId)}
             src={currentUsers.info?.picture}
             name={`${currentUsers.info?.name} (You)`}
             fallback={currentUsers.info?.name?.[0]}
+          />
+        )}
+
+        {hasMoreUsers && (
+          <UserAvatar
+            name={`${users.length - MAX_SHOWN_USERS}mare`}
+            fallback={`+${users.length - MAX_SHOWN_USERS}`}
           />
         )}
       </div>
