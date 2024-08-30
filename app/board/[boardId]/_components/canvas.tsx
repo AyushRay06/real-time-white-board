@@ -6,6 +6,7 @@ import { Info } from "./info"
 import { Participants } from "./participants"
 import { Toolbar } from "./toolbar"
 import { useCanRedo, useHistory } from "@liveblocks/react/suspense"
+import { CursorsPresence } from "./cursors-presence"
 // import { useSelf } from "@liveblocks/react/suspense"
 
 interface CanvasProps {
@@ -34,6 +35,9 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         canRedo={canRedo}
         canUndo={canUndo}
       />
+      <svg className="h-[100vh] w-[100vw]">
+        <g><CursorsPresence/></g>
+      </svg>
     </main>
   )
 }
