@@ -118,7 +118,7 @@ export type CanvasState =
       corner: Side
     }
   | {
-      mode: CanvasMode.pencil
+      mode: CanvasMode.Pencil
     }
 
 export enum CanvasMode {
@@ -128,5 +128,5 @@ export enum CanvasMode {
   Translating,
   Inserting,
   Resizing,
-  pencil,
+  Pencil,
 }

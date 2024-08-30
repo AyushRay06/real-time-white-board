@@ -103,8 +103,8 @@ export const Toolbar = ({
         <ToolButton
           label="Pen"
           icon={Pencil}
-          onClick={() => {}}
-          isActive={false}
+          onClick={() => setCanvasState({ mode: CanvasMode.Pencil })}
+          isActive={canvasState.mode === CanvasMode.Pencil}
         />
       </div>
       <div className="bg-white rounded-md p-1.5 flex flex-col items-center shadow-md">
