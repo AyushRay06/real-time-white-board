@@ -19,9 +19,9 @@ const Cursors = () => {
 export const CursorsPresence = memo(() => {
   return (
     <>
-      <p>
+      <g>
         <Cursors />
-      </p>
+      </g>
     </>
   )
 })

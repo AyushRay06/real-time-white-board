@@ -2,7 +2,7 @@
 
 import { connectionIdToColor } from "@/lib/utils"
 import { memo } from "react"
-import { MousePointer2 } from "lucide-react"
+import { MousePointer2, MousePointer2Icon } from "lucide-react"
 import { useOther } from "@liveblocks/react/suspense"
 
 interface CursorProps {
@@ -27,16 +27,22 @@ export const Cursor = memo(({ connectionId }: CursorProps) => {
         transform: `translateX(${x}px) translateY(${y}px)`,
       }}
       height={50}
-      width={50}
+      width={name.length * 10 + 24}
       className="relative drop-shadow-md"
     >
-      <MousePointer2
+      <MousePointer2Icon
         className="h-5 w-5"
         style={{
           fill: connectionIdToColor(connectionId),
           color: connectionIdToColor(connectionId),
         }}
       />
+      <div
+        className="absolute left-5 px-1.5 py-0.5 rounded-md text-sm text-white font-semibold"
+        style={{ backgroundColor: connectionIdToColor(connectionId) }}
+      >
+        {name}
+      </div>
     </foreignObject>
   )
 })

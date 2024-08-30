@@ -48,7 +48,7 @@ export async function POST(request: Request) {
 
   // Authorize the user and return the result
   const { status, body } = await session.authorize()
-  console.log({ status, body }, "Allowed")
+  //console.log({ status, body }, "Allowed")
 
   return new Response(body, { status })
 }
