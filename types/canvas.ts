@@ -17,7 +17,7 @@ export enum LayerType {
   Note,
 }
 
-export type Rectangle = {
+export type RectangleLayer = {
   type: LayerType.Rectangle
   x: number
   y: number
@@ -27,7 +27,7 @@ export type Rectangle = {
   value?: string
 }
 
-export type Ellipse = {
+export type EllipseLayer = {
   type: LayerType.Ellipse
   x: number
   y: number
@@ -130,3 +130,10 @@ export enum CanvasMode {
   Resizing,
   Pencil,
 }
+
+export type Layer =
+  | RectangleLayer
+  | EllipseLayer
+  | TextLayer
+  | PathLayer
+  | NoteLayer

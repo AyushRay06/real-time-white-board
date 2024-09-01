@@ -15,7 +15,7 @@ import { CursorsPresence } from "./cursors-presence"
 import { pointerEventToCanvasPoint } from "@/lib/utils"
 // import { useSelf } from "@liveblocks/react/suspense"
 
-const MAX_LAYERS = 10
+const MAX_LAYERS = 100
 
 interface CanvasProps {
   boardId: string
