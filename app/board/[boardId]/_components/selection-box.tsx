@@ -3,6 +3,7 @@
 import { memo } from "react"
 import { LayerType, Side, XYWH } from "@/types/canvas"
 import { useStorage, useSelf } from "@liveblocks/react/suspense"
+import { useSelectionBounds } from "@/hooks/use-selection-bound"
 
 interface SelecetionBoxProps {
   onResizeHandlePointerDown: (corner: Side, initialBounds: XYWH) => void
@@ -19,9 +20,41 @@ export const SelectionBox = memo(
       (root) =>
         soleLayerId && root.layers.get(soleLayerId)?.type !== LayerType.Path
     )
+    const bounds = useSelectionBounds()
+    if (!bounds) {
+      return null
+    }
 
-    return(
-        <div></div>
+    return (
+      <>
+        <rect
+          className="fill-transparent stroke-blue-500 stroke-1 pointer-events-none"
+          style={{
+            transform: `translate(${bounds.x}px, ${bounds.y}px)`,
+          }}
+          x={0}
+          y={0}
+          width={bounds.width}
+          height={bounds.height}
+        />
+        {isShowingHandles && (
+          <>
+            <rect
+              className="fill-white stroke-1 stroke-blue-500"
+              x={0}
+              y={0}
+              style={{
+                cursor: "nwse-resize",
+                width: `${HANDLE_WIDTH}px`,
+                height: `${HANDLE_WIDTH}px`,
+                transform: `translate(${bounds.x - HANDLE_WIDTH / 2}px,${bounds.y - HANDLE_WIDTH / 2}px)`,
+              }}
+            />
+          </>
+        )}
+      </>
     )
   }
 )
+
+SelectionBox.displayName = "SelectionBox"
