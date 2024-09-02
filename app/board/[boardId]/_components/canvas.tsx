@@ -23,6 +23,7 @@ import { CursorsPresence } from "./cursors-presence"
 import { pointerEventToCanvasPoint } from "@/lib/utils"
 import { nanoid } from "nanoid"
 import { LiveObject } from "@liveblocks/client"
+import { LayerPreview } from "./layer-preview"
 // import { useSelf } from "@liveblocks/react/suspense"
 
 const MAX_LAYERS = 100
@@ -111,6 +112,26 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     setMyPresence({ cursor: null })
   }, [])
 
+  const onPointerUp = useMutation(
+    ({}, e) => {
+      const point = pointerEventToCanvasPoint(e, camera)
+      console.log({
+        point,
+        mode: canvasState.mode,
+      })
+
+      if (canvasState.mode === CanvasMode.Inserting) {
+        insertLayer(canvasState.layerType, point)
+      } else {
+        setCanvasState({
+          mode: CanvasMode.None,
+        })
+      }
+      history.resume()
+    },
+    [camera, canvasState, history, insertLayer]
+  )
+
   return (
     <main className="h-full w-full relative bg-neutral-100 touch-none">
       <Info boardId={boardId} />
@@ -128,12 +149,21 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         onWheel={onWheel}
         onPointerMove={onPointerMove}
         onPointerLeave={onPointerLeave}
+        onPointerUp={onPointerUp}
       >
         <g
           style={{
             transform: `translate(${camera.x}px,${camera.y}px)`,
           }}
         >
+          {layerIds.map((layerId) => (
+            <LayerPreview
+              key={layerId}
+              id={layerId}
+              onLayerPointerDown={() => {}}
+              selectionColor="#000"
+            />
+          ))}
           <CursorsPresence />
         </g>
       </svg>
