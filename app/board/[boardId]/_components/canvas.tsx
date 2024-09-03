@@ -7,6 +7,8 @@ import {
   Color,
   LayerType,
   Point,
+  Side,
+  XYWH,
 } from "@/types/canvas"
 
 import { Info } from "./info"
@@ -90,6 +92,20 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     [lastUsedColour]
   )
 
+  const resizeSelectedLayer
+
+  const onResizeHandlePointerDown = useCallback(
+    (corner: Side, initialBounds: XYWH) => {
+      history.pause()
+      setCanvasState({
+        mode: CanvasMode.Resizing,
+        initialBounds,
+        corner,
+      })
+    },
+    [history]
+  )
+
   //scrolll movement
   const onWheel = useCallback((e: React.WheelEvent) => {
     //console.log({ x: e.deltaX, y: e.deltaY })
@@ -105,15 +121,19 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       e.preventDefault()
       const current = pointerEventToCanvasPoint(e, camera)
       // console.log({ current })
-
+      if (canvasState.mode === CanvasMode.Resizing) {
+      }
       setMyPresence({ cursor: current })
     },
     []
   )
 
-  const onPointerLeave = useMutation(({ setMyPresence }) => {
-    setMyPresence({ cursor: null })
-  }, [])
+  const onPointerLeave = useMutation(
+    ({ setMyPresence }) => {
+      setMyPresence({ cursor: null })
+    },
+    [canvasState]
+  )
 
   const onPointerUp = useMutation(
     ({}, e) => {
@@ -203,7 +223,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
               selectionColor={layerIdsToColorSelection[layerId]}
             />
           ))}
-          <SelectionBox onResizeHandlePointerDown={() => {}} />
+          <SelectionBox onResizeHandlePointerDown={onResizeHandlePointerDown} />
           <CursorsPresence />
         </g>
       </svg>
