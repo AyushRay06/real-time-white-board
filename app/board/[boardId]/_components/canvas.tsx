@@ -96,6 +96,10 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     [lastUsedColour]
   )
 
+  //function for translating(moving) the layer
+  const translateSelectedLayer = useMutation(() => {}, [])
+
+  //function for resizing layer
   const resizeSelectedLayer = useMutation(
     ({ storage, self }, point: Point) => {
       if (canvasState.mode !== CanvasMode.Resizing) {
@@ -143,8 +147,10 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     ({ setMyPresence }, e: React.PointerEvent) => {
       e.preventDefault()
       const current = pointerEventToCanvasPoint(e, camera)
-      // console.log({ current })
-      if (canvasState.mode === CanvasMode.Resizing) {
+
+      //for moving the layer
+      if (canvasState.mode === CanvasMode.Translating) {
+      } else if (canvasState.mode === CanvasMode.Resizing) {
         resizeSelectedLayer(current)
       }
       setMyPresence({ cursor: current })
