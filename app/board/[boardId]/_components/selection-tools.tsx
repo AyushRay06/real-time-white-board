@@ -8,7 +8,7 @@ import { ColorPicker } from "./color-picker"
 import { useDeleteLayers } from "@/hooks/use-delete-layers"
 import { Hint } from "@/components/hint"
 import { Button } from "@/components/ui/button"
-import { Trash2 } from "lucide-react"
+import { BringToFront, SendToBack, Trash2 } from "lucide-react"
 
 interface SelectionToolsProps {
   camera: Camera
@@ -52,11 +52,23 @@ export const SelectionTools = memo(
       <div
         className="absolute p-3 rounded-xl bg-white shadow-sm border flex select-none"
         style={{
-          left: `calc(${position.x - 64}px)`,
-          top: `${position.y - 64}px`, // Adjusted to be slightly above the selection
+          left: `calc(${position.x - 220}px)`,
+          top: `${position.y - 128}px`, // Adjusted to be slightly above the selection
         }}
       >
         <ColorPicker onChange={setFill} />
+        <div className="flex flex-col gap-y-0.5">
+          <Hint label="Bring to front">
+            <Button variant="board" size="icon">
+              <BringToFront />
+            </Button>
+          </Hint>
+          <Hint label="Send back">
+            <Button variant="board" size="icon">
+              <SendToBack />
+            </Button>
+          </Hint>
+        </div>
         <div className="flex items-center pl-2 ml-2 border-l border-neutral-200">
           <Hint label="Delete">
             <Button variant="board" size="icon" onClick={deleteLayers}>
