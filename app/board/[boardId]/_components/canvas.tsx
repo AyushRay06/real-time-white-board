@@ -126,6 +126,13 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     [canvasState]
   )
 
+  //function for deselecting layer
+  const unselectLayer = useMutation(({ self, setMyPresence }) => {
+    if (self.presence.selection.length > 0) {
+      setMyPresence({ selection: [] }, { addToHistory: true })
+    }
+  }, [])
+
   //function for resizing layer
   const resizeSelectedLayer = useMutation(
     ({ storage, self }, point: Point) => {
@@ -193,6 +200,19 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     [canvasState]
   )
 
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent) => {
+      const point = pointerEventToCanvasPoint(e, camera)
+
+      if (canvasState.mode === CanvasMode.Inserting) {
+        return
+      }
+
+      setCanvasState({ origin: point, mode: CanvasMode.Pressing })
+    },
+    [camera, canvasState.mode, setCanvasState]
+  )
+
   const onPointerUp = useMutation(
     ({}, e) => {
       const point = pointerEventToCanvasPoint(e, camera)
@@ -201,7 +221,15 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         mode: canvasState.mode,
       })
 
-      if (canvasState.mode === CanvasMode.Inserting) {
+      if (
+        canvasState.mode === CanvasMode.None ||
+        canvasState.mode === CanvasMode.Pressing
+      ) {
+        unselectLayer()
+        setCanvasState({
+          mode: CanvasMode.None,
+        })
+      } else if (canvasState.mode === CanvasMode.Inserting) {
         insertLayer(canvasState.layerType, point)
       } else {
         setCanvasState({
@@ -210,7 +238,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       }
       history.resume()
     },
-    [camera, canvasState, history, insertLayer]
+    [camera, canvasState, history, insertLayer, unselectLayer]
   )
 
   const selections = useOthersMapped((other) => other.presence.selection)
@@ -266,6 +294,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         onWheel={onWheel}
         onPointerMove={onPointerMove}
         onPointerLeave={onPointerLeave}
+        onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
       >
         <g
