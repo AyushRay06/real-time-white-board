@@ -5,6 +5,10 @@ import { Camera, Color } from "@/types/canvas"
 import { useSelectionBounds } from "@/hooks/use-selection-bound"
 import { useMutation, useSelf } from "@liveblocks/react/suspense"
 import { ColorPicker } from "./color-picker"
+import { useDeleteLayers } from "@/hooks/use-delete-layers"
+import { Hint } from "@/components/hint"
+import { Button } from "@/components/ui/button"
+import { Trash2 } from "lucide-react"
 
 interface SelectionToolsProps {
   camera: Camera
@@ -29,6 +33,8 @@ export const SelectionTools = memo(
       [selection, setLastUsedColor]
     )
 
+    const deleteLayers = useDeleteLayers()
+
     useEffect(() => {
       if (selectionBounds) {
         const x = selectionBounds.x + selectionBounds.width / 2 + camera.x
@@ -51,6 +57,13 @@ export const SelectionTools = memo(
         }}
       >
         <ColorPicker onChange={setFill} />
+        <div className="flex items-center pl-2 ml-2 border-l border-neutral-200">
+          <Hint label="Delete">
+            <Button variant="board" size="icon" onClick={deleteLayers}>
+              <Trash2 className="h-6 w-6 text-neutral-500" />
+            </Button>
+          </Hint>
+        </div>
       </div>
     )
   }
