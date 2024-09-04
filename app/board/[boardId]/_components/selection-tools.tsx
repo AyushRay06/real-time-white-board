@@ -4,6 +4,7 @@ import { memo, useEffect, useState } from "react"
 import { Camera, Color } from "@/types/canvas"
 import { useSelectionBounds } from "@/hooks/use-selection-bound"
 import { useSelf } from "@liveblocks/react/suspense"
+import { ColorPicker } from "./color-picker"
 
 interface SelectionToolsProps {
   camera: Camera
@@ -37,7 +38,7 @@ export const SelectionTools = memo(
           top: `${position.y - 64}px`, // Adjusted to be slightly above the selection
         }}
       >
-        Selection tools
+        <ColorPicker onChange={() => {}} />
       </div>
     )
   }
