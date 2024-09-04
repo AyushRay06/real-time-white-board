@@ -9,7 +9,7 @@ interface ColorPickerProps {
 
 export const ColorPicker = ({ onChange }: ColorPickerProps) => {
   return (
-    <div className="flex flex-wrap gap-2 items-center max-w-[332px]  mr-2 border-r border-neutral-200">
+    <div className="flex flex-wrap gap-2 items-center max-w-[332px] border-r border-neutral-200 shadow-lg">
       <ColorButton
         onClick={onChange}
         color={{
@@ -18,14 +18,7 @@ export const ColorPicker = ({ onChange }: ColorPickerProps) => {
           b: 51,
         }}
       />
-      <ColorButton
-        onClick={onChange}
-        color={{
-          r: 225,
-          g: 153,
-          b: 51,
-        }}
-      />
+
       <ColorButton
         onClick={onChange}
         color={{
@@ -72,6 +65,14 @@ export const ColorPicker = ({ onChange }: ColorPickerProps) => {
           r: 192,
           g: 192,
           b: 192,
+        }}
+      />
+      <ColorButton
+        onClick={onChange}
+        color={{
+          r: 0,
+          g: 0,
+          b: 0,
         }}
       />
     </div>
