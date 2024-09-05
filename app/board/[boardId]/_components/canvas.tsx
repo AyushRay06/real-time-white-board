@@ -134,6 +134,18 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     }
   }, [])
 
+  //functon to select Multiple layes
+
+  const startMultiSelection = useCallback((current: Point, origin: Point) => {
+    if (Math.abs(current.x - origin.x) + Math.abs(current.y - origin.y) > 5) {
+      setCanvasState({
+        mode: CanvasMode.SelectionNet,
+        origin,
+        current,
+      })
+    }
+  }, [])
+
   //function for resizing layer
   const resizeSelectedLayer = useMutation(
     ({ storage, self }, point: Point) => {
@@ -183,8 +195,9 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       e.preventDefault()
       const current = pointerEventToCanvasPoint(e, camera)
 
-      //for moving the layer
-      if (canvasState.mode === CanvasMode.Translating) {
+      if (canvasState.mode === CanvasMode.Pressing) {
+        startMultiSelection(current, canvasState.origin)
+      } else if (canvasState.mode === CanvasMode.Translating) {
         translateSelectedLayer(current)
       } else if (canvasState.mode === CanvasMode.Resizing) {
         resizeSelectedLayer(current)

@@ -21,6 +21,47 @@ export const SelectionTools = memo(
     const selectionBounds = useSelectionBounds()
     const [position, setPosition] = useState({ x: 0, y: 0 })
 
+    //to bring layer front
+    const bringToFront = useMutation(
+      ({ storage }) => {
+        const liveLayersIds = storage.get("layerIds")
+        const indices: number[] = []
+
+        const arr = liveLayersIds.toArray()
+
+        for (let i = 0; i < arr.length; i++) {
+          if (selection.includes(arr[i])) {
+            indices.push(i)
+          }
+        }
+
+        for (let i = indices.length - 1; i >= 0; i--) {
+          liveLayersIds.move(indices[i], arr.length - 1 - i)
+        }
+      },
+      [selection]
+    )
+    //to move layer back
+    const moveToBack = useMutation(
+      ({ storage }) => {
+        const liveLayersIds = storage.get("layerIds")
+        const indices: number[] = []
+
+        const arr = liveLayersIds.toArray()
+
+        for (let i = 0; i < arr.length; i++) {
+          if (selection.includes(arr[i])) {
+            indices.push(i)
+          }
+        }
+
+        for (let i = 0; i < indices.length; i++) {
+          liveLayersIds.move(indices[i], i)
+        }
+      },
+      [selection]
+    )
+
     const setFill = useMutation(
       ({ storage }, fill: Color) => {
         const liveLayers = storage.get("layers")
@@ -52,19 +93,19 @@ export const SelectionTools = memo(
       <div
         className="absolute p-3 rounded-xl bg-white shadow-sm border flex select-none"
         style={{
-          left: `calc(${position.x - 220}px)`,
+          left: `calc(${position.x - 160}px)`,
           top: `${position.y - 128}px`, // Adjusted to be slightly above the selection
         }}
       >
         <ColorPicker onChange={setFill} />
         <div className="flex flex-col gap-y-0.5">
           <Hint label="Bring to front">
-            <Button variant="board" size="icon">
+            <Button variant="board" size="icon" onClick={bringToFront}>
               <BringToFront />
             </Button>
           </Hint>
           <Hint label="Send back">
-            <Button variant="board" size="icon">
+            <Button variant="board" size="icon" onClick={moveToBack}>
               <SendToBack />
             </Button>
           </Hint>
