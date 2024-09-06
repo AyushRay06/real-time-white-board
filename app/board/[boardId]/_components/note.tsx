@@ -14,7 +14,7 @@ const font = Kalam({
 //function for fontsize
 const calculateFontsize = (width: number, height: number) => {
   const maxFontSize = 96
-  const scalefactor = 0.5
+  const scalefactor = 0.15
   const fontSizeBasedOnHeight = height * scalefactor
   const fontSizeBasedOnWidth = width * scalefactor
 
