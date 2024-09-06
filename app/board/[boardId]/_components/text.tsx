@@ -4,11 +4,22 @@ import ContentEditable from "react-contenteditable"
 import { TextLayer } from "@/types/canvas"
 import { cn, colorToCss } from "@/lib/utils"
 import { useMutation } from "@liveblocks/react/suspense"
+import { Weight } from "lucide-react"
 
 const font = Kalam({
   subsets: ["latin"],
   weight: ["400"],
 })
+
+//function for fontsize
+const calculateFontsize = (width: number, height: number) => {
+  const maxFontSize = 96
+  const scalefactor = 0.5
+  const fontSizeBasedOnHeight = height * scalefactor
+  const fontSizeBasedOnWidth = width * scalefactor
+
+  return Math.min(fontSizeBasedOnHeight, fontSizeBasedOnWidth, maxFontSize)
+}
 
 interface TextProps {
   id: string
@@ -39,6 +50,7 @@ export const Text = ({ layer, onPointDown, id, selectionColor }: TextProps) => {
           font.className
         )}
         style={{
+          fontSize: calculateFontsize(width, height),
           color: fill ? colorToCss(fill) : "#000",
         }}
       />
