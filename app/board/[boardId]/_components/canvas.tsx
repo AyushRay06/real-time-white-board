@@ -26,6 +26,7 @@ import {
 import { CursorsPresence } from "./cursors-presence"
 import {
   connectionIdToColor,
+  findIntersectinglayersWithRectangle,
   pointerEventToCanvasPoint,
   resizeBounds,
 } from "@/lib/utils"
@@ -133,6 +134,26 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       setMyPresence({ selection: [] }, { addToHistory: true })
     }
   }, [])
+  //update selectionNet function
+  const updateSelectionNet = useMutation(
+    ({ storage, setMyPresence }, current: Point, origin: Point) => {
+      const layers = storage.get("layers").toImmutable()
+      setCanvasState({
+        mode: CanvasMode.SelectionNet,
+        origin,
+        current,
+      })
+
+      const ids = findIntersectinglayersWithRectangle(
+        layerIds,
+        layers,
+        origin,
+        current
+      )
+      setMyPresence({ selection: ids })
+    },
+    [layerIds]
+  )
 
   //functon to select Multiple layes
 
@@ -197,6 +218,8 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 
       if (canvasState.mode === CanvasMode.Pressing) {
         startMultiSelection(current, canvasState.origin)
+      } else if (canvasState.mode === CanvasMode.SelectionNet) {
+        updateSelectionNet(current, canvasState.origin)
       } else if (canvasState.mode === CanvasMode.Translating) {
         translateSelectedLayer(current)
       } else if (canvasState.mode === CanvasMode.Resizing) {
