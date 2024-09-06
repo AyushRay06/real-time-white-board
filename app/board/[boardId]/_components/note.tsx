@@ -1,8 +1,8 @@
 import { Kalam } from "next/font/google"
 import ContentEditable, { ContentEditableEvent } from "react-contenteditable"
 
-import { Point, TextLayer } from "@/types/canvas"
-import { cn, colorToCss } from "@/lib/utils"
+import { Point, NoteLayer } from "@/types/canvas"
+import { cn, colorToCss, getContrastingTextColor } from "@/lib/utils"
 import { useMutation } from "@liveblocks/react/suspense"
 import { Weight } from "lucide-react"
 
@@ -21,14 +21,14 @@ const calculateFontsize = (width: number, height: number) => {
   return Math.min(fontSizeBasedOnHeight, fontSizeBasedOnWidth, maxFontSize)
 }
 
-interface TextProps {
+interface NoteProps {
   id: string
-  layer: TextLayer
+  layer: NoteLayer
   onPointDown: (e: React.PointerEvent, id: string) => void
   selectionColor?: string
 }
 
-export const Text = ({ layer, onPointDown, id, selectionColor }: TextProps) => {
+export const Note = ({ layer, onPointDown, id, selectionColor }: NoteProps) => {
   const { x, y, height, width, fill, value } = layer
 
   const updateValue = useMutation(
@@ -53,20 +53,23 @@ export const Text = ({ layer, onPointDown, id, selectionColor }: TextProps) => {
       onPointerDown={(e) => onPointDown(e, id)}
       style={{
         outline: selectionColor ? `1px solid ${selectionColor}` : "none",
+        backgroundColor: fill ? colorToCss(fill) : "#000",
       }}
+      className="shadow-md drop-shadow-xl"
     >
       <ContentEditable
         html={value || "Text"}
         onChange={handleContentChange}
         className={cn(
-          "h-full w-full flex items-center justify-center text-center drop-shadow-md outline-none",
+          "h-full w-full flex items-center justify-center text-center  outline-none",
           font.className
         )}
         style={{
           fontSize: calculateFontsize(width, height),
-          color: fill ? colorToCss(fill) : "#000",
+          color: fill ? getContrastingTextColor(fill) : "#000",
         }}
       />
+      t
     </foreignObject>
   )
 }
