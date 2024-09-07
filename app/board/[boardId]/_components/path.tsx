@@ -17,4 +17,8 @@ export const Path = ({
   fill,
   onPointerDown,
   stroke,
-}: PathProps) => {}
+}: PathProps) => {
+  return(
+    <path/>
+  )
+}
