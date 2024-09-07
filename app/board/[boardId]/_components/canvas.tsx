@@ -22,9 +22,11 @@ import {
   useStorage,
   useOthers,
   useOthersMapped,
+  useSelf,
 } from "@liveblocks/react/suspense"
 import { CursorsPresence } from "./cursors-presence"
 import {
+  colorToCss,
   connectionIdToColor,
   findIntersectinglayersWithRectangle,
   penPointsToPathLayer,
@@ -37,6 +39,7 @@ import { LayerPreview } from "./layer-preview"
 import { SelectionBox } from "./selection-box"
 import { SelectionTools } from "./selection-tools"
 import { Pencil } from "lucide-react"
+import { Path } from "./path"
 // import { useSelf } from "@liveblocks/react/suspense"
 
 const MAX_LAYERS = 100
@@ -49,6 +52,8 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   // const info = useSelf((me) => me.info)
 
   const layerIds = useStorage((root) => root.layerIds)
+
+  const pencilDraft = useSelf((me) => me.presence.pencilDraft)
 
   const [canvasState, setCanvasState] = useState<CanvasState>({
     mode: CanvasMode.None,
@@ -451,6 +456,14 @@ export const Canvas = ({ boardId }: CanvasProps) => {
               />
             )}
           <CursorsPresence />
+          {pencilDraft != null && pencilDraft.length > 0 && (
+            <Path
+              points={pencilDraft}
+              x={0}
+              y={0}
+              fill={colorToCss(lastUsedColour)}
+            />
+          )}
         </g>
       </svg>
     </main>
