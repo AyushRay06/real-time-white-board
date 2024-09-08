@@ -40,6 +40,7 @@ import { SelectionBox } from "./selection-box"
 import { SelectionTools } from "./selection-tools"
 import { Pencil } from "lucide-react"
 import { Path } from "./path"
+import { useDisableScrollBounce } from "@/hooks/use-disable-scroll-bounce"
 // import { useSelf } from "@liveblocks/react/suspense"
 
 const MAX_LAYERS = 100
@@ -66,6 +67,8 @@ export const Canvas = ({ boardId }: CanvasProps) => {
     b: 0,
   })
 
+  
+  useDisableScrollBounce()
   const history = useHistory()
   const canRedo = useCanRedo()
   const canUndo = useCanUndo()
