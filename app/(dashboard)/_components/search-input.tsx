@@ -1,7 +1,6 @@
 "use client"
 import { useRouter } from "next/navigation"
 import qs from "query-string"
-import { useDebounceValue } from "usehooks-ts"
 import { useState, useEffect, ChangeEvent } from "react"
 
 import { Input } from "@/components/ui/input"
@@ -10,24 +9,37 @@ import { Search } from "lucide-react"
 export const SearchInput = () => {
   const router = useRouter()
   const [value, setValue] = useState<string>("")
-  const debouncedValue = useDebounceValue(value, 500)
+  const [debouncedValue, setDebouncedValue] = useState<string>("")
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value)
   }
+
+  // Manually handle the debounce logic
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value)
+    }, 500)
+
+    // Cleanup the timeout if the value changes within the delay
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [value])
 
   useEffect(() => {
     const url = qs.stringifyUrl(
       {
         url: "/",
         query: {
-          search: debouncedValue,
+          search: debouncedValue || "",
         },
       },
       { skipEmptyString: true, skipNull: true }
     )
     router.push(url)
   }, [debouncedValue, router])
+
   return (
     <div className="w-full relative">
       <Search className="absolute top-1/2 left-3 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />

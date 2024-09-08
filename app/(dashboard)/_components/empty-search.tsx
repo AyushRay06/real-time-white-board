@@ -43,7 +43,7 @@ export const EmptySearch = ({ src, alt, desc1, desc2 }: EmptySearchProps) => {
       <p className="text-lg text-muted-foreground">{desc2}</p>
       <div className="pt-6">
         <Button disabled={pending} onClick={onClick} size="lg">
-          Create Organization
+          Create Board
         </Button>
       </div>
     </div>
