@@ -43,7 +43,7 @@ export function LandingPage() {
                   Collaborate in Real-Time with Our Free Digital Whiteboard
                 </h1>
                 <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl dark:text-gray-400">
-                  Boost your team's creativity and productivity with our
+                  Boost your team&apos;s creativity and productivity with our
                   intuitive, feature-rich whiteboard platform. Now completely
                   free to use!
                 </p>
@@ -192,8 +192,9 @@ export function LandingPage() {
                   <CardTitle>Amazing Tool!</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  "This whiteboard has revolutionized our brainstorming
-                  sessions. It's like we're all in the same room!"
+                  &quot;This whiteboard has revolutionized our brainstorming
+                  sessions. It&apos;s like we&apos;re all in the same
+                  room!&quot;
                 </CardContent>
                 <CardFooter>
                   <p className="text-sm text-gray-500">
@@ -206,7 +207,7 @@ export function LandingPage() {
                   <CardTitle>Boosts Productivity</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  "We've seen a 30% increase in project efficiency since we
+                  "We&apos;ve seen a 30% increase in project efficiency since we
                   started using this platform. Highly recommended!"
                 </CardContent>
                 <CardFooter>
