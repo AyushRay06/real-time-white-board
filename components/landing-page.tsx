@@ -207,8 +207,9 @@ export function LandingPage() {
                   <CardTitle>Boosts Productivity</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  "We&apos;ve seen a 30% increase in project efficiency since we
-                  started using this platform. Highly recommended!"
+                  &quot;We&apos;ve seen a 30% increase in project efficiency
+                  since we started using this platform. Highly
+                  recommended!&quot;
                 </CardContent>
                 <CardFooter>
                   <p className="text-sm text-gray-500">- Mike T., Team Lead</p>
@@ -219,8 +220,8 @@ export function LandingPage() {
                   <CardTitle>User-Friendly Interface</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  "Even our less tech-savvy team members found it easy to use.
-                  The learning curve is minimal."
+                  &quot;Even our less tech-savvy team members found it easy to
+                  use. The learning curve is minimal.&quot;
                 </CardContent>
                 <CardFooter>
                   <p className="text-sm text-gray-500">
