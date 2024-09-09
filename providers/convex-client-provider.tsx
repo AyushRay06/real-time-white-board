@@ -9,6 +9,7 @@ import {
   Unauthenticated,
 } from "convex/react"
 import { Loading } from "@/components/auth/loading"
+import { LandingPage } from "@/components/landing-page"
 
 interface ConvexClientProviderProps {
   children: React.ReactNode
@@ -26,7 +27,7 @@ export const ConvexClientProvider = ({
     <ClerkProvider publishableKey="pk_test_ZXBpYy1sZW11ci04My5jbGVyay5hY2NvdW50cy5kZXYk">
       <ConvexProviderWithClerk useAuth={useAuth} client={convex}>
         <Unauthenticated>
-          <SignInButton />
+          <LandingPage />
         </Unauthenticated>
         <Authenticated>{children}</Authenticated>
         <AuthLoading>
