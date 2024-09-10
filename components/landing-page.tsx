@@ -29,6 +29,7 @@ import {
   Cpu,
   Box,
   LineChart,
+  Github,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -48,35 +49,11 @@ export function LandingPage() {
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 text-gray-900">
       <header className="px-4 lg:px-6 h-14 flex items-center border-b border-gray-200 bg-white">
         <Link className="flex items-center justify-center" href="#">
-          <PenLine className="h-6 w-6 text-blue-600" />
-          <span className="ml-2 text-xl font-bold text-gray-900">Acme Inc</span>
+          <Image src="/logo.svg" alt="logo" width={40} height={40} />
+          <span className="ml-2 text-xl font-bold text-gray-900">
+            Planing Portal
+          </span>
         </Link>
-        <nav className="ml-auto flex gap-4 sm:gap-6">
-          <Link
-            className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
-            href="#"
-          >
-            Features
-          </Link>
-          <Link
-            className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
-            href="#"
-          >
-            How It Works
-          </Link>
-          <Link
-            className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
-            href="#"
-          >
-            Use Cases
-          </Link>
-          <Link
-            className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors"
-            href="#"
-          >
-            FAQ
-          </Link>
-        </nav>
       </header>
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-b from-blue-200 via-blue-100 to-white">
@@ -397,27 +374,21 @@ export function LandingPage() {
         </section>
       </main>
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t border-gray-200 bg-white">
-        <p className="text-xs text-gray-600">
-          © 2023 Acme Inc. All rights reserved.
+        <p className="text-sm text-gray-600">
+          Planning Portal developed by{" "}
+          <Link
+            className="hover:text-blue-500"
+            href="https://portfolio-website-nu-lyart.vercel.app/"
+          >
+            Ayush
+          </Link>
         </p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
           <Link
             className="text-xs hover:underline underline-offset-4 text-gray-600 hover:text-blue-600 transition-colors"
-            href="#"
+            href="https://github.com/AyushRay06/real-time-white-board"
           >
-            Terms of Service
-          </Link>
-          <Link
-            className="text-xs hover:underline underline-offset-4 text-gray-600 hover:text-blue-600 transition-colors"
-            href="#"
-          >
-            Privacy Policy
-          </Link>
-          <Link
-            className="text-xs hover:underline underline-offset-4 text-gray-600 hover:text-blue-600 transition-colors"
-            href="#"
-          >
-            Cookie Policy
+            <Github />
           </Link>
         </nav>
       </footer>
