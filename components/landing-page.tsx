@@ -90,7 +90,7 @@ export function LandingPage() {
                   </span>
                 </h1>
                 <p className="mx-auto max-w-[700px] text-xl text-gray-600 md:text-2xl">
-                  Boost your team's creativity and productivity with our
+                  Boost your team&apos;s creativity and productivity with our
                   intuitive, feature-rich whiteboard platform. Now completely
                   free to use!
                 </p>
