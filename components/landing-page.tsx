@@ -51,7 +51,7 @@ export function LandingPage() {
         <Link className="flex items-center justify-center" href="#">
           <Image src="/logo.svg" alt="logo" width={40} height={40} />
           <span className="ml-2 text-xl font-bold text-gray-900">
-            Planing Portal
+            Planning Portal
           </span>
         </Link>
       </header>
