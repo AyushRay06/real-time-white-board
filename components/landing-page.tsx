@@ -173,7 +173,7 @@ export function LandingPage() {
             </div>
           </div>
         </section>
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-pink-200 to-orange-100">
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-pink-200 to-white">
           <div className="container px-4 md:px-6">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-12 text-gray-900">
               How It Works
@@ -218,13 +218,13 @@ export function LandingPage() {
             </div>
           </div>
         </section>
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-orange-100 to-yellow-200">
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-white to-yellow-100">
           <div className="container px-4 md:px-6">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-center mb-12 text-gray-900">
               Use Cases
             </h2>
             <div className="grid gap-6 lg:grid-cols-3 lg:gap-12">
-              <Card className="bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-gradient-to-b from-yellow-200 to-orange-100">
+              <Card className="bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-gradient-to-b from-yellow-100 to-white">
                 <CardHeader>
                   <Briefcase className="h-8 w-8 mb-2 text-blue-600" />
                   <CardTitle>Consulting</CardTitle>
@@ -234,7 +234,7 @@ export function LandingPage() {
                   visualize complex business processes with ease.
                 </CardContent>
               </Card>
-              <Card className="bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-gradient-to-b from-yellow-200 to-orange-100">
+              <Card className="bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-gradient-to-b from-yellow-100 to-white">
                 <CardHeader>
                   <Cpu className="h-8 w-8 mb-2 text-blue-600" />
                   <CardTitle>Technology</CardTitle>
@@ -244,7 +244,7 @@ export function LandingPage() {
                   and plan sprints with distributed teams.
                 </CardContent>
               </Card>
-              <Card className="bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-gradient-to-b from-yellow-200 to-orange-100">
+              <Card className="bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-gradient-to-b from-yellow-100 to-white">
                 <CardHeader>
                   <Box className="h-8 w-8 mb-2 text-blue-600" />
                   <CardTitle>Product Development</CardTitle>
@@ -254,7 +254,7 @@ export function LandingPage() {
                   iterate on designs in real-time.
                 </CardContent>
               </Card>
-              <Card className="bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-gradient-to-b from-yellow-200 to-orange-100">
+              <Card className="bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-gradient-to-b from-yellow-100 to-white">
                 <CardHeader>
                   <LineChart className="h-8 w-8 mb-2 text-blue-600" />
                   <CardTitle>Data Analysis</CardTitle>
@@ -264,7 +264,7 @@ export function LandingPage() {
                   explain complex insights to stakeholders.
                 </CardContent>
               </Card>
-              <Card className="bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-gradient-to-b from-yellow-200 to-orange-100">
+              <Card className="bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-gradient-to-b from-yellow-100 to-white">
                 <CardHeader>
                   <Users className="h-8 w-8 mb-2 text-blue-600" />
                   <CardTitle>Education</CardTitle>
@@ -274,7 +274,7 @@ export function LandingPage() {
                   projects, and provide visual feedback on assignments.
                 </CardContent>
               </Card>
-              <Card className="bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-gradient-to-b from-yellow-200 to-orange-100">
+              <Card className="bg-white shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 hover:bg-gradient-to-b from-yellow-100 to-white">
                 <CardHeader>
                   <Globe className="h-8 w-8 mb-2 text-blue-600" />
                   <CardTitle>Remote Work</CardTitle>
@@ -288,7 +288,7 @@ export function LandingPage() {
             </div>
           </div>
         </section>
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-yellow-200 to-green-300">
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-yellow-100 to-green-200">
           <div className="container px-4 md:px-6">
             <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl  text-center mb-12 text-gray-900">
               Frequently Asked Questions
@@ -341,17 +341,13 @@ export function LandingPage() {
             </Accordion>
           </div>
         </section>
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-green-300 to-blue-500">
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-green-200 to-blue-300">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center space-y-4 text-center">
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-gray-900">
                   Start Collaborating Today
                 </h2>
-                <p className="mx-auto max-w-[700px] text-xl text-gray-600">
-                  Our digital whiteboard is completely free to use. Sign up now
-                  and experience the power of real-time collaboration!
-                </p>
               </div>
               <div className="w-full max-w-sm space-y-2">
                 <SignInButton>
