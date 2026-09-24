@@ -21,6 +21,8 @@ import {
 import { ToolButton } from "./tool-button"
 import { CanvasMode, CanvasState, LayerType } from "@/types/canvas"
 import { useSimulation } from "./simulation-context"
+import { useCanvasTheme } from "./canvas-theme-context"
+import { cn } from "@/lib/utils"
 
 interface ToolbarProps {
   canvasState: CanvasState
@@ -50,10 +52,19 @@ export const Toolbar = ({
   onSelectAllArchitecture,
 }: ToolbarProps) => {
   const { isSimulating, toggleSimulate } = useSimulation()
+  const { theme } = useCanvasTheme()
+
+  const groupClass =
+    theme === "dark"
+      ? "bg-slate-900/95 backdrop-blur-md rounded-2xl p-1.5 flex flex-col gap-y-1 items-center shadow-2xl border border-slate-800"
+      : "bg-white/95 backdrop-blur-md rounded-2xl p-1.5 flex flex-col gap-y-1 items-center shadow-lg border border-neutral-200"
+
+  const dividerClass = theme === "dark" ? "bg-slate-800" : "bg-neutral-200"
+
   return (
     <div className="absolute top-[50%] -translate-y-[50%] left-3 flex flex-col gap-y-3 z-40 select-none">
       {/* ── Group 1: Select & Navigation ── */}
-      <div className="bg-white/95 backdrop-blur-md rounded-2xl p-1.5 flex gap-y-1 flex-col items-center shadow-lg border border-neutral-200">
+      <div className={groupClass}>
         <ToolButton
           label="Select (V)"
           icon={MousePointer2}
@@ -81,7 +92,7 @@ export const Toolbar = ({
       </div>
 
       {/* ── Group 2: System Architecture Tools ── */}
-      <div className="bg-white/95 backdrop-blur-md rounded-2xl p-1.5 flex gap-y-1 flex-col items-center shadow-lg border border-neutral-200">
+      <div className={groupClass}>
         <ToolButton
           label={isLibraryOpen ? "Close Architecture Library (L)" : "Architecture Components Library (L)"}
           icon={LayoutGrid}
@@ -130,7 +141,7 @@ export const Toolbar = ({
       </div>
 
       {/* ── Group 3: Shapes, Notes & Freehand ── */}
-      <div className="bg-white/95 backdrop-blur-md rounded-2xl p-1.5 flex gap-y-1 flex-col items-center shadow-lg border border-neutral-200">
+      <div className={groupClass}>
         <ToolButton
           label="Text (T)"
           icon={Type}
@@ -196,14 +207,14 @@ export const Toolbar = ({
       </div>
 
       {/* ── Group 4: Eraser & History ── */}
-      <div className="bg-white/95 backdrop-blur-md rounded-2xl p-1.5 flex flex-col gap-y-1 items-center shadow-lg border border-neutral-200">
+      <div className={groupClass}>
         <ToolButton
           label="Eraser (E) — Click or swipe to erase"
           icon={Eraser}
           onClick={() => setCanvasState({ mode: CanvasMode.Eraser })}
           isActive={canvasState.mode === CanvasMode.Eraser}
         />
-        <div className="w-5 h-px bg-neutral-200 my-0.5" />
+        <div className={cn("w-5 h-px my-0.5", dividerClass)} />
         <ToolButton
           label="Undo (Ctrl+Z)"
           icon={Undo2}

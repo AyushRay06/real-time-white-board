@@ -13,8 +13,11 @@ import { useRenameModal } from "@/store/use-rename-modal"
 import { Actions } from "@/components/actions"
 import { Menu } from "lucide-react"
 
+import { useCanvasTheme } from "./canvas-theme-context"
+
 const TabSeparator = () => {
-  return <div className="text-neutral-300 px-1.5">|</div>
+  const { theme } = useCanvasTheme()
+  return <div className={cn("px-1.5", theme === "dark" ? "text-neutral-700" : "text-neutral-300")}>|</div>
 }
 
 const font = Poppins({
@@ -28,6 +31,7 @@ interface InfoProps {
 
 export const Info = ({ boardId }: InfoProps) => {
   const { onOpen } = useRenameModal()
+  const { theme } = useCanvasTheme()
 
   const data = useQuery(api.board.get, {
     id: boardId as Id<"boards">,
@@ -36,16 +40,22 @@ export const Info = ({ boardId }: InfoProps) => {
   if (!data) return <InfoSkeleton />
   return (
     //need to fix the logo|board name| menu bar width for now w-[300px]
-    <div className="absolute  top-2 left-2 bg-white rounded-md px-1.5 h-12 flex items-center shadow-md">
+    <div
+      className={cn(
+        "absolute top-2 left-2 rounded-md px-1.5 h-12 flex items-center shadow-md transition-colors",
+        theme === "dark" ? "bg-slate-900 border border-slate-800 text-white" : "bg-white text-black"
+      )}
+    >
       <Hint label="Go to boards" side="bottom" sideOffset={12}>
-        <Button asChild variant="board" className="px-2">
+        <Button asChild variant="board" className={cn("px-2", theme === "dark" && "hover:bg-slate-800 text-white")}>
           <Link href="/">
             <Image src="/logo.svg" alt="logo" width={40} height={40} />
 
             <span
               className={cn(
-                "font-semibold ml-2 text-xl text-black",
-                font.className
+                "font-semibold ml-2 text-xl",
+                font.className,
+                theme === "dark" ? "text-white" : "text-black"
               )}
             >
               Board
@@ -58,7 +68,7 @@ export const Info = ({ boardId }: InfoProps) => {
         <Button
           onClick={() => onOpen(data._id, data.title)}
           variant="board"
-          className="text-base font-mono px-8"
+          className={cn("text-base font-mono px-8", theme === "dark" && "text-slate-200 hover:text-white hover:bg-slate-800")}
         >
           {data.title}
         </Button>

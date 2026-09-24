@@ -14,6 +14,7 @@ import {
 } from "@liveblocks/react/suspense"
 import { CursorsPresence } from "./cursors-presence"
 import {
+  cn,
   colorToCss, connectionIdToColor,
   findIntersectinglayersWithRectangle,
   penPointsToPathLayer, pointerEventToCanvasPoint, resizeBounds,
@@ -36,6 +37,8 @@ import { Minimap } from "./minimap"
 import { SimulationProvider, useSimulation } from "./simulation-context"
 import { ArchitectureSimulator } from "./architecture-simulator"
 import { ArchitectureTourBar } from "./architecture-tour-bar"
+import { useCanvasTheme } from "./canvas-theme-context"
+import { CanvasThemeToggle } from "./canvas-theme-toggle"
 
 // ─── Preview line while connecting ──────────────────────────────────────────
 function ConnectingPreviewLine({ fromLayerId, to }: { fromLayerId: string; to: Point }) {
@@ -65,6 +68,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
 }
 
 const CanvasInner = ({ boardId }: CanvasProps) => {
+  const { theme } = useCanvasTheme()
   const layerIds = useStorage((root) => root.layerIds)
   const layers = useStorage((root) => root.layers)
   const pencilDraft = useSelf((me) => me.presence.pencilDraft)
@@ -1419,14 +1423,20 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
 
   return (
     <main
-      className="h-full w-full relative bg-neutral-100 touch-none overflow-hidden"
+      className={cn(
+        "h-full w-full relative touch-none overflow-hidden transition-colors duration-200",
+        theme === "dark" ? "bg-[#0b0f19] text-white" : "bg-neutral-100 text-neutral-900"
+      )}
       onContextMenu={(e) => {
         e.preventDefault()
         setContextMenu({ x: e.clientX, y: e.clientY })
       }}
     >
       <Info boardId={boardId} />
-      <Participants />
+      <div className="absolute top-2 right-2 flex items-center gap-x-2 z-40">
+        <Participants />
+        <CanvasThemeToggle />
+      </div>
 
       <Toolbar
         canvasState={canvasState}
@@ -1577,7 +1587,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         <defs>
           {/* Subtle grid pattern */}
           <pattern id="canvas-grid" width={36} height={36} patternUnits="userSpaceOnUse">
-            <circle cx={18} cy={18} r={1.2} fill="#D1D5DB" />
+            <circle cx={18} cy={18} r={1.2} fill={theme === "dark" ? "#334155" : "#D1D5DB"} />
           </pattern>
         </defs>
 

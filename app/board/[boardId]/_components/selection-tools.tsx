@@ -33,6 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { COMPONENT_LABELS, ICON_MAP } from "./sys-component-layer"
+import { useCanvasTheme } from "./canvas-theme-context"
 
 interface SelectionToolsProps {
   camera: Camera
@@ -57,6 +58,8 @@ export const SelectionTools = memo(
   ({ camera, setLastUsedColor, onDuplicate, onSelectConnected }: SelectionToolsProps) => {
     const selection = useSelf((me) => me.presence.selection)
     const selectionBounds = useSelectionBounds()
+    const { theme } = useCanvasTheme()
+    const isLight = theme === "light"
 
     const soleLayerId = selection.length === 1 ? selection[0] : null
     const soleLayer = useStorage((root) =>
@@ -246,6 +249,44 @@ export const SelectionTools = memo(
     const compType = isComponent && soleLayer && "componentType" in soleLayer ? (soleLayer.componentType as SysComponent) : null
     const CompIcon = compType ? ICON_MAP[compType] || Box : Box
 
+    const containerClasses = isLight
+      ? "bg-white/95 text-slate-800 border-slate-200/90 shadow-xl shadow-slate-900/10"
+      : "bg-neutral-900/95 text-white border-neutral-700/80 shadow-2xl"
+
+    const dividerClass = isLight ? "border-slate-200" : "border-neutral-700/80"
+
+    const inputClassComp = isLight
+      ? "bg-slate-100 hover:bg-slate-200/70 focus:bg-white border-slate-200 focus:border-indigo-500 text-slate-900 placeholder:text-slate-400"
+      : "bg-neutral-800/80 hover:bg-neutral-800 focus:bg-neutral-950 border-neutral-700 focus:border-indigo-400 text-white placeholder:text-neutral-500"
+
+    const inputClassArrow = isLight
+      ? "bg-slate-100 hover:bg-slate-200/70 focus:bg-white border-slate-200 focus:border-cyan-500 text-slate-900 placeholder:text-slate-400"
+      : "bg-neutral-800/80 hover:bg-neutral-800 focus:bg-neutral-950 border-neutral-700 focus:border-cyan-400 text-white placeholder:text-neutral-500"
+
+    const inputClassSection = isLight
+      ? "bg-slate-100 hover:bg-slate-200/70 focus:bg-white border-slate-200 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400"
+      : "bg-neutral-800/80 hover:bg-neutral-800 focus:bg-neutral-950 border-neutral-700 focus:border-emerald-400 text-white placeholder:text-neutral-500"
+
+    const buttonPillClass = isLight
+      ? "bg-slate-100 hover:bg-slate-200/70 border-slate-200 text-slate-800"
+      : "bg-neutral-800 hover:bg-neutral-750 border-neutral-700 text-white"
+
+    const buttonPillInactive = isLight
+      ? "text-slate-500 hover:text-slate-900"
+      : "text-neutral-400 hover:text-white"
+
+    const dropdownMenuContentClass = isLight
+      ? "bg-white border-slate-200 text-slate-800 shadow-xl"
+      : "bg-neutral-900 border-neutral-750 text-white shadow-2xl"
+
+    const dropdownMenuItemClass = isLight
+      ? "hover:bg-slate-100 text-slate-800 cursor-pointer"
+      : "hover:bg-neutral-800 text-white cursor-pointer"
+
+    const actionButtonClass = isLight
+      ? "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+      : "text-neutral-300 hover:text-white hover:bg-neutral-800"
+
     return (
       <div
         style={{
@@ -254,12 +295,12 @@ export const SelectionTools = memo(
           top: `${Math.max(65, tooltipY)}px`,
           transform: "translate(-50%, 0)",
         }}
-        className="z-50 flex items-center gap-2 bg-neutral-900/95 backdrop-blur-xl border border-neutral-700/80 shadow-2xl rounded-2xl px-3 py-1.5 text-white select-none transition-all duration-150 text-xs animate-in fade-in zoom-in-95 pointer-events-auto"
+        className={`z-50 flex items-center gap-2 backdrop-blur-xl border rounded-2xl px-3 py-1.5 select-none transition-all duration-150 text-xs animate-in fade-in zoom-in-95 pointer-events-auto ${containerClasses}`}
       >
         {/* ── SECTION 1: INLINE EDITABLE NAME & TYPE ── */}
         {isComponent && compType && (
-          <div className="flex items-center gap-1.5 border-r border-neutral-700/80 pr-2">
-            <div className="p-1 rounded-md bg-indigo-500/20 text-indigo-400">
+          <div className={`flex items-center gap-1.5 border-r pr-2 ${dividerClass}`}>
+            <div className={`p-1 rounded-md ${isLight ? "bg-indigo-50 text-indigo-600" : "bg-indigo-500/20 text-indigo-400"}`}>
               <CompIcon className="w-3.5 h-3.5" />
             </div>
             <input
@@ -274,14 +315,14 @@ export const SelectionTools = memo(
                   e.currentTarget.blur()
                 }
               }}
-              className="bg-neutral-800/80 hover:bg-neutral-800 focus:bg-neutral-950 border border-neutral-700 focus:border-indigo-400 outline-none rounded-lg px-2 py-0.5 text-xs font-semibold text-white w-28 sm:w-36 transition"
+              className={`outline-none rounded-lg px-2 py-0.5 text-xs font-semibold w-28 sm:w-36 transition border ${inputClassComp}`}
             />
           </div>
         )}
 
         {isArrow && (
-          <div className="flex items-center gap-1.5 border-r border-neutral-700/80 pr-2">
-            <div className="p-1 rounded-md bg-cyan-500/20 text-cyan-400">
+          <div className={`flex items-center gap-1.5 border-r pr-2 ${dividerClass}`}>
+            <div className={`p-1 rounded-md ${isLight ? "bg-cyan-50 text-cyan-600" : "bg-cyan-500/20 text-cyan-400"}`}>
               <Spline className="w-3.5 h-3.5" />
             </div>
             <input
@@ -296,14 +337,14 @@ export const SelectionTools = memo(
                   e.currentTarget.blur()
                 }
               }}
-              className="bg-neutral-800/80 hover:bg-neutral-800 focus:bg-neutral-950 border border-neutral-700 focus:border-cyan-400 outline-none rounded-lg px-2 py-0.5 text-xs font-semibold text-white w-28 sm:w-32 transition"
+              className={`outline-none rounded-lg px-2 py-0.5 text-xs font-semibold w-28 sm:w-32 transition border ${inputClassArrow}`}
             />
           </div>
         )}
 
         {isSection && (
-          <div className="flex items-center gap-1.5 border-r border-neutral-700/80 pr-2">
-            <div className="p-1 rounded-md bg-emerald-500/20 text-emerald-400">
+          <div className={`flex items-center gap-1.5 border-r pr-2 ${dividerClass}`}>
+            <div className={`p-1 rounded-md ${isLight ? "bg-emerald-50 text-emerald-600" : "bg-emerald-500/20 text-emerald-400"}`}>
               <Layers className="w-3.5 h-3.5" />
             </div>
             <input
@@ -318,14 +359,14 @@ export const SelectionTools = memo(
                   e.currentTarget.blur()
                 }
               }}
-              className="bg-neutral-800/80 hover:bg-neutral-800 focus:bg-neutral-950 border border-neutral-700 focus:border-emerald-400 outline-none rounded-lg px-2 py-0.5 text-xs font-semibold text-white w-28 sm:w-36 transition"
+              className={`outline-none rounded-lg px-2 py-0.5 text-xs font-semibold w-28 sm:w-36 transition border ${inputClassSection}`}
             />
           </div>
         )}
 
         {isMultiple && (
-          <div className="flex items-center gap-1 border-r border-neutral-700/80 pr-2 text-neutral-300 font-medium text-[11px]">
-            <span className="font-semibold text-indigo-400">{selection.length}</span>
+          <div className={`flex items-center gap-1 border-r pr-2 font-medium text-[11px] ${dividerClass} ${isLight ? "text-slate-600" : "text-neutral-300"}`}>
+            <span className={`font-semibold ${isLight ? "text-indigo-600" : "text-indigo-400"}`}>{selection.length}</span>
             <span>items</span>
           </div>
         )}
@@ -334,65 +375,65 @@ export const SelectionTools = memo(
 
         {/* COMPONENT: Health Status Dropdown */}
         {isComponent && (
-          <div className="flex items-center gap-1 border-r border-neutral-700/80 pr-2">
+          <div className={`flex items-center gap-1 border-r pr-2 ${dividerClass}`}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="flex items-center gap-1 px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-750 border border-neutral-700 text-xs font-medium text-white transition">
+                <button className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-medium transition ${buttonPillClass}`}>
                   <span
                     className={`w-2 h-2 rounded-full ${
                       currentStatus === "healthy"
-                        ? "bg-emerald-400"
+                        ? "bg-emerald-500"
                         : currentStatus === "warning"
-                        ? "bg-amber-400"
+                        ? "bg-amber-500"
                         : currentStatus === "error"
                         ? "bg-rose-500"
                         : currentStatus === "info"
-                        ? "bg-sky-400"
-                        : "bg-neutral-500"
+                        ? "bg-sky-500"
+                        : isLight ? "bg-slate-400" : "bg-neutral-500"
                     }`}
                   />
                   <span className="capitalize">{currentStatus === "none" ? "Status" : currentStatus}</span>
-                  <ChevronDown className="w-3 h-3 text-neutral-400" />
+                  <ChevronDown className={`w-3 h-3 ${isLight ? "text-slate-400" : "text-neutral-400"}`} />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="center"
                 side="bottom"
-                className="w-36 bg-neutral-900 border border-neutral-750 text-white rounded-xl shadow-2xl p-1 z-50 text-xs"
+                className={`w-36 rounded-xl p-1 z-50 text-xs ${dropdownMenuContentClass}`}
               >
                 <DropdownMenuItem
                   onClick={() => setComponentStatus("none")}
-                  className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-neutral-800 cursor-pointer"
+                  className={`flex items-center justify-between px-2 py-1.5 rounded-lg ${dropdownMenuItemClass}`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-neutral-500" />
+                    <span className="w-2 h-2 rounded-full bg-slate-400" />
                     <span>None</span>
                   </div>
-                  {currentStatus === "none" && <Check className="w-3.5 h-3.5 text-indigo-400" />}
+                  {currentStatus === "none" && <Check className="w-3.5 h-3.5 text-indigo-500" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setComponentStatus("healthy")}
-                  className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-neutral-800 cursor-pointer"
+                  className={`flex items-center justify-between px-2 py-1.5 rounded-lg ${dropdownMenuItemClass}`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400" />
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
                     <span>Healthy</span>
                   </div>
-                  {currentStatus === "healthy" && <Check className="w-3.5 h-3.5 text-emerald-400" />}
+                  {currentStatus === "healthy" && <Check className="w-3.5 h-3.5 text-emerald-500" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setComponentStatus("warning")}
-                  className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-neutral-800 cursor-pointer"
+                  className={`flex items-center justify-between px-2 py-1.5 rounded-lg ${dropdownMenuItemClass}`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-amber-400" />
+                    <span className="w-2 h-2 rounded-full bg-amber-500" />
                     <span>Warning</span>
                   </div>
-                  {currentStatus === "warning" && <Check className="w-3.5 h-3.5 text-amber-400" />}
+                  {currentStatus === "warning" && <Check className="w-3.5 h-3.5 text-amber-500" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setComponentStatus("error")}
-                  className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-neutral-800 cursor-pointer"
+                  className={`flex items-center justify-between px-2 py-1.5 rounded-lg ${dropdownMenuItemClass}`}
                 >
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-rose-500" />
@@ -402,13 +443,13 @@ export const SelectionTools = memo(
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setComponentStatus("info")}
-                  className="flex items-center justify-between px-2 py-1.5 rounded-lg hover:bg-neutral-800 cursor-pointer"
+                  className={`flex items-center justify-between px-2 py-1.5 rounded-lg ${dropdownMenuItemClass}`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-sky-400" />
+                    <span className="w-2 h-2 rounded-full bg-sky-500" />
                     <span>Info</span>
                   </div>
-                  {currentStatus === "info" && <Check className="w-3.5 h-3.5 text-sky-400" />}
+                  {currentStatus === "info" && <Check className="w-3.5 h-3.5 text-sky-500" />}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -417,14 +458,14 @@ export const SelectionTools = memo(
 
         {/* ARROW: Curvature, Pattern, Direction (ONLY for Arrow) */}
         {isArrow && (
-          <div className="flex items-center gap-1.5 border-r border-neutral-700/80 pr-2">
+          <div className={`flex items-center gap-1.5 border-r pr-2 ${dividerClass}`}>
             {/* Style */}
-            <div className="flex items-center bg-neutral-800/80 p-0.5 rounded-lg border border-neutral-700">
+            <div className={`flex items-center p-0.5 rounded-lg border ${buttonPillClass}`}>
               <Hint label="Curvy Bezier">
                 <button
                   onClick={() => setArrowStyle("curvy")}
                   className={`p-1 rounded ${
-                    currentArrowStyle === "curvy" ? "bg-cyan-500 text-white" : "text-neutral-400 hover:text-white"
+                    currentArrowStyle === "curvy" ? "bg-cyan-500 text-white" : buttonPillInactive
                   }`}
                 >
                   <Spline className="w-3.5 h-3.5" />
@@ -434,7 +475,7 @@ export const SelectionTools = memo(
                 <button
                   onClick={() => setArrowStyle("sharp")}
                   className={`p-1 rounded ${
-                    currentArrowStyle === "sharp" ? "bg-cyan-500 text-white" : "text-neutral-400 hover:text-white"
+                    currentArrowStyle === "sharp" ? "bg-cyan-500 text-white" : buttonPillInactive
                   }`}
                 >
                   <CornerDownRight className="w-3.5 h-3.5" />
@@ -443,12 +484,12 @@ export const SelectionTools = memo(
             </div>
 
             {/* Pattern */}
-            <div className="flex items-center bg-neutral-800/80 p-0.5 rounded-lg border border-neutral-700">
+            <div className={`flex items-center p-0.5 rounded-lg border ${buttonPillClass}`}>
               <Hint label="Solid Line">
                 <button
                   onClick={() => setStrokePattern("solid")}
                   className={`px-1.5 py-0.5 rounded text-[11px] font-mono ${
-                    currentStrokePattern === "solid" ? "bg-cyan-500 text-white" : "text-neutral-400 hover:text-white"
+                    currentStrokePattern === "solid" ? "bg-cyan-500 text-white" : buttonPillInactive
                   }`}
                 >
                   —
@@ -458,7 +499,7 @@ export const SelectionTools = memo(
                 <button
                   onClick={() => setStrokePattern("dashed")}
                   className={`px-1.5 py-0.5 rounded text-[11px] font-mono ${
-                    currentStrokePattern === "dashed" ? "bg-cyan-500 text-white" : "text-neutral-400 hover:text-white"
+                    currentStrokePattern === "dashed" ? "bg-cyan-500 text-white" : buttonPillInactive
                   }`}
                 >
                   - -
@@ -467,12 +508,12 @@ export const SelectionTools = memo(
             </div>
 
             {/* Direction */}
-            <div className="flex items-center bg-neutral-800/80 p-0.5 rounded-lg border border-neutral-700">
+            <div className={`flex items-center p-0.5 rounded-lg border ${buttonPillClass}`}>
               <Hint label="Forward (➔)">
                 <button
                   onClick={() => setArrowDirection("forward")}
                   className={`p-1 rounded ${
-                    currentDirection === "forward" ? "bg-cyan-500 text-white" : "text-neutral-400 hover:text-white"
+                    currentDirection === "forward" ? "bg-cyan-500 text-white" : buttonPillInactive
                   }`}
                 >
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -482,7 +523,7 @@ export const SelectionTools = memo(
                 <button
                   onClick={() => setArrowDirection("bidirectional")}
                   className={`p-1 rounded ${
-                    currentDirection === "bidirectional" ? "bg-cyan-500 text-white" : "text-neutral-400 hover:text-white"
+                    currentDirection === "bidirectional" ? "bg-cyan-500 text-white" : buttonPillInactive
                   }`}
                 >
                   <ArrowRightLeft className="w-3.5 h-3.5" />
@@ -494,13 +535,13 @@ export const SelectionTools = memo(
 
         {/* SECTION: Border Pattern (ONLY for Section) */}
         {isSection && (
-          <div className="flex items-center gap-1 border-r border-neutral-700/80 pr-2">
-            <div className="flex items-center bg-neutral-800/80 p-0.5 rounded-lg border border-neutral-700">
+          <div className={`flex items-center gap-1 border-r pr-2 ${dividerClass}`}>
+            <div className={`flex items-center p-0.5 rounded-lg border ${buttonPillClass}`}>
               <Hint label="Solid Border">
                 <button
                   onClick={() => setStrokePattern("solid")}
                   className={`px-1.5 py-0.5 rounded text-[11px] font-mono ${
-                    currentStrokePattern === "solid" ? "bg-emerald-500 text-white" : "text-neutral-400 hover:text-white"
+                    currentStrokePattern === "solid" ? "bg-emerald-500 text-white" : buttonPillInactive
                   }`}
                 >
                   —
@@ -510,7 +551,7 @@ export const SelectionTools = memo(
                 <button
                   onClick={() => setStrokePattern("dashed")}
                   className={`px-1.5 py-0.5 rounded text-[11px] font-mono ${
-                    currentStrokePattern === "dashed" ? "bg-emerald-500 text-white" : "text-neutral-400 hover:text-white"
+                    currentStrokePattern === "dashed" ? "bg-emerald-500 text-white" : buttonPillInactive
                   }`}
                 >
                   - -
@@ -521,14 +562,14 @@ export const SelectionTools = memo(
         )}
 
         {/* ── SECTION 3: COMPACT COLOR DROPDOWN (Saves 70% space!) ── */}
-        <div className="flex items-center border-r border-neutral-700/80 pr-2">
+        <div className={`flex items-center border-r pr-2 ${dividerClass}`}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
-                className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-750 border border-neutral-700 text-xs font-medium text-white transition"
+                className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-medium transition ${buttonPillClass}`}
               >
                 <div
-                  className="w-3.5 h-3.5 rounded-full border border-white/20 shadow-sm"
+                  className={`w-3.5 h-3.5 rounded-full border shadow-sm ${isLight ? "border-slate-300" : "border-white/20"}`}
                   style={{
                     backgroundColor:
                       isComponent && !soleLayer?.customColor
@@ -539,15 +580,15 @@ export const SelectionTools = memo(
                   }}
                 />
                 <span className="hidden sm:inline">Color</span>
-                <ChevronDown className="w-3 h-3 text-neutral-400" />
+                <ChevronDown className={`w-3 h-3 ${isLight ? "text-slate-400" : "text-neutral-400"}`} />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="center"
               side={shouldFlipBelow ? "bottom" : "top"}
-              className="bg-neutral-900 border border-neutral-750 text-white rounded-xl shadow-2xl p-2 z-50 min-w-[160px]"
+              className={`rounded-xl p-2 z-50 min-w-[160px] border ${dropdownMenuContentClass}`}
             >
-              <div className="text-[10px] text-neutral-400 font-semibold uppercase px-1 mb-1.5">
+              <div className={`text-[10px] font-semibold uppercase px-1 mb-1.5 ${isLight ? "text-slate-400" : "text-neutral-400"}`}>
                 Palette
               </div>
               <div className="grid grid-cols-4 gap-1.5 p-1">
@@ -556,7 +597,9 @@ export const SelectionTools = memo(
                     <button
                       onClick={() => setFill(swatch.color)}
                       style={{ backgroundColor: swatch.hex }}
-                      className="w-6 h-6 rounded-full border border-white/20 hover:scale-115 transition-transform focus:outline-none shadow-sm"
+                      className={`w-6 h-6 rounded-full border hover:scale-115 transition-transform focus:outline-none shadow-sm ${
+                        isLight ? "border-slate-300" : "border-white/20"
+                      }`}
                     />
                   </Hint>
                 ))}
@@ -566,7 +609,11 @@ export const SelectionTools = memo(
               {isComponent && (
                 <button
                   onClick={resetComponentColor}
-                  className="w-full mt-1.5 pt-1.5 border-t border-neutral-800 flex items-center justify-center gap-1.5 py-1 text-[11px] text-neutral-400 hover:text-white rounded hover:bg-neutral-800 transition"
+                  className={`w-full mt-1.5 pt-1.5 border-t flex items-center justify-center gap-1.5 py-1 text-[11px] rounded transition ${
+                    isLight
+                      ? "border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+                      : "border-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-800"
+                  }`}
                 >
                   <RotateCcw className="w-3 h-3" />
                   <span>Reset to Original</span>
@@ -582,7 +629,7 @@ export const SelectionTools = memo(
             <Hint label="Select Connected Architecture">
               <button
                 onClick={onSelectConnected}
-                className="p-1 rounded-lg text-neutral-300 hover:text-white hover:bg-neutral-800 transition"
+                className={`p-1 rounded-lg transition ${actionButtonClass}`}
               >
                 <Network className="w-3.5 h-3.5" />
               </button>
@@ -594,7 +641,7 @@ export const SelectionTools = memo(
               <Hint label="Align Center Horizontally">
                 <button
                   onClick={alignHorizontal}
-                  className="p-1 rounded-lg text-neutral-300 hover:text-white hover:bg-neutral-800 transition"
+                  className={`p-1 rounded-lg transition ${actionButtonClass}`}
                 >
                   <AlignCenterHorizontal className="w-3.5 h-3.5" />
                 </button>
@@ -602,7 +649,7 @@ export const SelectionTools = memo(
               <Hint label="Align Center Vertically">
                 <button
                   onClick={alignVertical}
-                  className="p-1 rounded-lg text-neutral-300 hover:text-white hover:bg-neutral-800 transition"
+                  className={`p-1 rounded-lg transition ${actionButtonClass}`}
                 >
                   <AlignCenterVertical className="w-3.5 h-3.5" />
                 </button>
@@ -614,7 +661,7 @@ export const SelectionTools = memo(
             <Hint label="Duplicate (Cmd+D)">
               <button
                 onClick={onDuplicate}
-                className="p-1 rounded-lg text-neutral-300 hover:text-white hover:bg-neutral-800 transition"
+                className={`p-1 rounded-lg transition ${actionButtonClass}`}
               >
                 <Copy className="w-3.5 h-3.5" />
               </button>
@@ -624,7 +671,7 @@ export const SelectionTools = memo(
           <Hint label="Send to Back">
             <button
               onClick={moveToBack}
-              className="p-1 rounded-lg text-neutral-300 hover:text-white hover:bg-neutral-800 transition"
+              className={`p-1 rounded-lg transition ${actionButtonClass}`}
             >
               <SendToBack className="w-3.5 h-3.5" />
             </button>
@@ -633,18 +680,22 @@ export const SelectionTools = memo(
           <Hint label="Bring to Front">
             <button
               onClick={moveToFront}
-              className="p-1 rounded-lg text-neutral-300 hover:text-white hover:bg-neutral-800 transition"
+              className={`p-1 rounded-lg transition ${actionButtonClass}`}
             >
               <BringToFront className="w-3.5 h-3.5" />
             </button>
           </Hint>
 
-          <div className="h-3 w-px bg-neutral-700/80 mx-0.5" />
+          <div className={`h-3 w-px mx-0.5 ${isLight ? "bg-slate-200" : "bg-neutral-700/80"}`} />
 
           <Hint label="Delete">
             <button
               onClick={deleteLayers}
-              className="p-1 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-950/60 transition"
+              className={`p-1 rounded-lg transition ${
+                isLight
+                  ? "text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                  : "text-rose-400 hover:text-rose-300 hover:bg-rose-950/60"
+              }`}
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>

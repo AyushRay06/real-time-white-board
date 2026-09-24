@@ -4,6 +4,8 @@ import React, { memo, useRef, useCallback, useState } from "react"
 import { useStorage } from "@liveblocks/react/suspense"
 import { Camera, LayerType } from "@/types/canvas"
 import { Map, ChevronDown, ChevronUp } from "lucide-react"
+import { useCanvasTheme } from "./canvas-theme-context"
+import { cn } from "@/lib/utils"
 
 interface MinimapProps {
   camera: Camera
@@ -15,6 +17,7 @@ const MAP_HEIGHT = 140
 const PADDING = 180
 
 export const Minimap = memo(({ camera, setCamera }: MinimapProps) => {
+  const { theme } = useCanvasTheme()
   const layerIds = useStorage((root) => root.layerIds)
   const layers = useStorage((root) => root.layers)
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -136,19 +139,43 @@ export const Minimap = memo(({ camera, setCamera }: MinimapProps) => {
 
   return (
     <div className="absolute bottom-5 right-5 z-40 select-none">
-      <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-neutral-200/80 overflow-hidden transition-all duration-200 hover:shadow-2xl">
+      <div
+        className={cn(
+          "backdrop-blur-md rounded-2xl shadow-xl overflow-hidden transition-all duration-200 hover:shadow-2xl border",
+          theme === "dark"
+            ? "bg-slate-900/95 border-slate-800 text-white"
+            : "bg-white/90 border-neutral-200/80 text-neutral-800"
+        )}
+      >
         {/* Header bar */}
-        <div className="flex items-center justify-between px-3 py-1.5 bg-neutral-50/80 border-b border-neutral-100 text-[11px] font-semibold text-neutral-600">
+        <div
+          className={cn(
+            "flex items-center justify-between px-3 py-1.5 border-b text-[11px] font-semibold",
+            theme === "dark"
+              ? "bg-slate-950/80 border-slate-800 text-slate-200"
+              : "bg-neutral-50/80 border-neutral-100 text-neutral-600"
+          )}
+        >
           <div className="flex items-center gap-1.5">
-            <Map className="w-3.5 h-3.5 text-indigo-600" />
+            <Map className="w-3.5 h-3.5 text-indigo-500" />
             <span>Navigator</span>
-            <span className="text-[10px] text-neutral-400 font-normal">
+            <span
+              className={cn(
+                "text-[10px] font-normal",
+                theme === "dark" ? "text-slate-400" : "text-neutral-400"
+              )}
+            >
               ({layerIds.length} items)
             </span>
           </div>
           <button
             onClick={() => setIsCollapsed((v) => !v)}
-            className="p-0.5 hover:bg-neutral-200/60 rounded text-neutral-500 hover:text-neutral-800 transition"
+            className={cn(
+              "p-0.5 rounded transition",
+              theme === "dark"
+                ? "hover:bg-slate-800 text-slate-400 hover:text-white"
+                : "hover:bg-neutral-200/60 text-neutral-500 hover:text-neutral-800"
+            )}
             title={isCollapsed ? "Expand Navigator (M)" : "Collapse Navigator (M)"}
           >
             {isCollapsed ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -157,12 +184,15 @@ export const Minimap = memo(({ camera, setCamera }: MinimapProps) => {
 
         {/* Miniature SVG Canvas */}
         {!isCollapsed && (
-          <div className="relative p-1 bg-neutral-900/5">
+          <div className={cn("relative p-1", theme === "dark" ? "bg-slate-950" : "bg-neutral-900/5")}>
             <svg
               ref={svgRef}
               width={MAP_WIDTH}
               height={MAP_HEIGHT}
-              className="cursor-crosshair bg-neutral-50 rounded-xl overflow-hidden block"
+              className={cn(
+                "cursor-crosshair rounded-xl overflow-hidden block",
+                theme === "dark" ? "bg-[#090d16]" : "bg-neutral-50"
+              )}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
@@ -170,7 +200,12 @@ export const Minimap = memo(({ camera, setCamera }: MinimapProps) => {
               {/* Subtle background grid */}
               <defs>
                 <pattern id="mini-grid" width="14" height="14" patternUnits="userSpaceOnUse">
-                  <circle cx="7" cy="7" r="0.8" fill="#E5E7EB" />
+                  <circle
+                    cx="7"
+                    cy="7"
+                    r="0.8"
+                    fill={theme === "dark" ? "#1e293b" : "#E5E7EB"}
+                  />
                 </pattern>
               </defs>
               <rect width="100%" height="100%" fill="url(#mini-grid)" />

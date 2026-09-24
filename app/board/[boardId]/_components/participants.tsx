@@ -4,16 +4,24 @@ import { useOthers, useSelf } from "@liveblocks/react/suspense"
 
 import { UserAvatar } from "./user-avater"
 import { connectionIdToColor } from "@/lib/utils"
+import { useCanvasTheme } from "./canvas-theme-context"
+import { cn } from "@/lib/utils"
 
 const MAX_SHOWN_USERS = 4
 
 export const Participants = () => {
   const users = useOthers()
   const currentUsers = useSelf()
+  const { theme } = useCanvasTheme()
   const hasMoreUsers = users.length > MAX_SHOWN_USERS
 
   return (
-    <div className="absolute h-12 top-2 right-2 bg-white rounded-md p-3 flex items-center shadow-md">
+    <div
+      className={cn(
+        "h-12 rounded-md p-3 flex items-center shadow-md transition-colors",
+        theme === "dark" ? "bg-slate-900 border border-slate-800 text-white" : "bg-white"
+      )}
+    >
       <div className="flex gap-x-2">
         {users.slice(0, MAX_SHOWN_USERS).map(({ connectionId, info }) => {
           return (

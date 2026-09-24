@@ -24,8 +24,11 @@ export const SelectionBox = memo(
         root.layers.get(soleLayerId)?.type !== LayerType.Path &&
         root.layers.get(soleLayerId)?.type !== LayerType.Arrow
     )
+    const isSoleArrow = useStorage((root) =>
+      soleLayerId ? root.layers.get(soleLayerId)?.type === LayerType.Arrow : false
+    )
     const bounds = useSelectionBounds()
-    if (!bounds) {
+    if (!bounds || isSoleArrow) {
       return null
     }
 

@@ -219,7 +219,50 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
       style={{ cursor: "pointer" }}
     >
       {/* Wide invisible hit area */}
-      <path d={pathD} fill="none" stroke="transparent" strokeWidth={18} />
+      <path d={pathD} fill="none" stroke="transparent" strokeWidth={24} />
+
+      {/* ── SELECTION HIGHLIGHT (Hugs arrow body with aura, contour & endpoints) ── */}
+      {selectionColor && (
+        <g className="pointer-events-none">
+          {/* Outer glowing aura */}
+          <path
+            d={pathD}
+            fill="none"
+            stroke={selectionColor}
+            strokeWidth={10}
+            strokeOpacity={0.22}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* Inner crisp selection contour */}
+          <path
+            d={pathD}
+            fill="none"
+            stroke={selectionColor}
+            strokeWidth={4.5}
+            strokeOpacity={0.65}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* Source & Destination Anchor Nodes */}
+          <circle
+            cx={fromPt.x}
+            cy={fromPt.y}
+            r={5}
+            fill="#ffffff"
+            stroke={selectionColor}
+            strokeWidth={2.5}
+          />
+          <circle
+            cx={toPt.x}
+            cy={toPt.y}
+            r={5}
+            fill="#ffffff"
+            stroke={selectionColor}
+            strokeWidth={2.5}
+          />
+        </g>
+      )}
 
       {/* Visible line / curve */}
       <path
@@ -230,9 +273,7 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeDasharray={
-          selectionColor
-            ? "6 3"
-            : layer.strokePattern === "dotted"
+          layer.strokePattern === "dotted"
             ? "3 4"
             : layer.strokePattern === "dashed"
             ? "7 5"
@@ -242,12 +283,25 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
 
       {/* Destination Arrowhead */}
       {layer.direction !== "none" && (
-        <polygon
-          points={arrowPts}
-          fill={stroke}
-          stroke={stroke}
-          strokeWidth={1}
-        />
+        <>
+          {selectionColor && (
+            <polygon
+              points={arrowPts}
+              fill="none"
+              stroke={selectionColor}
+              strokeWidth={5}
+              strokeLinejoin="round"
+              opacity={0.35}
+              className="pointer-events-none"
+            />
+          )}
+          <polygon
+            points={arrowPts}
+            fill={stroke}
+            stroke={stroke}
+            strokeWidth={1}
+          />
+        </>
       )}
 
       {/* Source Arrowhead for Bidirectional */}
