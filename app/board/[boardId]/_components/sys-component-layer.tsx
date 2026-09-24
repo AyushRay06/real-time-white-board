@@ -7,7 +7,7 @@ import {
   FolderGit2, FileText, Disc, Search, BarChart3, TrendingUp, Waves,
   Workflow, Lock, Key, Gauge, FileCode2, Eye
 } from "lucide-react"
-import { ComponentLayer, SysComponent, AnchorSide, Point } from "@/types/canvas"
+import { ComponentLayer, SysComponent, AnchorSide, Point, Color } from "@/types/canvas"
 import { useSimulation } from "./simulation-context"
 
 // ─── Anchor point geometry ────────────────────────────────────────────────────
@@ -188,7 +188,7 @@ export const COMPONENT_COLORS: Record<SysComponent, Theme> = {
   [SysComponent.DistributedTracing]: { bg: "#EFF6FF", badge: "#DBEAFE", icon: "#2563EB", text: "#1E40AF", border: "#93C5FD" },
 }
 
-const ICON_MAP: Record<SysComponent, React.ElementType> = {
+export const ICON_MAP: Record<SysComponent, React.ElementType> = {
   // Clients
   [SysComponent.WebClient]:          Monitor,
   [SysComponent.MobileClient]:       Smartphone,
@@ -277,6 +277,32 @@ interface SysComponentLayerProps {
 
 
 
+export function getComponentTheme(componentType: SysComponent, fill?: Color): Theme {
+  const defaultTheme = COMPONENT_COLORS[componentType] || {
+    bg: "#EFF6FF",
+    badge: "#DBEAFE",
+    icon: "#2563EB",
+    text: "#1E40AF",
+    border: "#93C5FD",
+  }
+
+  if (!fill) return defaultTheme
+
+  // If neutral black or pure white, use default component theme
+  if ((fill.r === 0 && fill.g === 0 && fill.b === 0) || (fill.r === 255 && fill.g === 255 && fill.b === 255)) {
+    return defaultTheme
+  }
+
+  const { r, g, b } = fill
+  return {
+    bg: `rgba(${r}, ${g}, ${b}, 0.09)`,
+    badge: `rgba(${r}, ${g}, ${b}, 0.18)`,
+    icon: `rgb(${r}, ${g}, ${b})`,
+    text: `rgb(${Math.max(0, Math.floor(r * 0.65))}, ${Math.max(0, Math.floor(g * 0.65))}, ${Math.max(0, Math.floor(b * 0.65))})`,
+    border: `rgba(${r}, ${g}, ${b}, 0.45)`,
+  }
+}
+
 export const SysComponentLayer = memo(function SysComponentLayer({
   id,
   layer,
@@ -288,7 +314,7 @@ export const SysComponentLayer = memo(function SysComponentLayer({
   onDoubleClick,
 }: SysComponentLayerProps) {
   const { x, y, width, height, componentType, value } = layer
-  const theme  = COMPONENT_COLORS[componentType] || { bg: "#EFF6FF", badge: "#DBEAFE", icon: "#2563EB", text: "#1E40AF", border: "#93C5FD" }
+  const theme  = getComponentTheme(componentType, layer.fill)
   const label  = value || COMPONENT_LABELS[componentType] || componentType
   const Icon   = ICON_MAP[componentType] || Box
 

@@ -6,6 +6,8 @@ import { ArrowLayer, AnchorSide, Point, ArrowStyle } from "@/types/canvas"
 import { getAnchorPoint } from "./sys-component-layer"
 import { useSimulation } from "./simulation-context"
 
+import { colorToCss } from "@/lib/utils"
+
 interface ArrowLayerProps {
   id: string
   layer: ArrowLayer
@@ -164,7 +166,7 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
   }
 
   const arrowPts = arrowheadPoints(toPt, layer.toAnchor)
-  const stroke   = selectionColor || "#6366f1"
+  const stroke   = selectionColor || (layer.fill ? colorToCss(layer.fill) : "#6366f1")
 
   // Label pill dimensions
   const labelText    = layer.value || ""
