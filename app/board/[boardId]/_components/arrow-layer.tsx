@@ -106,6 +106,7 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
 }: ArrowLayerProps) {
   const fromLayer = useStorage((root) => root.layers.get(layer.fromLayerId))
   const toLayer   = useStorage((root) => root.layers.get(layer.toLayerId))
+  const simContext = useSimulation()
 
   const [editing, setEditing] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -172,21 +173,52 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
   const pillH        = 22
   const charWidth    = 7
   const pillW        = Math.max(60, labelText.length * charWidth + pillPadX * 2)
-  let simContext: any = null
-  try {
-    simContext = useSimulation()
-  } catch {
-    // fallback if rendered outside provider
-  }
 
   const isSimulating = (simContext && simContext.simMode !== "idle") || layer.isAnimated
   const simMode = simContext?.simMode || (layer.isAnimated ? "playing" : "idle")
   const simSpeed = simContext?.simSpeed || 1
 
-  const baseDur = Math.max(0.6, 2.4 / simSpeed)
+  const arrowStage = simContext?.graph?.arrowStages?.[id] ?? 0
+  const totalStages = simContext?.graph?.totalStages || 1
+  const isHalted = Boolean(simContext?.graph?.haltedArrowIds?.has(id))
+  const isFailing = Boolean(simContext?.graph?.failingArrowIds?.has(id))
+
+  // Timing for Normal Mode (Causal Request Propagation)
+  const stageDur = Math.max(0.6, 1.4 / simSpeed)
+  const pauseDur = Math.max(0.2, 0.5 / simSpeed)
+  const totalDur = totalStages * stageDur + pauseDur
+
+  const pStartRaw = (arrowStage * stageDur) / totalDur
+  const pEndRaw = ((arrowStage + 1) * stageDur) / totalDur
+
+  const pStart = Math.max(0, Math.min(0.99, pStartRaw))
+  const pEnd = Math.max(pStart + 0.01, Math.min(1, pEndRaw))
+
+  const normalKeyPoints = pStart === 0 ? "0;1;1" : "0;0;1;1"
+  const normalKeyTimes =
+    pStart === 0
+      ? `0;${pEnd.toFixed(4)};1`
+      : `0;${pStart.toFixed(4)};${pEnd.toFixed(4)};1`
+
+  const normalOpacityValues = pStart === 0 ? "1;1;0;0" : "0;0;1;1;0;0"
+  const normalOpacityKeyTimes =
+    pStart === 0
+      ? `0;${Math.max(0, pEnd - 0.005).toFixed(4)};${pEnd.toFixed(4)};1`
+      : `0;${Math.max(0, pStart - 0.002).toFixed(4)};${Math.min(1, pStart + 0.004).toFixed(4)};${Math.max(0, pEnd - 0.004).toFixed(4)};${Math.min(1, pEnd + 0.002).toFixed(4)};1`
+
+  // Return ACK packet for bidirectional arrows in Normal Mode
+  const pMid = (pStart + pEnd) / 2
+  const ackKeyPoints = "1;1;0;0"
+  const ackKeyTimes = `0;${pMid.toFixed(4)};${pEnd.toFixed(4)};1`
+  const ackOpacityValues = "0;0;1;1;0;0"
+  const ackOpacityKeyTimes = `0;${Math.max(0, pMid - 0.002).toFixed(4)};${Math.min(1, pMid + 0.004).toFixed(4)};${Math.max(0, pEnd - 0.004).toFixed(4)};${Math.min(1, pEnd + 0.002).toFixed(4)};1`
+
+  // Continuous pipeline duration for Spike Mode
+  const spikeDur = Math.max(0.4, 0.9 / simSpeed)
+
   const packetColor =
     simMode === "chaos"
-      ? "#ef4444"
+      ? "#f43f5e"
       : simMode === "spike"
       ? "#f59e0b"
       : "#06b6d4" // electric cyan
@@ -201,32 +233,39 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
       <path d={pathD} fill="none" stroke="transparent" strokeWidth={18} />
 
       {/* Visible line / curve */}
-      {/* Visible line / curve */}
       <path
         d={pathD}
         fill="none"
-        stroke={stroke}
+        stroke={
+          isSimulating && simMode === "chaos" && isHalted
+            ? "#dc2626"
+            : stroke
+        }
         strokeWidth={2.5}
         strokeLinecap="round"
         strokeLinejoin="round"
         strokeDasharray={
           selectionColor
             ? "6 3"
+            : isSimulating && simMode === "chaos" && isHalted
+            ? "4 4"
             : layer.strokePattern === "dotted"
             ? "3 4"
             : layer.strokePattern === "dashed"
             ? "7 5"
             : undefined
         }
+        opacity={isSimulating && simMode === "chaos" && isHalted ? 0.45 : 1}
       />
 
       {/* Destination Arrowhead */}
       {layer.direction !== "none" && (
         <polygon
           points={arrowPts}
-          fill={stroke}
-          stroke={stroke}
+          fill={isSimulating && simMode === "chaos" && isHalted ? "#dc2626" : stroke}
+          stroke={isSimulating && simMode === "chaos" && isHalted ? "#dc2626" : stroke}
           strokeWidth={1}
+          opacity={isSimulating && simMode === "chaos" && isHalted ? 0.45 : 1}
         />
       )}
 
@@ -243,104 +282,248 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
               ? "bottom"
               : "top"
           )}
-          fill={stroke}
-          stroke={stroke}
+          fill={isSimulating && simMode === "chaos" && isHalted ? "#dc2626" : stroke}
+          stroke={isSimulating && simMode === "chaos" && isHalted ? "#dc2626" : stroke}
           strokeWidth={1}
+          opacity={isSimulating && simMode === "chaos" && isHalted ? 0.45 : 1}
         />
       )}
 
-      {/* ── Animated Traffic Packets & Energy Flow ── */}
-      {isSimulating && (
+      {/* ── Chaos Mode: Halted Indicator for Downstream Failure ── */}
+      {isSimulating && simMode === "chaos" && isHalted && (
         <g style={{ pointerEvents: "none" }}>
-          {/* Glowing Energy Flow Overlay */}
+          <rect
+            x={mid.x - 38}
+            y={mid.y - 10}
+            width={76}
+            height={20}
+            rx={10}
+            fill="#450a0a"
+            stroke="#ef4444"
+            strokeWidth={1}
+          />
+          <text
+            x={mid.x}
+            y={mid.y + 4}
+            textAnchor="middle"
+            fill="#fca5a5"
+            fontSize={9}
+            fontWeight={700}
+            fontFamily="ui-monospace, monospace"
+          >
+            ✕ STALLED
+          </text>
+        </g>
+      )}
+
+      {/* ── MODE 1: Normal Mode (Causal Sequential Request Propagation) ── */}
+      {isSimulating && simMode === "playing" && !isHalted && (
+        <g style={{ pointerEvents: "none" }}>
+          {/* Energy trace pulse active only during this arrow's hop stage */}
           <path
             d={pathD}
             fill="none"
-            stroke={packetColor}
+            stroke="#06b6d4"
             strokeWidth={3}
             strokeDasharray="8 12"
-            opacity={0.65}
             strokeLinecap="round"
           >
+            <animate
+              attributeName="opacity"
+              dur={`${totalDur}s`}
+              repeatCount="indefinite"
+              values={normalOpacityValues}
+              keyTimes={normalOpacityKeyTimes}
+            />
             <animate
               attributeName="stroke-dashoffset"
               from="40"
               to="0"
-              dur={`${Math.max(0.4, 1.2 / simSpeed)}s`}
+              dur={`${stageDur}s`}
               repeatCount="indefinite"
             />
           </path>
 
-          {/* Packet 1 Glow Ring */}
-          <circle r={8} fill="none" stroke={packetColor} strokeWidth={1.5} opacity={0.45}>
-            <animateMotion
-              dur={`${baseDur}s`}
+          {/* Sequential Packet with Synchronized Traveling Window */}
+          <g>
+            <animate
+              attributeName="opacity"
+              dur={`${totalDur}s`}
               repeatCount="indefinite"
-              path={pathD}
-              rotate="auto"
+              values={normalOpacityValues}
+              keyTimes={normalOpacityKeyTimes}
             />
-          </circle>
 
-          {/* Packet 1 Core */}
-          <circle r={4.5} fill={packetColor} opacity={0.95}>
-            <animateMotion
-              dur={`${baseDur}s`}
-              repeatCount="indefinite"
-              path={pathD}
-              rotate="auto"
-            />
-          </circle>
-
-          {/* Packet 2: Offset by 50% */}
-          <circle r={3.5} fill={packetColor} opacity={0.85}>
-            <animateMotion
-              dur={`${baseDur}s`}
-              begin={`${baseDur * 0.5}s`}
-              repeatCount="indefinite"
-              path={pathD}
-              rotate="auto"
-            />
-          </circle>
-
-          {/* Spike Mode: Extra rapid burst packet */}
-          {simMode === "spike" && (
-            <circle r={5} fill="#f97316" opacity={0.95}>
+            {/* Glowing Packet Aura */}
+            <circle r={8} fill="none" stroke="#06b6d4" strokeWidth={1.5} opacity={0.5}>
               <animateMotion
-                dur={`${baseDur * 0.65}s`}
-                begin={`${baseDur * 0.25}s`}
+                dur={`${totalDur}s`}
                 repeatCount="indefinite"
                 path={pathD}
                 rotate="auto"
+                keyPoints={normalKeyPoints}
+                keyTimes={normalKeyTimes}
+                calcMode="linear"
               />
             </circle>
-          )}
 
-          {/* Chaos Mode: Error alert burst */}
-          {simMode === "chaos" && (
-            <circle r={4} fill="#dc2626" opacity={0.95}>
+            {/* Solid Packet Core */}
+            <circle r={4.5} fill="#06b6d4" opacity={0.95}>
               <animateMotion
-                dur={`${baseDur * 0.8}s`}
-                begin={`${baseDur * 0.7}s`}
+                dur={`${totalDur}s`}
                 repeatCount="indefinite"
                 path={pathD}
                 rotate="auto"
+                keyPoints={normalKeyPoints}
+                keyTimes={normalKeyTimes}
+                calcMode="linear"
               />
             </circle>
-          )}
+          </g>
 
-          {/* Bidirectional: Return ACK packet flowing in reverse */}
+          {/* Bidirectional Response ACK Traveling Back */}
           {layer.direction === "bidirectional" && (
-            <circle r={3.5} fill="#10b981" opacity={0.9}>
+            <g>
+              <animate
+                attributeName="opacity"
+                dur={`${totalDur}s`}
+                repeatCount="indefinite"
+                values={ackOpacityValues}
+                keyTimes={ackOpacityKeyTimes}
+              />
+              <circle r={4} fill="#10b981" opacity={0.95}>
+                <animateMotion
+                  dur={`${totalDur}s`}
+                  repeatCount="indefinite"
+                  path={pathD}
+                  rotate="auto"
+                  keyPoints={ackKeyPoints}
+                  keyTimes={ackKeyTimes}
+                  calcMode="linear"
+                />
+              </circle>
+            </g>
+          )}
+        </g>
+      )}
+
+      {/* ── MODE 2: Spike Mode (High-Concurrency Pipelining Surge) ── */}
+      {isSimulating && simMode === "spike" && !isHalted && (
+        <g style={{ pointerEvents: "none" }}>
+          <path
+            d={pathD}
+            fill="none"
+            stroke="#f59e0b"
+            strokeWidth={3.5}
+            strokeDasharray="6 8"
+            opacity={0.8}
+            strokeLinecap="round"
+          >
+            <animate
+              attributeName="stroke-dashoffset"
+              from="28"
+              to="0"
+              dur={`${spikeDur * 0.6}s`}
+              repeatCount="indefinite"
+            />
+          </path>
+
+          {/* Packet 1 */}
+          <circle r={5} fill="#f59e0b" opacity={0.95}>
+            <animateMotion
+              dur={`${spikeDur}s`}
+              repeatCount="indefinite"
+              path={pathD}
+              rotate="auto"
+            />
+          </circle>
+
+          {/* Packet 2: Offset 33% */}
+          <circle r={4.5} fill="#fbbf24" opacity={0.9}>
+            <animateMotion
+              dur={`${spikeDur}s`}
+              begin={`${spikeDur * 0.33}s`}
+              repeatCount="indefinite"
+              path={pathD}
+              rotate="auto"
+            />
+          </circle>
+
+          {/* Packet 3: Offset 66% */}
+          <circle r={4} fill="#f97316" opacity={0.95}>
+            <animateMotion
+              dur={`${spikeDur}s`}
+              begin={`${spikeDur * 0.66}s`}
+              repeatCount="indefinite"
+              path={pathD}
+              rotate="auto"
+            />
+          </circle>
+        </g>
+      )}
+
+      {/* ── MODE 3: Chaos Mode (Fault Propagation & Packet Drop) ── */}
+      {isSimulating && simMode === "chaos" && !isHalted && (
+        <g style={{ pointerEvents: "none" }}>
+          <path
+            d={pathD}
+            fill="none"
+            stroke="#f43f5e"
+            strokeWidth={3}
+            strokeDasharray="8 10"
+            opacity={0.7}
+            strokeLinecap="round"
+          >
+            <animate
+              attributeName="opacity"
+              dur={`${totalDur}s`}
+              repeatCount="indefinite"
+              values={normalOpacityValues}
+              keyTimes={normalOpacityKeyTimes}
+            />
+          </path>
+
+          {/* Packet traveling toward node */}
+          <g>
+            <animate
+              attributeName="opacity"
+              dur={`${totalDur}s`}
+              repeatCount="indefinite"
+              values={normalOpacityValues}
+              keyTimes={normalOpacityKeyTimes}
+            />
+            <circle r={5} fill="#ef4444" opacity={0.95}>
               <animateMotion
-                dur={`${baseDur * 1.1}s`}
-                begin={`${baseDur * 0.35}s`}
-                keyPoints="1;0"
-                keyTimes="0;1"
+                dur={`${totalDur}s`}
                 repeatCount="indefinite"
                 path={pathD}
                 rotate="auto"
+                keyPoints={normalKeyPoints}
+                keyTimes={normalKeyTimes}
+                calcMode="linear"
               />
             </circle>
+          </g>
+
+          {/* If destination is a failing node, show error drop explosion at target point */}
+          {isFailing && (
+            <g>
+              <circle cx={toPt.x} cy={toPt.y} r={16} fill="none" stroke="#ef4444" strokeWidth={2}>
+                <animate
+                  attributeName="r"
+                  values="4;24"
+                  dur={`${totalDur}s`}
+                  repeatCount="indefinite"
+                />
+                <animate
+                  attributeName="opacity"
+                  values={normalOpacityValues}
+                  keyTimes={normalOpacityKeyTimes}
+                  dur={`${totalDur}s`}
+                  repeatCount="indefinite"
+                />
+              </circle>
+            </g>
           )}
         </g>
       )}

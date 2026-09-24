@@ -7,18 +7,17 @@ import {
   Zap,
   Activity,
   AlertTriangle,
-  Flame,
-  Volume2,
-  VolumeX,
-  Compass,
+  ChevronRight,
+  ChevronLeft,
   Gauge,
-  Sparkles,
+  Compass,
+  CheckCircle2,
+  RefreshCw,
 } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import { Hint } from "@/components/hint"
 import { useSimulation } from "./simulation-context"
-import { SimulationMode, SimulationSpeed, LayerType } from "@/types/canvas"
-import { useStorage, useMutation } from "@liveblocks/react/suspense"
+import { SimulationSpeed, LayerType, ComponentLayer } from "@/types/canvas"
+import { useMutation, useStorage } from "@liveblocks/react/suspense"
 
 interface ArchitectureSimulatorProps {
   onStartTour: () => void
@@ -34,15 +33,18 @@ export const ArchitectureSimulator = memo(function ArchitectureSimulator({
     setSimSpeed,
     showMetrics,
     setShowMetrics,
-    soundEnabled,
-    setSoundEnabled,
+    graph,
+    activeStage,
+    activeHop,
+    stepForward,
+    stepBackward,
     isTourActive,
   } = useSimulation()
 
-  const layerIds = useStorage((root) => root.layerIds)
   const isPlaying = simMode !== "idle"
+  const layers = useStorage((root) => root.layers)
 
-  // Quick toggle play / pause
+  // Toggle play / pause
   const togglePlay = useCallback(() => {
     if (isPlaying) {
       setSimMode("idle")
@@ -56,43 +58,52 @@ export const ArchitectureSimulator = memo(function ArchitectureSimulator({
     setSimSpeed((simSpeed === 0.5 ? 1 : simSpeed === 1 ? 2 : 0.5) as SimulationSpeed)
   }, [simSpeed, setSimSpeed])
 
-  // Chaos Injection: pick a component and mark it with "error" status
-  const injectChaos = useMutation(({ storage }) => {
+  // Fault Injection: toggles outage on a candidate node
+  const toggleFault = useMutation(({ storage }) => {
     const liveLayers = storage.get("layers")
     const liveLayerIds = storage.get("layerIds")
 
-    // Find candidate components (servers, databases, services)
     const candidateIds: string[] = []
+    let failedId: string | null = null
+
     liveLayerIds.forEach((id) => {
-      const l = liveLayers.get(id)
+      const l = liveLayers.get(id) as any
       if (l && l.get("type") === LayerType.Component) {
         candidateIds.push(id)
+        if (l.get("status") === "error") {
+          failedId = id
+        }
       }
     })
 
     if (candidateIds.length === 0) return
 
-    // Pick a random component to fail
-    const targetId = candidateIds[Math.floor(Math.random() * candidateIds.length)]
-    const target = liveLayers.get(targetId) as any
-    if (target) {
-      const currentStatus = target.get("status") as string | undefined
-      if (currentStatus === "error") {
+    // If a node is already failed, recover it
+    if (failedId) {
+      const target = liveLayers.get(failedId) as any
+      if (target) {
         target.set("status", "healthy")
         target.set("statusText", "HEALTHY")
-      } else {
+      }
+    } else {
+      // Pick a downstream component (DB, Server, etc.) or random
+      const targetId = candidateIds[candidateIds.length > 2 ? 2 : candidateIds.length - 1]
+      const target = liveLayers.get(targetId) as any
+      if (target) {
         target.set("status", "error")
         target.set("statusText", "OUTAGE")
       }
+      setSimMode("chaos")
     }
-
-    setSimMode("chaos")
   }, [setSimMode])
 
+  const hasFailedNode = graph.failedNodeIds.size > 0
+  const totalStages = graph.totalStages || 1
+
   return (
-    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 bg-neutral-900/90 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-2xl border border-neutral-700/60 select-none text-white transition-all hover:bg-neutral-900/95">
-      {/* Play / Pause Simulator */}
-      <Hint label={isPlaying ? "Pause Flow Simulator" : "Play Live Architecture Flow (▶)"}>
+    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 bg-neutral-900/95 backdrop-blur-md px-3.5 py-1.5 rounded-2xl shadow-2xl border border-neutral-700/60 select-none text-white transition-all">
+      {/* ── Play / Pause Primary Action ── */}
+      <Hint label={isPlaying ? "Pause Flow Simulator" : "Play Sequential Request Flow (▶)"}>
         <button
           onClick={togglePlay}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold text-xs transition-all shadow-sm ${
@@ -115,52 +126,52 @@ export const ArchitectureSimulator = memo(function ArchitectureSimulator({
         </button>
       </Hint>
 
-      {/* Mode Selectors */}
+      {/* ── Mode Switcher with Distinct Production Utilities ── */}
       <div className="flex items-center bg-neutral-800/80 p-0.5 rounded-xl border border-neutral-700/50">
-        <Hint label="Standard Traffic Flow">
+        <Hint label="Trace Mode: Causal, hop-by-hop single request lifecycle">
           <button
             onClick={() => setSimMode("playing")}
-            className={`px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-all ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
               simMode === "playing"
-                ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/40"
+                ? "bg-cyan-500/25 text-cyan-300 border border-cyan-500/50 shadow-sm"
                 : "text-neutral-400 hover:text-white"
             }`}
           >
-            <Activity className="w-3 h-3" />
-            <span className="hidden sm:inline">Normal</span>
+            <Activity className="w-3.5 h-3.5" />
+            <span>Trace</span>
           </button>
         </Hint>
 
-        <Hint label="High Traffic Spike">
+        <Hint label="Spike Mode: High-concurrency pipelined traffic & buffer surge">
           <button
             onClick={() => setSimMode("spike")}
-            className={`px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-all ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
               simMode === "spike"
-                ? "bg-amber-500/20 text-amber-400 border border-amber-500/40"
+                ? "bg-amber-500/25 text-amber-300 border border-amber-500/50 shadow-sm"
                 : "text-neutral-400 hover:text-white"
             }`}
           >
-            <Zap className="w-3 h-3" />
-            <span className="hidden sm:inline">Spike</span>
+            <Zap className="w-3.5 h-3.5" />
+            <span>Spike</span>
           </button>
         </Hint>
 
-        <Hint label="Chaos / Fault Injection Test">
+        <Hint label="Chaos Mode: Fault injection, packet drop & cascading outage test">
           <button
             onClick={() => setSimMode("chaos")}
-            className={`px-2 py-1 rounded-lg text-xs font-medium flex items-center gap-1 transition-all ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all ${
               simMode === "chaos"
-                ? "bg-rose-500/20 text-rose-400 border border-rose-500/40"
+                ? "bg-rose-500/25 text-rose-300 border border-rose-500/50 shadow-sm"
                 : "text-neutral-400 hover:text-white"
             }`}
           >
-            <Flame className="w-3 h-3" />
-            <span className="hidden sm:inline">Chaos</span>
+            <AlertTriangle className="w-3.5 h-3.5" />
+            <span>Chaos</span>
           </button>
         </Hint>
       </div>
 
-      {/* Speed Cycler */}
+      {/* ── Speed Cycler ── */}
       <Hint label={`Playback Speed: ${simSpeed}x (Click to cycle)`}>
         <button
           onClick={cycleSpeed}
@@ -170,9 +181,82 @@ export const ArchitectureSimulator = memo(function ArchitectureSimulator({
         </button>
       </Hint>
 
-      <div className="h-4 w-px bg-neutral-700 mx-0.5" />
+      <div className="h-4 w-px bg-neutral-700/80 mx-0.5" />
 
-      {/* Telemetry Metrics HUD Toggle */}
+      {/* ── Live Causal Pipeline Stage Breadcrumb ── */}
+      <div className="flex items-center gap-1.5 px-2.5 py-1 bg-neutral-950/60 rounded-xl border border-neutral-800 text-xs">
+        {simMode === "playing" && (
+          <>
+            <div className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+            {activeHop ? (
+              <span className="font-mono text-cyan-300 font-medium truncate max-w-[200px] sm:max-w-[280px]">
+                Hop {activeStage + 1}/{totalStages}: {activeHop.label}
+              </span>
+            ) : (
+              <span className="text-neutral-400">Connect components to trace</span>
+            )}
+            {/* Step navigation buttons */}
+            <div className="flex items-center ml-1 gap-0.5">
+              <Hint label="Previous Hop">
+                <button
+                  onClick={stepBackward}
+                  className="p-0.5 text-neutral-400 hover:text-white rounded hover:bg-neutral-800 transition"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+              </Hint>
+              <Hint label="Next Hop">
+                <button
+                  onClick={stepForward}
+                  className="p-0.5 text-neutral-400 hover:text-white rounded hover:bg-neutral-800 transition"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </Hint>
+            </div>
+          </>
+        )}
+
+        {simMode === "spike" && (
+          <>
+            <div className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+            <span className="font-mono text-amber-300 font-medium">
+              Surge: {Math.round(48000 * simSpeed).toLocaleString()} req/s · Pipelined
+            </span>
+          </>
+        )}
+
+        {simMode === "chaos" && (
+          <>
+            <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+            {hasFailedNode ? (
+              <span className="font-mono text-rose-300 font-medium">
+                Fault Injected: Packet Dropped · Branch Stalled
+              </span>
+            ) : (
+              <span className="font-mono text-neutral-300 font-medium">
+                Resilience Test Ready
+              </span>
+            )}
+            <button
+              onClick={toggleFault}
+              className="ml-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-rose-950/80 hover:bg-rose-900 text-rose-300 border border-rose-800/60 transition"
+            >
+              {hasFailedNode ? "Recover Node" : "Inject Outage"}
+            </button>
+          </>
+        )}
+
+        {simMode === "idle" && (
+          <span className="text-neutral-400 font-mono text-[11px]">
+            Ready to simulate architecture
+          </span>
+        )}
+      </div>
+
+      <div className="h-4 w-px bg-neutral-700/80 mx-0.5" />
+
+      {/* ── Live Telemetry Metrics HUD Toggle ── */}
       <Hint label={`Live Telemetry Metrics: ${showMetrics ? "ON" : "OFF"}`}>
         <button
           onClick={() => setShowMetrics((v) => !v)}
@@ -186,8 +270,8 @@ export const ArchitectureSimulator = memo(function ArchitectureSimulator({
         </button>
       </Hint>
 
-      {/* Architecture Tour / Presentation Mode */}
-      <Hint label="Step-by-Step Architecture Presentation / Tour">
+      {/* ── Step-by-Step Architecture Tour Mode ── */}
+      <Hint label="Architecture Presentation Tour">
         <button
           onClick={onStartTour}
           className={`p-1.5 rounded-xl text-xs font-medium transition-all ${
@@ -197,30 +281,6 @@ export const ArchitectureSimulator = memo(function ArchitectureSimulator({
           }`}
         >
           <Compass className="w-4 h-4" />
-        </button>
-      </Hint>
-
-      {/* Chaos Monkey Outage Trigger */}
-      <Hint label="Chaos Monkey: Inject Outage into random server">
-        <button
-          onClick={injectChaos}
-          className="p-1.5 rounded-xl text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 border border-rose-900/40 transition-all"
-        >
-          <AlertTriangle className="w-4 h-4" />
-        </button>
-      </Hint>
-
-      {/* SFX Audio Toggle */}
-      <Hint label={`Sound Effects: ${soundEnabled ? "ON" : "OFF"}`}>
-        <button
-          onClick={() => setSoundEnabled((v) => !v)}
-          className={`p-1.5 rounded-xl text-xs transition-all ${
-            soundEnabled
-              ? "text-neutral-300 hover:text-white hover:bg-neutral-800"
-              : "text-neutral-600 hover:text-neutral-400"
-          }`}
-        >
-          {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
         </button>
       </Hint>
     </div>

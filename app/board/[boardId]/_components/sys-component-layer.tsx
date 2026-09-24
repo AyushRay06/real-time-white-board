@@ -275,10 +275,50 @@ interface SysComponentLayerProps {
   onDoubleClick?: (layerId: string) => void
 }
 
-function getComponentTelemetry(compType: SysComponent, status?: string): { metric1: string; metric2: string } {
+function getComponentTelemetry(
+  compType: SysComponent,
+  status?: string,
+  simMode?: string
+): { metric1: string; metric2: string } {
   if (status === "error") {
-    return { metric1: "ERR: Outage", metric2: "0 req/s · 100% fail" }
+    return { metric1: "ERR 500: OUTAGE", metric2: "0 req/s · Packet Dropped" }
   }
+
+  // High traffic surge metrics in Spike mode
+  if (simMode === "spike") {
+    switch (compType) {
+      case SysComponent.WebClient:
+      case SysComponent.MobileClient:
+      case SysComponent.DesktopClient:
+      case SysComponent.IoTDevice:
+        return { metric1: "84.2k Users (Surge)", metric2: "Latency: 142ms · +320%" }
+      case SysComponent.LoadBalancer:
+      case SysComponent.APIGateway:
+      case SysComponent.ReverseProxy:
+        return { metric1: "158.4k QPS", metric2: "p99: 46ms · Queue 82%" }
+      case SysComponent.DNS:
+      case SysComponent.CDN:
+        return { metric1: "Edge Hit: 92.1%", metric2: "Bandwidth: 14.8 Gbps" }
+      case SysComponent.Server:
+      case SysComponent.Microservice:
+      case SysComponent.Kubernetes:
+      case SysComponent.Docker:
+        return { metric1: "CPU: 89% · RAM: 84%", metric2: "Auto-Scaling +6 Pods" }
+      case SysComponent.Database:
+      case SysComponent.PrimaryDB:
+      case SysComponent.ReplicaDB:
+      case SysComponent.ShardedDB:
+      case SysComponent.DistributedSQL:
+        return { metric1: "9.2k TPS · IOPS 14.5k", metric2: "Conn Pool: 96/100" }
+      case SysComponent.Cache:
+      case SysComponent.DistributedCache:
+        return { metric1: "Hit Rate: 86.4%", metric2: "Eviction: 680/s · High" }
+      default:
+        return { metric1: "High Load (4x)", metric2: "Throughput: 94.2k req/s" }
+    }
+  }
+
+  // Normal / Baseline healthy metrics
   switch (compType) {
     case SysComponent.WebClient:
     case SysComponent.MobileClient:
@@ -361,15 +401,19 @@ export const SysComponentLayer = memo(function SysComponentLayer({
     }
   }
 
-  let simContext: any = null
-  try {
-    simContext = useSimulation()
-  } catch {}
+  const simContext = useSimulation()
 
   const isSimulating = Boolean(simContext && simContext.simMode !== "idle")
+  const simMode = simContext?.simMode || "idle"
   const showMetrics = Boolean(simContext?.showMetrics)
   const isFocused = Boolean(simContext?.isTourActive && simContext?.focusedLayerId === id)
-  const telemetry = showMetrics ? getComponentTelemetry(layer.componentType, layer.status) : null
+  const telemetry = showMetrics ? getComponentTelemetry(layer.componentType, layer.status, simMode) : null
+
+  const nodeStage = simContext?.graph?.nodeStages?.[id]
+  const isActiveHopNode =
+    simMode === "playing" &&
+    (nodeStage === simContext?.activeStage || nodeStage === (simContext?.activeStage ?? -99) + 1)
+  const isFailedNode = layer.status === "error"
 
   return (
     <g
@@ -545,25 +589,32 @@ export const SysComponentLayer = memo(function SysComponentLayer({
       )}
 
       {/* ── Simulation Processing Energy Halo ── */}
-      {isSimulating && (
+      {isSimulating && (isFailedNode || simMode === "spike" || isActiveHopNode) && (
         <rect
-          x={x - 3}
-          y={y - 3}
-          width={width + 6}
-          height={height + 6}
-          rx={14}
+          x={x - 4}
+          y={y - 4}
+          width={width + 8}
+          height={height + 8}
+          rx={15}
           fill="none"
           stroke={
-            layer.status === "error"
+            isFailedNode
               ? "#ef4444"
-              : simContext?.simMode === "spike"
+              : simMode === "spike"
               ? "#f59e0b"
               : "#06b6d4"
           }
-          strokeWidth={1.5}
-          opacity={0.65}
+          strokeWidth={isFailedNode ? 2.5 : 2}
+          opacity={0.8}
           className="animate-pulse"
-          style={{ pointerEvents: "none" }}
+          style={{
+            filter: isFailedNode
+              ? "drop-shadow(0 0 8px rgba(239,68,68,0.7))"
+              : simMode === "spike"
+              ? "drop-shadow(0 0 6px rgba(245,158,11,0.5))"
+              : "drop-shadow(0 0 8px rgba(6,182,212,0.6))",
+            pointerEvents: "none",
+          }}
         />
       )}
 

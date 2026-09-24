@@ -1,8 +1,22 @@
 "use client"
 
-import React, { createContext, useContext, useState, useCallback, useMemo } from "react"
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useMemo,
+  useEffect,
+  useRef,
+} from "react"
+import { useStorage } from "@liveblocks/react/suspense"
 import { SimulationMode, SimulationSpeed } from "@/types/canvas"
 import { sfx } from "@/lib/sfx"
+import {
+  analyzeArchitectureGraph,
+  ArchitectureGraphAnalysis,
+  StageDescription,
+} from "./architecture-graph"
 
 interface SimulationContextType {
   simMode: SimulationMode
@@ -13,6 +27,16 @@ interface SimulationContextType {
   setShowMetrics: (v: boolean | ((prev: boolean) => boolean)) => void
   soundEnabled: boolean
   setSoundEnabled: (v: boolean | ((prev: boolean) => boolean)) => void
+
+  // Architecture Graph & Causal Flow
+  graph: ArchitectureGraphAnalysis
+  activeStage: number
+  stageProgress: number
+  activeHop: StageDescription | null
+  stepForward: () => void
+  stepBackward: () => void
+
+  // Tour / Presentation Mode
   isTourActive: boolean
   tourStepIndex: number
   tourSteps: string[]
@@ -33,15 +57,35 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
   const [showMetrics, setShowMetrics] = useState<boolean>(false)
   const [soundEnabled, setSoundEnabledState] = useState<boolean>(true)
 
+  // Live storage of layers to build the DAG
+  const layers = useStorage((root) => root.layers)
+
+  // Compute topological architecture graph
+  const graph = useMemo(() => {
+    return analyzeArchitectureGraph(layers || new Map())
+  }, [layers])
+
+  // Active causal stage index and progress
+  const [activeStage, setActiveStage] = useState<number>(0)
+  const [stageProgress, setStageProgress] = useState<number>(0)
+
   // Tour mode state
   const [isTourActive, setIsTourActive] = useState(false)
   const [tourSteps, setTourSteps] = useState<string[]>([])
   const [tourStepIndex, setTourStepIndex] = useState(0)
   const [isTourAutoPlaying, setIsTourAutoPlaying] = useState(false)
 
+  const activeStageRef = useRef(0)
+  activeStageRef.current = activeStage
+
+  // Sound effects & state changes on mode switch
   const setSimMode = useCallback((mode: SimulationMode) => {
     setSimModeState(mode)
-    if (mode === "playing" || mode === "spike") {
+    if (mode === "playing") {
+      sfx.playSimulateStart()
+      setActiveStage(0)
+      setStageProgress(0)
+    } else if (mode === "spike") {
       sfx.playSimulateStart()
     } else if (mode === "chaos") {
       sfx.playChaos()
@@ -56,6 +100,72 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
     })
   }, [])
 
+  // Causal simulation clock: drives sequential stages in Normal mode and syncs activeHop
+  useEffect(() => {
+    if (simMode === "idle" || graph.totalStages === 0) {
+      return
+    }
+
+    const stageDurMs = (1.4 / simSpeed) * 1000
+    const pauseDurMs = (0.5 / simSpeed) * 1000
+    const totalCycleMs = graph.totalStages * stageDurMs + pauseDurMs
+
+    const startTime = Date.now()
+    let animId: number
+
+    const tick = () => {
+      const elapsed = Date.now() - startTime
+      const cycleElapsed = elapsed % totalCycleMs
+
+      if (cycleElapsed < graph.totalStages * stageDurMs) {
+        const stageIdx = Math.min(
+          graph.totalStages - 1,
+          Math.floor(cycleElapsed / stageDurMs)
+        )
+        const progress = (cycleElapsed % stageDurMs) / stageDurMs
+
+        if (stageIdx !== activeStageRef.current) {
+          setActiveStage(stageIdx)
+          // Soft audio tick on stage advance in single-trace mode
+          if (soundEnabled && simMode === "playing") {
+            sfx.playStep()
+          }
+        }
+        setStageProgress(progress)
+      } else {
+        // In pause gap between request cycles
+        const progress =
+          (cycleElapsed - graph.totalStages * stageDurMs) / pauseDurMs
+        setStageProgress(progress)
+      }
+
+      animId = requestAnimationFrame(tick)
+    }
+
+    animId = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(animId)
+  }, [simMode, simSpeed, graph.totalStages, soundEnabled])
+
+  // Manual stepping forward/backward in pipeline
+  const stepForward = useCallback(() => {
+    setActiveStage((curr) => (curr + 1) % Math.max(1, graph.totalStages))
+    sfx.playStep()
+  }, [graph.totalStages])
+
+  const stepBackward = useCallback(() => {
+    setActiveStage((curr) =>
+      curr > 0 ? curr - 1 : Math.max(0, graph.totalStages - 1)
+    )
+    sfx.playStep()
+  }, [graph.totalStages])
+
+  // Active Hop description
+  const activeHop = useMemo(() => {
+    if (graph.stageDescriptions.length === 0) return null
+    return graph.stageDescriptions[activeStage] || graph.stageDescriptions[0] || null
+  }, [graph.stageDescriptions, activeStage])
+
+  // Presentation Tour controls
   const startTour = useCallback((steps: string[]) => {
     if (steps.length === 0) return
     setTourSteps(steps)
@@ -77,7 +187,7 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
         sfx.playStep()
         return curr + 1
       }
-      return 0 // loop or stay
+      return 0
     })
   }, [tourSteps.length])
 
@@ -103,6 +213,12 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
       setShowMetrics,
       soundEnabled,
       setSoundEnabled,
+      graph,
+      activeStage,
+      stageProgress,
+      activeHop,
+      stepForward,
+      stepBackward,
       isTourActive,
       tourStepIndex,
       tourSteps,
@@ -118,9 +234,17 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
       simMode,
       setSimMode,
       simSpeed,
+      setSimSpeed,
       showMetrics,
+      setShowMetrics,
       soundEnabled,
       setSoundEnabled,
+      graph,
+      activeStage,
+      stageProgress,
+      activeHop,
+      stepForward,
+      stepBackward,
       isTourActive,
       tourStepIndex,
       tourSteps,
@@ -130,6 +254,7 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
       nextTourStep,
       prevTourStep,
       isTourAutoPlaying,
+      setIsTourAutoPlaying,
     ]
   )
 
