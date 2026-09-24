@@ -38,7 +38,6 @@ import { SimulationProvider, useSimulation } from "./simulation-context"
 import { ArchitectureSimulator } from "./architecture-simulator"
 import { ArchitectureTourBar } from "./architecture-tour-bar"
 import { useCanvasTheme } from "./canvas-theme-context"
-import { CanvasThemeToggle } from "./canvas-theme-toggle"
 
 // ─── Preview line while connecting ──────────────────────────────────────────
 function ConnectingPreviewLine({ fromLayerId, to }: { fromLayerId: string; to: Point }) {
@@ -78,7 +77,10 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   const [camera, setCamera] = useState<Camera>({ x: 0, y: 0, zoom: 1 })
   const [lastUsedColour, setLastUsedColor] = useState<Color>({ r: 0, g: 0, b: 0 })
   const [isLibraryOpen, setIsLibraryOpen] = useState(false)
-  const [showGrid, setShowGrid] = useState(true)
+  const [gridType, setGridType] = useState<"dots" | "cross" | "none">("dots")
+  const toggleGrid = useCallback(() => {
+    setGridType((prev) => (prev === "dots" ? "cross" : prev === "cross" ? "none" : "dots"))
+  }, [])
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false)
   const [renamingLayerId, setRenamingLayerId] = useState<string | null>(null)
   const [arrowStyle, setArrowStyle] = useState<"curvy" | "sharp">("curvy")
@@ -1170,7 +1172,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
           break
         case "g":
         case "G":
-          setShowGrid((prev) => !prev)
+          toggleGrid()
           break
         case "?":
           setIsShortcutsOpen(true)
@@ -1433,10 +1435,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       }}
     >
       <Info boardId={boardId} />
-      <div className="absolute top-2 right-2 flex items-center gap-x-2 z-40">
-        <Participants />
-        <CanvasThemeToggle />
-      </div>
+      <Participants />
 
       <Toolbar
         canvasState={canvasState}
@@ -1510,8 +1509,8 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         onZoomOut={zoomOut}
         onResetZoom={resetZoom}
         onFitToScreen={fitToScreen}
-        showGrid={showGrid}
-        onToggleGrid={() => setShowGrid((v) => !v)}
+        gridType={gridType}
+        onToggleGrid={toggleGrid}
         onOpenShortcuts={() => setIsShortcutsOpen(true)}
         onExport={handleExport}
         isMinimapOpen={isMinimapOpen}
@@ -1585,9 +1584,19 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         style={{ cursor: cursorStyle }}
       >
         <defs>
-          {/* Subtle grid pattern */}
-          <pattern id="canvas-grid" width={36} height={36} patternUnits="userSpaceOnUse">
+          {/* Subtle dotted grid pattern */}
+          <pattern id="canvas-grid-dots" width={36} height={36} patternUnits="userSpaceOnUse">
             <circle cx={18} cy={18} r={1.2} fill={theme === "dark" ? "#334155" : "#D1D5DB"} />
+          </pattern>
+
+          {/* Crisscross squares grid pattern */}
+          <pattern id="canvas-grid-cross" width={36} height={36} patternUnits="userSpaceOnUse">
+            <path
+              d="M 36 0 L 0 0 0 36"
+              fill="none"
+              stroke={theme === "dark" ? "rgba(51, 65, 85, 0.45)" : "rgba(203, 213, 225, 0.65)"}
+              strokeWidth={1}
+            />
           </pattern>
         </defs>
 
@@ -1598,13 +1607,13 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
           }}
         >
           {/* Grid Background */}
-          {showGrid && (
+          {gridType !== "none" && (
             <rect
               x={-50000}
               y={-50000}
               width={100000}
               height={100000}
-              fill="url(#canvas-grid)"
+              fill={gridType === "dots" ? "url(#canvas-grid-dots)" : "url(#canvas-grid-cross)"}
               style={{ pointerEvents: "none" }}
             />
           )}

@@ -9,6 +9,7 @@ import {
 } from "lucide-react"
 import { ComponentLayer, SysComponent, AnchorSide, Point, Color } from "@/types/canvas"
 import { useSimulation } from "./simulation-context"
+import { useCanvasTheme } from "./canvas-theme-context"
 
 // ─── Anchor point geometry ────────────────────────────────────────────────────
 export function getAnchorPoint(
@@ -117,7 +118,7 @@ export const COMPONENT_LABELS: Record<SysComponent, string> = {
   [SysComponent.DistributedTracing]: "Jaeger Tracing",
 }
 
-type Theme = { bg: string; badge: string; icon: string; text: string; border: string }
+type Theme = { bg: string; cardBg?: string; badge: string; icon: string; text: string; border: string }
 
 export const COMPONENT_COLORS: Record<SysComponent, Theme> = {
   // Clients & Ingress (Blue / Cyan / Green)
@@ -277,7 +278,28 @@ interface SysComponentLayerProps {
 
 
 
-export function getComponentTheme(componentType: SysComponent, customColor?: Color): Theme {
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const cleanHex = hex.replace("#", "").trim()
+  if (cleanHex.length === 3) {
+    const r = parseInt(cleanHex[0] + cleanHex[0], 16)
+    const g = parseInt(cleanHex[1] + cleanHex[1], 16)
+    const b = parseInt(cleanHex[2] + cleanHex[2], 16)
+    return { r, g, b }
+  }
+  if (cleanHex.length === 6) {
+    const r = parseInt(cleanHex.substring(0, 2), 16)
+    const g = parseInt(cleanHex.substring(2, 4), 16)
+    const b = parseInt(cleanHex.substring(4, 6), 16)
+    return { r, g, b }
+  }
+  return null
+}
+
+export function getComponentTheme(
+  componentType: SysComponent,
+  customColor?: Color,
+  isDark: boolean = false
+): Theme {
   const defaultTheme = COMPONENT_COLORS[componentType] || {
     bg: "#EFF6FF",
     badge: "#DBEAFE",
@@ -286,7 +308,32 @@ export function getComponentTheme(componentType: SysComponent, customColor?: Col
     border: "#93C5FD",
   }
 
-  // If no explicit customColor was set by the user, keep authentic original component theme!
+  if (isDark) {
+    // ── DARK MODE THEME GENERATION ─────────────────────────────────────────
+    let rgb = customColor
+    if (!rgb) {
+      // Derive dark mode palette from the component's authentic default icon color
+      rgb = hexToRgb(defaultTheme.icon) || { r: 99, g: 102, b: 241 }
+    }
+
+    const { r, g, b } = rgb
+
+    // Vibrant, luminous icon tone for dark background
+    const iconColor = `rgb(${Math.min(255, Math.floor(r * 1.15))}, ${Math.min(255, Math.floor(g * 1.15))}, ${Math.min(255, Math.floor(b * 1.15))})`
+    // Soft, luminous high-contrast text matching the component color family (e.g. pastel lavender for purple)
+    const textColor = `rgb(${Math.min(255, Math.floor(r * 0.45 + 140))}, ${Math.min(255, Math.floor(g * 0.45 + 140))}, ${Math.min(255, Math.floor(b * 0.45 + 140))})`
+
+    return {
+      bg: `rgba(${r}, ${g}, ${b}, 0.22)`,
+      cardBg: `linear-gradient(145deg, rgba(${r}, ${g}, ${b}, 0.28), rgba(${r}, ${g}, ${b}, 0.12))`,
+      badge: `rgba(${r}, ${g}, ${b}, 0.35)`,
+      icon: iconColor,
+      text: textColor,
+      border: `rgba(${r}, ${g}, ${b}, 0.55)`,
+    }
+  }
+
+  // ── LIGHT MODE THEME GENERATION ──────────────────────────────────────────
   if (!customColor) {
     return defaultTheme
   }
@@ -294,6 +341,7 @@ export function getComponentTheme(componentType: SysComponent, customColor?: Col
   const { r, g, b } = customColor
   return {
     bg: `rgba(${r}, ${g}, ${b}, 0.09)`,
+    cardBg: `linear-gradient(145deg, rgba(${r}, ${g}, ${b}, 0.12), rgba(${r}, ${g}, ${b}, 0.06))`,
     badge: `rgba(${r}, ${g}, ${b}, 0.18)`,
     icon: `rgb(${r}, ${g}, ${b})`,
     text: `rgb(${Math.max(0, Math.floor(r * 0.65))}, ${Math.max(0, Math.floor(g * 0.65))}, ${Math.max(0, Math.floor(b * 0.65))})`,
@@ -312,13 +360,15 @@ export const SysComponentLayer = memo(function SysComponentLayer({
   onDoubleClick,
 }: SysComponentLayerProps) {
   const { x, y, width, height, componentType, value } = layer
-  const theme  = getComponentTheme(componentType, layer.customColor)
+  const { theme: canvasTheme } = useCanvasTheme()
+  const isDark = canvasTheme === "dark"
+  const theme  = getComponentTheme(componentType, layer.customColor, isDark)
   const label  = value || COMPONENT_LABELS[componentType] || componentType
   const Icon   = ICON_MAP[componentType] || Box
 
   // Decide border colour: connecting-from gets a vivid blue ring
   const strokeColor = isConnectingFrom
-    ? "#2563EB"
+    ? (isDark ? "#60A5FA" : "#2563EB")
     : selectionColor || theme.border
 
   const strokeWidth = isConnectingFrom || selectionColor ? 2.5 : 1.5
@@ -352,7 +402,14 @@ export const SysComponentLayer = memo(function SysComponentLayer({
       style={{ cursor: isConnecting ? "crosshair" : "pointer" }}
     >
       {/* Drop shadow */}
-      <rect x={x + 2} y={y + 4} width={width} height={height} rx={12} fill="rgba(0,0,0,0.07)" />
+      <rect
+        x={x + 2}
+        y={y + 4}
+        width={width}
+        height={height}
+        rx={12}
+        fill={isDark ? "rgba(0,0,0,0.45)" : "rgba(0,0,0,0.07)"}
+      />
 
       {/* Native SVG Base Card (ensures 100% visibility even before foreignObject paints) */}
       <rect
@@ -361,7 +418,7 @@ export const SysComponentLayer = memo(function SysComponentLayer({
         width={width}
         height={height}
         rx={12}
-        fill={theme.bg}
+        fill={isDark ? "#0f172a" : theme.bg}
         stroke={strokeColor}
         strokeWidth={strokeWidth}
       />
@@ -374,7 +431,8 @@ export const SysComponentLayer = memo(function SysComponentLayer({
             position: "relative",
             width: "100%",
             height: "100%",
-            background: theme.bg,
+            backgroundColor: isDark ? "#0f172a" : theme.bg,
+            backgroundImage: isDark ? theme.cardBg : undefined,
             border: `${strokeWidth}px solid ${strokeColor}`,
             borderRadius: 12,
             display: "flex",
@@ -387,7 +445,7 @@ export const SysComponentLayer = memo(function SysComponentLayer({
             fontFamily: "Inter, system-ui, sans-serif",
             pointerEvents: "none",
             transition: "border-color 0.15s ease",
-            boxShadow: isConnectingFrom ? `0 0 0 3px #93C5FD` : undefined,
+            boxShadow: isConnectingFrom ? `0 0 0 3px ${isDark ? "#60A5FA" : "#93C5FD"}` : undefined,
           }}
         >
           {/* Status health badge in top-right */}
@@ -404,24 +462,46 @@ export const SysComponentLayer = memo(function SysComponentLayer({
                 borderRadius: 9999,
                 fontSize: 8,
                 fontWeight: 700,
-                backgroundColor:
-                  layer.status === "healthy"
-                    ? "#DCFCE7"
+                backgroundColor: isDark
+                  ? layer.status === "healthy"
+                    ? "rgba(34, 197, 94, 0.22)"
                     : layer.status === "warning"
-                    ? "#FEF9C3"
+                    ? "rgba(234, 179, 8, 0.22)"
                     : layer.status === "error"
-                    ? "#FEE2E2"
-                    : "#DBEAFE",
-                color:
-                  layer.status === "healthy"
-                    ? "#15803D"
+                    ? "rgba(239, 68, 68, 0.25)"
+                    : "rgba(59, 130, 246, 0.22)"
+                  : layer.status === "healthy"
+                  ? "#DCFCE7"
+                  : layer.status === "warning"
+                  ? "#FEF9C3"
+                  : layer.status === "error"
+                  ? "#FEE2E2"
+                  : "#DBEAFE",
+                color: isDark
+                  ? layer.status === "healthy"
+                    ? "#4ADE80"
                     : layer.status === "warning"
-                    ? "#A16207"
+                    ? "#FACC15"
                     : layer.status === "error"
-                    ? "#B91C1C"
-                    : "#1D4ED8",
+                    ? "#F87171"
+                    : "#60A5FA"
+                  : layer.status === "healthy"
+                  ? "#15803D"
+                  : layer.status === "warning"
+                  ? "#A16207"
+                  : layer.status === "error"
+                  ? "#B91C1C"
+                  : "#1D4ED8",
                 border: `1px solid ${
-                  layer.status === "healthy"
+                  isDark
+                    ? layer.status === "healthy"
+                      ? "rgba(74, 222, 128, 0.4)"
+                      : layer.status === "warning"
+                      ? "rgba(250, 204, 21, 0.4)"
+                      : layer.status === "error"
+                      ? "rgba(248, 113, 113, 0.4)"
+                      : "rgba(96, 165, 250, 0.4)"
+                    : layer.status === "healthy"
                     ? "#86EFAC"
                     : layer.status === "warning"
                     ? "#FDE047"

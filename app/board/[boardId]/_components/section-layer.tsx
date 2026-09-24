@@ -1,6 +1,7 @@
 import React, { memo } from "react"
 import { Layers, Edit2 } from "lucide-react"
 import { SectionLayer } from "@/types/canvas"
+import { useCanvasTheme } from "./canvas-theme-context"
 
 interface SectionLayerComponentProps {
   id: string
@@ -12,6 +13,8 @@ interface SectionLayerComponentProps {
 
 export const SectionLayerComponent = memo(
   ({ id, layer, onPointerDown, selectionColor, onDoubleClick }: SectionLayerComponentProps) => {
+    const { theme } = useCanvasTheme()
+    const isDark = theme === "dark"
     const { x, y, width, height, fill, value } = layer
     const label = value || "Architecture Zone"
 
@@ -66,7 +69,11 @@ export const SectionLayerComponent = memo(
           <div
             className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold shadow-sm backdrop-blur-md transition-all ${
               isSelected
-                ? "bg-white/95 text-indigo-900 border-indigo-300 shadow-md ring-2 ring-indigo-400/20"
+                ? isDark
+                  ? "bg-slate-900/95 text-indigo-300 border-indigo-500 shadow-md ring-2 ring-indigo-500/20"
+                  : "bg-white/95 text-indigo-900 border-indigo-300 shadow-md ring-2 ring-indigo-400/20"
+                : isDark
+                ? "bg-slate-900/85 text-slate-200 border-slate-700 hover:bg-slate-900/95"
                 : "bg-white/85 text-neutral-800 border-neutral-300 hover:bg-white/95"
             }`}
             title="Double-click to rename this section"

@@ -18,7 +18,7 @@ export const Participants = () => {
   return (
     <div
       className={cn(
-        "h-12 rounded-md p-3 flex items-center shadow-md transition-colors",
+        "absolute h-12 top-2 right-2 rounded-md p-3 flex items-center shadow-md transition-colors",
         theme === "dark" ? "bg-slate-900 border border-slate-800 text-white" : "bg-white"
       )}
     >

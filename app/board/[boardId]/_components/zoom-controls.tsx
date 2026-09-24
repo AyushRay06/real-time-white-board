@@ -1,7 +1,18 @@
 "use client"
 
 import React, { memo } from "react"
-import { Plus, Minus, Maximize2, Grid, Keyboard, Download, Map } from "lucide-react"
+import {
+  Plus,
+  Minus,
+  Maximize2,
+  Grid,
+  Keyboard,
+  Download,
+  Map,
+  Sun,
+  Moon,
+  LayoutGrid,
+} from "lucide-react"
 import { Hint } from "@/components/hint"
 import { Button } from "@/components/ui/button"
 import { useCanvasTheme } from "./canvas-theme-context"
@@ -13,7 +24,7 @@ interface ZoomControlsProps {
   onZoomOut: () => void
   onResetZoom: () => void
   onFitToScreen: () => void
-  showGrid: boolean
+  gridType: "dots" | "cross" | "none"
   onToggleGrid: () => void
   onOpenShortcuts: () => void
   onExport: (format: "png" | "svg" | "json" | "mermaid") => void
@@ -27,14 +38,14 @@ export const ZoomControls = memo(function ZoomControls({
   onZoomOut,
   onResetZoom,
   onFitToScreen,
-  showGrid,
+  gridType,
   onToggleGrid,
   onOpenShortcuts,
   onExport,
   onToggleMinimap,
   isMinimapOpen,
 }: ZoomControlsProps) {
-  const { theme } = useCanvasTheme()
+  const { theme, toggleTheme } = useCanvasTheme()
   const [showExportMenu, setShowExportMenu] = React.useState(false)
   const zoomPercent = Math.round(zoom * 100)
 
@@ -47,15 +58,34 @@ export const ZoomControls = memo(function ZoomControls({
           : "bg-white/95 border-neutral-200 text-slate-800"
       )}
     >
-      {/* Grid Toggle */}
-      <Hint label={`Grid: ${showGrid ? "ON" : "OFF"} (G)`}>
+      {/* Grid Mode Toggle (Dots ➔ Crisscross Squares ➔ Off) */}
+      <Hint
+        label={
+          gridType === "dots"
+            ? "Grid: Dotted (click for Crisscross Squares) [G]"
+            : gridType === "cross"
+            ? "Grid: Crisscross Squares (click to Turn Off) [G]"
+            : "Grid: Off (click for Dotted Grid) [G]"
+        }
+      >
         <Button
           variant="board"
           size="icon"
           onClick={onToggleGrid}
-          className={showGrid ? "text-indigo-600 bg-indigo-50" : "text-neutral-500"}
+          className={cn(
+            gridType !== "none"
+              ? theme === "dark"
+                ? "bg-indigo-950/60 text-indigo-400"
+                : "text-indigo-600 bg-indigo-50"
+              : "text-neutral-500",
+            theme === "dark" && gridType === "none" && "text-slate-400 hover:text-white"
+          )}
         >
-          <Grid className="w-4 h-4" />
+          {gridType === "cross" ? (
+            <LayoutGrid className="w-4 h-4 text-cyan-400 animate-in zoom-in-75" />
+          ) : (
+            <Grid className={cn("w-4 h-4", gridType === "dots" && "text-indigo-500")} />
+          )}
         </Button>
       </Hint>
 
@@ -209,9 +239,31 @@ export const ZoomControls = memo(function ZoomControls({
           variant="board"
           size="icon"
           onClick={onOpenShortcuts}
-          className="text-neutral-600"
+          className={cn(theme === "dark" ? "text-slate-300 hover:text-white" : "text-neutral-600")}
         >
           <Keyboard className="w-4 h-4" />
+        </Button>
+      </Hint>
+
+      <div className={cn("h-4 w-px mx-0.5", theme === "dark" ? "bg-slate-800" : "bg-neutral-200")} />
+
+      {/* Canvas Theme Toggle (Light / Dark) */}
+      <Hint label={theme === "dark" ? "Switch to Light Canvas" : "Switch to Dark Canvas"}>
+        <Button
+          variant="board"
+          size="icon"
+          onClick={toggleTheme}
+          className={cn(
+            theme === "dark"
+              ? "text-amber-400 hover:text-amber-300 hover:bg-slate-800"
+              : "text-slate-700 hover:text-indigo-600 hover:bg-neutral-100"
+          )}
+        >
+          {theme === "dark" ? (
+            <Sun className="w-4 h-4 transition-transform hover:rotate-45" />
+          ) : (
+            <Moon className="w-4 h-4 transition-transform hover:-rotate-12" />
+          )}
         </Button>
       </Hint>
     </div>
