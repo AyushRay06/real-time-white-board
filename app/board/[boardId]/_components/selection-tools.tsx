@@ -1,7 +1,7 @@
 "use client"
 
 import { memo, useEffect, useState } from "react"
-import { Camera, Color, LayerType } from "@/types/canvas"
+import { Camera, Color, LayerType, ComponentStatus } from "@/types/canvas"
 import { useSelectionBounds } from "@/hooks/use-selection-bound"
 import { useMutation, useSelf, useStorage } from "@liveblocks/react/suspense"
 import { ColorPicker } from "./color-picker"
@@ -21,11 +21,17 @@ import {
   AlignCenterVertical,
   AlignCenterHorizontal,
   MoreHorizontal,
-  Activity,
-  Layers,
   Sparkles,
   Flame,
+  ChevronDown,
+  Check,
 } from "lucide-react"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface SelectionToolsProps {
   camera: Camera
@@ -54,6 +60,10 @@ export const SelectionTools = memo(
     const currentArrowStyle = isArrow && "arrowStyle" in soleLayer ? (soleLayer.arrowStyle || "curvy") : "curvy"
     const currentStrokePattern = soleLayer && "strokePattern" in soleLayer ? (soleLayer.strokePattern || "solid") : "solid"
     const currentDirection = isArrow && "direction" in soleLayer ? (soleLayer.direction || "forward") : "forward"
+    const currentStatus: ComponentStatus =
+      soleLayer && "status" in soleLayer && soleLayer.status
+        ? (soleLayer.status as ComponentStatus)
+        : "none"
 
     const toggleArrowStyle = useMutation(({ storage }) => {
       if (!soleLayerId) return
@@ -86,14 +96,24 @@ export const SelectionTools = memo(
       }
     }, [soleLayerId])
 
-    const cycleComponentStatus = useMutation(({ storage }) => {
+    // Explicit Status Assignment Mutation
+    const setComponentStatus = useMutation(({ storage }, newStatus: ComponentStatus) => {
       const liveLayers = storage.get("layers")
       selection.forEach((id) => {
         const layer = liveLayers.get(id)
         if (layer && layer.get("type") === LayerType.Component) {
-          const cur = ((layer as any).get("status") as string) || "none"
-          const next = cur === "none" ? "healthy" : cur === "healthy" ? "warning" : cur === "warning" ? "error" : "none"
-          ;(layer as any).set("status", next === "none" ? undefined : next)
+          const text =
+            newStatus === "healthy"
+              ? "HEALTHY"
+              : newStatus === "warning"
+              ? "WARNING"
+              : newStatus === "error"
+              ? "OUTAGE"
+              : newStatus === "info"
+              ? "MAINTENANCE"
+              : ""
+          ;(layer as any).set("status", newStatus)
+          ;(layer as any).set("statusText", text)
         }
       })
     }, [selection])
@@ -112,7 +132,7 @@ export const SelectionTools = memo(
       selection.forEach((id) => {
         const layer = liveLayers.get(id)
         if (layer && layer.get("type") === LayerType.Component) {
-          const cur = (layer as any).get("status") as string
+          const cur = ((layer as any).get("status") as string) || "none"
           if (cur === "error") {
             ;(layer as any).set("status", "healthy")
             ;(layer as any).set("statusText", "HEALTHY")
@@ -174,26 +194,30 @@ export const SelectionTools = memo(
     const distributeHorizontally = useMutation(({ storage }) => {
       if (selection.length < 3) return
       const liveLayers = storage.get("layers")
-      const items: { id: string; x: number; width: number }[] = []
+      const validNodes: { id: string; x: number; width: number }[] = []
       selection.forEach((id) => {
         const l = liveLayers.get(id)
         if (l && l.get("type") !== LayerType.Arrow) {
-          items.push({ id, x: l.get("x") || 0, width: l.get("width") || 100 })
+          validNodes.push({ id, x: l.get("x") || 0, width: l.get("width") || 100 })
         }
       })
-      if (items.length < 3) return
-      items.sort((a, b) => a.x - b.x)
-      const first = items[0]
-      const last = items[items.length - 1]
+      if (validNodes.length < 3) return
+      validNodes.sort((a, b) => a.x - b.x)
+      const first = validNodes[0]
+      const last = validNodes[validNodes.length - 1]
       const totalSpan = last.x - first.x
-      const step = totalSpan / (items.length - 1)
-      items.forEach((item, idx) => {
-        const l = liveLayers.get(item.id)
-        if (l) l.set("x", first.x + idx * step)
+      const step = totalSpan / (validNodes.length - 1)
+
+      validNodes.forEach((node, idx) => {
+        if (idx === 0 || idx === validNodes.length - 1) return
+        const l = liveLayers.get(node.id)
+        if (l) {
+          l.set("x", first.x + step * idx)
+        }
       })
     }, [selection])
 
-    // To bring layer to front
+    // Move to front / back
     const bringToFront = useMutation(
       ({ storage }) => {
         const liveLayersIds = storage.get("layerIds")
@@ -213,7 +237,6 @@ export const SelectionTools = memo(
       [selection]
     )
 
-    // To move layer back
     const moveToBack = useMutation(
       ({ storage }) => {
         const liveLayersIds = storage.get("layerIds")
@@ -263,53 +286,114 @@ export const SelectionTools = memo(
 
     return (
       <div
-        className="absolute p-2.5 rounded-2xl bg-white shadow-xl border border-neutral-200 flex items-center gap-1.5 select-none z-40 animate-in fade-in zoom-in-95 duration-100"
+        className="absolute p-1.5 rounded-2xl bg-white/95 backdrop-blur-md shadow-2xl border border-neutral-200/90 flex items-center gap-1 select-none z-40 animate-in fade-in zoom-in-95 duration-100"
         style={{
-          left: `calc(${position.x}px - 140px)`,
-          top: `${position.y - 65}px`,
+          left: `${position.x}px`,
+          top: `${Math.max(75, position.y - 58)}px`,
+          transform: "translateX(-50%)",
         }}
       >
-        <ColorPicker onChange={setFill} />
+        {/* Color Swatch */}
+        <div className="flex items-center px-1">
+          <ColorPicker onChange={setFill} />
+        </div>
 
-        <div className="h-6 w-px bg-neutral-200 mx-1" />
+        <div className="h-5 w-px bg-neutral-200" />
 
-        {/* Duplicate button */}
-        {onDuplicate && (
-          <Hint label="Duplicate (Ctrl+D)">
-            <Button variant="board" size="icon" onClick={onDuplicate} className="text-neutral-600">
-              <Copy className="w-4 h-4" />
-            </Button>
-          </Hint>
+        {/* Component Specific Controls */}
+        {isComponent && (
+          <div className="flex items-center gap-1">
+            {/* Status Badge Dropdown Option Selector */}
+            <DropdownMenu>
+              <Hint label="Assign Health Status Badge">
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="board"
+                    size="sm"
+                    className="h-8 px-2 flex items-center gap-1.5 rounded-lg border border-neutral-200 hover:border-neutral-300 text-xs font-medium hover:bg-neutral-50 transition-all"
+                  >
+                    <span
+                      className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                        currentStatus === "healthy"
+                          ? "bg-emerald-500 shadow-sm shadow-emerald-500/50 animate-pulse"
+                          : currentStatus === "warning"
+                          ? "bg-amber-500 shadow-sm shadow-amber-500/50"
+                          : currentStatus === "error"
+                          ? "bg-rose-500 shadow-sm shadow-rose-500/50"
+                          : currentStatus === "info"
+                          ? "bg-blue-500 shadow-sm shadow-blue-500/50"
+                          : "bg-neutral-300"
+                      }`}
+                    />
+                    <span className="capitalize text-neutral-700 font-semibold text-[11px]">
+                      {currentStatus === "none" ? "Status" : currentStatus}
+                    </span>
+                    <ChevronDown className="w-3 h-3 text-neutral-400 ml-0.5" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </Hint>
+              <DropdownMenuContent align="center" side="top" sideOffset={8} className="w-48 p-1.5 rounded-xl shadow-xl border border-neutral-200 bg-white z-50">
+                <DropdownMenuItem
+                  onClick={() => setComponentStatus("none")}
+                  className="flex items-center gap-2.5 px-2.5 py-1.5 text-xs rounded-lg cursor-pointer hover:bg-neutral-100"
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-neutral-300" />
+                  <span>None (No Badge)</span>
+                  {currentStatus === "none" && <Check className="w-3.5 h-3.5 ml-auto text-neutral-600" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setComponentStatus("healthy")}
+                  className="flex items-center gap-2.5 px-2.5 py-1.5 text-xs rounded-lg cursor-pointer hover:bg-emerald-50 text-emerald-700 font-medium"
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                  <span>Healthy (Normal)</span>
+                  {currentStatus === "healthy" && <Check className="w-3.5 h-3.5 ml-auto text-emerald-600" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setComponentStatus("warning")}
+                  className="flex items-center gap-2.5 px-2.5 py-1.5 text-xs rounded-lg cursor-pointer hover:bg-amber-50 text-amber-700 font-medium"
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+                  <span>Warning (Degraded)</span>
+                  {currentStatus === "warning" && <Check className="w-3.5 h-3.5 ml-auto text-amber-600" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setComponentStatus("error")}
+                  className="flex items-center gap-2.5 px-2.5 py-1.5 text-xs rounded-lg cursor-pointer hover:bg-rose-50 text-rose-700 font-medium"
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-rose-500" />
+                  <span>Outage (Error)</span>
+                  {currentStatus === "error" && <Check className="w-3.5 h-3.5 ml-auto text-rose-600" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setComponentStatus("info")}
+                  className="flex items-center gap-2.5 px-2.5 py-1.5 text-xs rounded-lg cursor-pointer hover:bg-blue-50 text-blue-700 font-medium"
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+                  <span>Maintenance (Info)</span>
+                  {currentStatus === "info" && <Check className="w-3.5 h-3.5 ml-auto text-blue-600" />}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Hint label="Inject Fault / Outage (Simulate Node Down)">
+              <Button
+                variant="board"
+                size="icon"
+                onClick={injectFault}
+                className={currentStatus === "error" ? "text-rose-600 bg-rose-50" : "text-neutral-600 hover:text-rose-600 hover:bg-rose-50"}
+              >
+                <Flame className="w-4 h-4" />
+              </Button>
+            </Hint>
+
+            <div className="h-5 w-px bg-neutral-200" />
+          </div>
         )}
 
-        {/* Rename button */}
-        {canRename && onRename && (
-          <Hint label="Rename / Label">
-            <Button variant="board" size="icon" onClick={onRename} className="text-neutral-600">
-              <Edit3 className="w-4 h-4" />
-            </Button>
-          </Hint>
-        )}
-
-        {/* Select connected layout button */}
-        {onSelectConnected && (
-          <Hint label="Select Entire Layout / Architecture">
-            <Button variant="board" size="icon" onClick={onSelectConnected} className="text-neutral-600 hover:text-indigo-600">
-              <Network className="w-4 h-4" />
-            </Button>
-          </Hint>
-        )}
-
-        {/* Border / Stroke Pattern Toggle */}
-        <Hint label={`Stroke Pattern: ${currentStrokePattern.toUpperCase()} (Click to toggle Solid / Dashed / Dotted)`}>
-          <Button variant="board" size="icon" onClick={toggleStrokePattern} className="text-neutral-600 hover:text-indigo-600 font-mono text-xs font-bold w-8">
-            {currentStrokePattern === "solid" ? "—" : currentStrokePattern === "dashed" ? "- -" : "···"}
-          </Button>
-        </Hint>
-
-        {/* Toggle Curvy vs Sharp Arrow & Direction */}
+        {/* Arrow Specific Controls */}
         {isArrow && (
-          <>
+          <div className="flex items-center gap-1">
             <Hint label={currentArrowStyle === "sharp" ? "Switch to Curvy Arrow" : "Switch to Sharp Arrow"}>
               <Button variant="board" size="icon" onClick={toggleArrowStyle} className="text-neutral-600 hover:text-indigo-600">
                 {currentArrowStyle === "sharp" ? <Spline className="w-4 h-4" /> : <CornerDownRight className="w-4 h-4" />}
@@ -330,66 +414,90 @@ export const SelectionTools = memo(
                 <Sparkles className="w-4 h-4" />
               </Button>
             </Hint>
-          </>
+            <div className="h-5 w-px bg-neutral-200" />
+          </div>
         )}
 
-        {/* Component Health Status Badge & Fault Injection */}
-        {isComponent && (
-          <>
-            <Hint label="Toggle Health Badge (🟢 Healthy, 🟡 Warning, 🔴 Error)">
-              <Button variant="board" size="icon" onClick={cycleComponentStatus} className="text-neutral-600 hover:text-indigo-600">
-                <Activity className="w-4 h-4" />
-              </Button>
-            </Hint>
-            <Hint label="Inject Fault / Outage (Simulate Node Down)">
-              <Button variant="board" size="icon" onClick={injectFault} className="text-neutral-600 hover:text-rose-600 hover:bg-rose-50">
-                <Flame className="w-4 h-4" />
-              </Button>
-            </Hint>
-          </>
-        )}
+        {/* Pattern, Rename & Connected Layout */}
+        <div className="flex items-center gap-1">
+          {/* Border / Stroke Pattern Toggle */}
+          <Hint label={`Stroke Pattern: ${currentStrokePattern.toUpperCase()} (Solid / Dashed / Dotted)`}>
+            <Button variant="board" size="icon" onClick={toggleStrokePattern} className="text-neutral-600 hover:text-indigo-600 font-mono text-xs font-bold w-8">
+              {currentStrokePattern === "solid" ? "—" : currentStrokePattern === "dashed" ? "- -" : "···"}
+            </Button>
+          </Hint>
 
-        {/* Multi-Selection Alignment Tools */}
-        {selection.length > 1 && (
-          <>
-            <div className="h-6 w-px bg-neutral-200 mx-0.5" />
-            <Hint label="Align Horizontally (Row)">
-              <Button variant="board" size="icon" onClick={alignHorizontally} className="text-neutral-600 hover:text-indigo-600">
-                <AlignCenterHorizontal className="w-4 h-4" />
+          {canRename && onRename && (
+            <Hint label="Rename / Label">
+              <Button variant="board" size="icon" onClick={onRename} className="text-neutral-600 hover:text-indigo-600">
+                <Edit3 className="w-4 h-4" />
               </Button>
             </Hint>
-            <Hint label="Align Vertically (Column)">
-              <Button variant="board" size="icon" onClick={alignVertically} className="text-neutral-600 hover:text-indigo-600">
-                <AlignCenterVertical className="w-4 h-4" />
-              </Button>
-            </Hint>
-            {selection.length > 2 && (
-              <Hint label="Distribute Evenly">
-                <Button variant="board" size="icon" onClick={distributeHorizontally} className="text-neutral-600 hover:text-indigo-600">
-                  <MoreHorizontal className="w-4 h-4" />
-                </Button>
-              </Hint>
-            )}
-          </>
-        )}
+          )}
 
-        <div className="flex gap-x-0.5">
-          <Hint label="Bring to front">
+          {onSelectConnected && (
+            <Hint label="Select Entire Connected Layout">
+              <Button variant="board" size="icon" onClick={onSelectConnected} className="text-neutral-600 hover:text-indigo-600">
+                <Network className="w-4 h-4" />
+              </Button>
+            </Hint>
+          )}
+        </div>
+
+        <div className="h-5 w-px bg-neutral-200" />
+
+        {/* Duplication & Layer Ordering */}
+        <div className="flex items-center gap-0.5">
+          {onDuplicate && (
+            <Hint label="Duplicate (Ctrl+D)">
+              <Button variant="board" size="icon" onClick={onDuplicate} className="text-neutral-600 hover:text-indigo-600">
+                <Copy className="w-4 h-4" />
+              </Button>
+            </Hint>
+          )}
+          <Hint label="Bring to Front">
             <Button variant="board" size="icon" onClick={bringToFront} className="text-neutral-600">
               <BringToFront className="w-4 h-4" />
             </Button>
           </Hint>
-          <Hint label="Send back">
+          <Hint label="Send to Back">
             <Button variant="board" size="icon" onClick={moveToBack} className="text-neutral-600">
               <SendToBack className="w-4 h-4" />
             </Button>
           </Hint>
         </div>
 
-        <div className="h-6 w-px bg-neutral-200 mx-1" />
+        {/* Multi-Selection Alignment (only visible when > 1 items selected) */}
+        {selection.length > 1 && (
+          <>
+            <div className="h-5 w-px bg-neutral-200" />
+            <div className="flex items-center gap-0.5">
+              <Hint label="Align Horizontal (Row)">
+                <Button variant="board" size="icon" onClick={alignHorizontally} className="text-neutral-600 hover:text-indigo-600">
+                  <AlignCenterHorizontal className="w-4 h-4" />
+                </Button>
+              </Hint>
+              <Hint label="Align Vertical (Column)">
+                <Button variant="board" size="icon" onClick={alignVertically} className="text-neutral-600 hover:text-indigo-600">
+                  <AlignCenterVertical className="w-4 h-4" />
+                </Button>
+              </Hint>
+              {selection.length > 2 && (
+                <Hint label="Distribute Evenly">
+                  <Button variant="board" size="icon" onClick={distributeHorizontally} className="text-neutral-600 hover:text-indigo-600">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </Hint>
+              )}
+            </div>
+          </>
+        )}
 
+        <div className="h-5 w-px bg-neutral-200" />
+
+        {/* Delete */}
         <Hint label="Delete (Del)">
-          <Button variant="board" size="icon" onClick={deleteLayers} className="text-red-500 hover:text-red-600 hover:bg-red-50">
+          <Button variant="board" size="icon" onClick={deleteLayers} className="text-rose-500 hover:text-rose-600 hover:bg-rose-50">
             <Trash2 className="w-4 h-4" />
           </Button>
         </Hint>

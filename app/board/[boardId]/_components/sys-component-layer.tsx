@@ -408,7 +408,7 @@ export const SysComponentLayer = memo(function SysComponentLayer({
           }}
         >
           {/* Status health badge in top-right */}
-          {layer.status && (
+          {layer.status && layer.status !== "none" && (
             <div
               style={{
                 position: "absolute",

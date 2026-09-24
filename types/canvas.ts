@@ -148,7 +148,7 @@ export type NoteLayer = {
   value?: string
 }
 
-export type ComponentStatus = "healthy" | "warning" | "error" | "info"
+export type ComponentStatus = "healthy" | "warning" | "error" | "info" | "none"
 
 export type ComponentLayer = {
   type: LayerType.Component
