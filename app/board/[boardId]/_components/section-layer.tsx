@@ -21,6 +21,13 @@ export const SectionLayerComponent = memo(
 
     const isSelected = Boolean(selectionColor)
 
+    const dashArray =
+      layer.strokePattern === "solid"
+        ? undefined
+        : layer.strokePattern === "dotted"
+        ? "3 4"
+        : "8 6"
+
     return (
       <g
         style={{
@@ -44,7 +51,7 @@ export const SectionLayerComponent = memo(
           fill={`rgba(${r}, ${g}, ${b}, ${isSelected ? 0.12 : 0.07})`}
           stroke={selectionColor || `rgba(${r}, ${g}, ${b}, ${isSelected ? 0.8 : 0.45})`}
           strokeWidth={isSelected ? 2.5 : 2}
-          strokeDasharray="8 6"
+          strokeDasharray={dashArray}
           className="transition-colors duration-150"
         />
 

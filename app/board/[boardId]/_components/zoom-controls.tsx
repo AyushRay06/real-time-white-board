@@ -1,7 +1,7 @@
 "use client"
 
 import React, { memo } from "react"
-import { Plus, Minus, Maximize2, Grid, Keyboard, Download } from "lucide-react"
+import { Plus, Minus, Maximize2, Grid, Keyboard, Download, Map } from "lucide-react"
 import { Hint } from "@/components/hint"
 import { Button } from "@/components/ui/button"
 
@@ -14,7 +14,9 @@ interface ZoomControlsProps {
   showGrid: boolean
   onToggleGrid: () => void
   onOpenShortcuts: () => void
-  onExport: (format: "png" | "svg" | "json") => void
+  onExport: (format: "png" | "svg" | "json" | "mermaid") => void
+  onToggleMinimap?: () => void
+  isMinimapOpen?: boolean
 }
 
 export const ZoomControls = memo(function ZoomControls({
@@ -27,12 +29,14 @@ export const ZoomControls = memo(function ZoomControls({
   onToggleGrid,
   onOpenShortcuts,
   onExport,
+  onToggleMinimap,
+  isMinimapOpen,
 }: ZoomControlsProps) {
   const [showExportMenu, setShowExportMenu] = React.useState(false)
   const zoomPercent = Math.round(zoom * 100)
 
   return (
-    <div className="absolute bottom-4 right-4 z-40 flex items-center gap-1.5 bg-white/95 backdrop-blur-md px-2 py-1.5 rounded-2xl shadow-lg border border-neutral-200 select-none">
+    <div className="absolute bottom-5 left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 bg-white/95 backdrop-blur-md px-3 py-1.5 rounded-2xl shadow-xl border border-neutral-200 select-none hover:shadow-2xl transition-all">
       {/* Grid Toggle */}
       <Hint label={`Grid: ${showGrid ? "ON" : "OFF"} (G)`}>
         <Button
@@ -147,10 +151,34 @@ export const ZoomControls = memo(function ZoomControls({
                 <span>Export JSON</span>
                 <span className="text-[10px] text-neutral-400">Schema</span>
               </button>
+              <button
+                onClick={() => {
+                  setShowExportMenu(false)
+                  onExport("mermaid")
+                }}
+                className="px-3 py-1.5 text-left hover:bg-neutral-100 flex items-center justify-between font-medium text-indigo-600"
+              >
+                <span>Mermaid.js</span>
+                <span className="text-[10px] text-indigo-400">Diagram</span>
+              </button>
             </div>
           </>
         )}
       </div>
+
+      {/* Minimap toggle button */}
+      {onToggleMinimap && (
+        <Hint label="Minimap Navigator (M)">
+          <Button
+            variant="board"
+            size="icon"
+            onClick={onToggleMinimap}
+            className={isMinimapOpen ? "text-indigo-600 bg-indigo-50" : "text-neutral-600"}
+          >
+            <Map className="w-4 h-4" />
+          </Button>
+        </Hint>
+      )}
 
       {/* Shortcuts */}
       <Hint label="Keyboard Shortcuts (?)">

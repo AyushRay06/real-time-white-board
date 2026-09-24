@@ -322,6 +322,7 @@ export const SysComponentLayer = memo(function SysComponentLayer({
         {/* @ts-ignore – xmlns required for SVG foreignObject in some renderers */}
         <div
           style={{
+            position: "relative",
             width: "100%",
             height: "100%",
             background: theme.bg,
@@ -340,6 +341,66 @@ export const SysComponentLayer = memo(function SysComponentLayer({
             boxShadow: isConnectingFrom ? `0 0 0 3px #93C5FD` : undefined,
           }}
         >
+          {/* Status health badge in top-right */}
+          {layer.status && (
+            <div
+              style={{
+                position: "absolute",
+                top: 5,
+                right: 5,
+                display: "flex",
+                alignItems: "center",
+                gap: 3,
+                padding: "1px 5px",
+                borderRadius: 9999,
+                fontSize: 8,
+                fontWeight: 700,
+                backgroundColor:
+                  layer.status === "healthy"
+                    ? "#DCFCE7"
+                    : layer.status === "warning"
+                    ? "#FEF9C3"
+                    : layer.status === "error"
+                    ? "#FEE2E2"
+                    : "#DBEAFE",
+                color:
+                  layer.status === "healthy"
+                    ? "#15803D"
+                    : layer.status === "warning"
+                    ? "#A16207"
+                    : layer.status === "error"
+                    ? "#B91C1C"
+                    : "#1D4ED8",
+                border: `1px solid ${
+                  layer.status === "healthy"
+                    ? "#86EFAC"
+                    : layer.status === "warning"
+                    ? "#FDE047"
+                    : layer.status === "error"
+                    ? "#FCA5A5"
+                    : "#93C5FD"
+                }`,
+              }}
+            >
+              <span
+                style={{
+                  width: 5,
+                  height: 5,
+                  borderRadius: "50%",
+                  backgroundColor:
+                    layer.status === "healthy"
+                      ? "#22C55E"
+                      : layer.status === "warning"
+                      ? "#EAB308"
+                      : layer.status === "error"
+                      ? "#EF4444"
+                      : "#3B82F6",
+                }}
+              />
+              <span>{layer.statusText || layer.status.toUpperCase()}</span>
+            </div>
+          )}
+
           {/* Icon badge */}
           <div
             style={{

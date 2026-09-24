@@ -182,6 +182,7 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
       <path d={pathD} fill="none" stroke="transparent" strokeWidth={18} />
 
       {/* Visible line / curve */}
+      {/* Visible line / curve */}
       <path
         d={pathD}
         fill="none"
@@ -189,16 +190,45 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
         strokeWidth={2.5}
         strokeLinecap="round"
         strokeLinejoin="round"
-        strokeDasharray={selectionColor ? "6 3" : undefined}
+        strokeDasharray={
+          selectionColor
+            ? "6 3"
+            : layer.strokePattern === "dotted"
+            ? "3 4"
+            : layer.strokePattern === "dashed"
+            ? "7 5"
+            : undefined
+        }
       />
 
-      {/* Arrowhead */}
-      <polygon
-        points={arrowPts}
-        fill={stroke}
-        stroke={stroke}
-        strokeWidth={1}
-      />
+      {/* Destination Arrowhead */}
+      {layer.direction !== "none" && (
+        <polygon
+          points={arrowPts}
+          fill={stroke}
+          stroke={stroke}
+          strokeWidth={1}
+        />
+      )}
+
+      {/* Source Arrowhead for Bidirectional */}
+      {layer.direction === "bidirectional" && (
+        <polygon
+          points={arrowheadPoints(
+            fromPt,
+            layer.fromAnchor === "right"
+              ? "left"
+              : layer.fromAnchor === "left"
+              ? "right"
+              : layer.fromAnchor === "top"
+              ? "bottom"
+              : "top"
+          )}
+          fill={stroke}
+          stroke={stroke}
+          strokeWidth={1}
+        />
+      )}
 
       {/* ── Midpoint label pill (view mode) ── */}
       {hasLabel && !editing && (

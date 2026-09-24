@@ -92,6 +92,9 @@ export enum LayerType {
   Section,
 }
 
+export type StrokePattern = "solid" | "dashed" | "dotted"
+export type ArrowDirection = "forward" | "bidirectional" | "none"
+
 export type RectangleLayer = {
   type: LayerType.Rectangle
   x: number
@@ -100,6 +103,7 @@ export type RectangleLayer = {
   height: number
   fill: Color
   value?: string
+  strokePattern?: StrokePattern
 }
 
 export type EllipseLayer = {
@@ -110,6 +114,7 @@ export type EllipseLayer = {
   height: number
   fill: Color
   value?: string
+  strokePattern?: StrokePattern
 }
 
 export type PathLayer = {
@@ -143,6 +148,8 @@ export type NoteLayer = {
   value?: string
 }
 
+export type ComponentStatus = "healthy" | "warning" | "error" | "info"
+
 export type ComponentLayer = {
   type: LayerType.Component
   x: number
@@ -152,6 +159,8 @@ export type ComponentLayer = {
   fill: Color
   componentType: SysComponent
   value?: string
+  status?: ComponentStatus
+  statusText?: string
 }
 
 export type ArrowStyle = "curvy" | "sharp" | "orthogonal"
@@ -171,6 +180,8 @@ export type ArrowLayer = {
   fill: Color
   value?: string
   arrowStyle?: ArrowStyle
+  strokePattern?: StrokePattern
+  direction?: ArrowDirection
 }
 
 export type SectionLayer = {
@@ -181,6 +192,7 @@ export type SectionLayer = {
   height: number
   fill: Color
   value?: string
+  strokePattern?: StrokePattern
 }
 
 export type Point = {

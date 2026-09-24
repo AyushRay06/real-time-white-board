@@ -53,6 +53,7 @@ const SHORTCUT_GROUPS = [
       { key: "Ctrl + 0", desc: "Reset zoom to 100%" },
       { key: "Shift + 1", desc: "Fit diagram to screen" },
       { key: "G", desc: "Toggle background grid" },
+      { key: "M", desc: "Toggle minimap navigator" },
       { key: "Esc", desc: "Deselect / Cancel active tool" },
     ],
   },

@@ -32,6 +32,7 @@ import { ZoomControls } from "./zoom-controls"
 import { CanvasContextMenu } from "./context-menu"
 import { ShortcutsModal } from "./shortcuts-modal"
 import { ComponentRenameDialog } from "./component-rename-dialog"
+import { Minimap } from "./minimap"
 
 // ─── Preview line while connecting ──────────────────────────────────────────
 function ConnectingPreviewLine({ fromLayerId, to }: { fromLayerId: string; to: Point }) {
@@ -66,6 +67,7 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false)
   const [renamingLayerId, setRenamingLayerId] = useState<string | null>(null)
   const [arrowStyle, setArrowStyle] = useState<"curvy" | "sharp">("curvy")
+  const [isMinimapOpen, setIsMinimapOpen] = useState(true)
 
   const toggleDefaultArrowStyle = useCallback(() => {
     setArrowStyle((s) => s === "sharp" ? "curvy" : "sharp")
@@ -1154,6 +1156,10 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         case "L":
           setIsLibraryOpen((v) => !v)
           break
+        case "m":
+        case "M":
+          setIsMinimapOpen((v) => !v)
+          break
         // When no layer is selected or holding Alt: Arrow keys pan the canvas!
         case "ArrowLeft":
           e.preventDefault()
@@ -1203,7 +1209,58 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   }, [])
 
   // ─── EXPORT DIAGRAM ──────────────────────────────────────────────────────
-  const handleExport = useCallback((format: "png" | "svg" | "json") => {
+  const handleExport = useCallback((format: "png" | "svg" | "json" | "mermaid") => {
+    if (format === "mermaid") {
+      let mmd = "flowchart LR\n"
+      layerIds.forEach((id) => {
+        const l = layers.get(id)
+        if (!l) return
+        const safeId = `node_${id.replace(/[^a-zA-Z0-9_]/g, "_")}`
+        if (l.type === LayerType.Component) {
+          const comp = l as any
+          const label = (comp.label || comp.componentType || "Node").replace(/["\n]/g, " ")
+          mmd += `  ${safeId}["${label}"]\n`
+        } else if (l.type === LayerType.Rectangle || l.type === LayerType.Note) {
+          const shape = l as any
+          const label = (shape.value || shape.label || (l.type === LayerType.Note ? "Note" : "Box")).replace(/["\n]/g, " ")
+          mmd += `  ${safeId}["${label || "Box"}"]\n`
+        }
+      })
+
+      layerIds.forEach((id) => {
+        const l = layers.get(id)
+        if (!l || l.type !== LayerType.Arrow) return
+        const arrow = l as any
+        const fromId = arrow.fromLayerId
+        const toId = arrow.toLayerId
+        if (!fromId || !toId) return
+        const fromSafe = `node_${fromId.replace(/[^a-zA-Z0-9_]/g, "_")}`
+        const toSafe = `node_${toId.replace(/[^a-zA-Z0-9_]/g, "_")}`
+        const label = arrow.label ? `|"${arrow.label.replace(/["\n]/g, " ")}"|` : ""
+        const isDotted = arrow.strokePattern === "dotted" || arrow.strokePattern === "dashed"
+        const isBi = arrow.direction === "bidirectional"
+
+        let connector = "-->"
+        if (isDotted && isBi) connector = "<-.->"
+        else if (isDotted) connector = "-.->"
+        else if (isBi) connector = "<-->"
+
+        mmd += `  ${fromSafe} ${connector}${label} ${toSafe}\n`
+      })
+
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(mmd)
+      }
+      const blob = new Blob([mmd], { type: "text/plain;charset=utf-8" })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `architecture-flowchart-${boardId}.mmd`
+      a.click()
+      URL.revokeObjectURL(url)
+      return
+    }
+
     if (format === "json") {
       const data: Record<string, any> = {}
       layerIds.forEach((id) => {
@@ -1378,7 +1435,17 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         onToggleGrid={() => setShowGrid((v) => !v)}
         onOpenShortcuts={() => setIsShortcutsOpen(true)}
         onExport={handleExport}
+        isMinimapOpen={isMinimapOpen}
+        onToggleMinimap={() => setIsMinimapOpen((v) => !v)}
       />
+
+      {/* Interactive Minimap Navigator */}
+      {isMinimapOpen && (
+        <Minimap
+          camera={camera}
+          setCamera={setCamera}
+        />
+      )}
 
       {/* Right-click Context Menu */}
       {contextMenu && (

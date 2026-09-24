@@ -47,8 +47,9 @@ export const Toolbar = ({
   onSelectAllArchitecture,
 }: ToolbarProps) => {
   return (
-    <div className="absolute top-[50%] -translate-y-[50%] left-3 flex flex-col gap-y-4 z-40 select-none">
-      <div className="bg-white/95 backdrop-blur-md rounded-2xl p-1.5 flex gap-y-1.5 flex-col items-center shadow-lg border border-neutral-200">
+    <div className="absolute top-[50%] -translate-y-[50%] left-3 flex flex-col gap-y-3 z-40 select-none">
+      {/* ── Group 1: Select & Navigation ── */}
+      <div className="bg-white/95 backdrop-blur-md rounded-2xl p-1.5 flex gap-y-1 flex-col items-center shadow-lg border border-neutral-200">
         <ToolButton
           label="Select (V)"
           icon={MousePointer2}
@@ -73,8 +74,18 @@ export const Toolbar = ({
           }
           isActive={canvasState.mode === CanvasMode.Panning}
         />
+      </div>
+
+      {/* ── Group 2: System Architecture Tools ── */}
+      <div className="bg-white/95 backdrop-blur-md rounded-2xl p-1.5 flex gap-y-1 flex-col items-center shadow-lg border border-neutral-200">
         <ToolButton
-          label="Architecture Section / Zone (S)"
+          label={isLibraryOpen ? "Close Architecture Library (L)" : "Architecture Components Library (L)"}
+          icon={LayoutGrid}
+          onClick={onToggleLibrary}
+          isActive={isLibraryOpen}
+        />
+        <ToolButton
+          label="Architecture Section / Zone Box (S)"
           icon={Layers}
           onClick={() =>
             setCanvasState({
@@ -87,6 +98,29 @@ export const Toolbar = ({
             canvasState.layerType === LayerType.Section
           }
         />
+        <ToolButton
+          label={`Connect Arrow (${arrowStyle === "sharp" ? "Sharp 90°" : "Curvy"}) [C]`}
+          icon={arrowStyle === "sharp" ? CornerDownRight : Spline}
+          onClick={() => {
+            if (canvasState.mode === CanvasMode.Connecting && onToggleArrowStyle) {
+              onToggleArrowStyle()
+            } else {
+              setCanvasState({ mode: CanvasMode.Connecting, from: null })
+            }
+          }}
+          isActive={canvasState.mode === CanvasMode.Connecting}
+        />
+        {onSelectAllArchitecture && (
+          <ToolButton
+            label="Move / Select Entire Architecture (Ctrl+A)"
+            icon={Move}
+            onClick={onSelectAllArchitecture}
+          />
+        )}
+      </div>
+
+      {/* ── Group 3: Shapes, Notes & Freehand ── */}
+      <div className="bg-white/95 backdrop-blur-md rounded-2xl p-1.5 flex gap-y-1 flex-col items-center shadow-lg border border-neutral-200">
         <ToolButton
           label="Text (T)"
           icon={Type}
@@ -144,49 +178,22 @@ export const Toolbar = ({
           }
         />
         <ToolButton
-          label="Pen (P)"
+          label="Pen / Sketch (P)"
           icon={Pencil}
           onClick={() => setCanvasState({ mode: CanvasMode.Pencil })}
           isActive={canvasState.mode === CanvasMode.Pencil}
         />
+      </div>
+
+      {/* ── Group 4: Eraser & History ── */}
+      <div className="bg-white/95 backdrop-blur-md rounded-2xl p-1.5 flex flex-col gap-y-1 items-center shadow-lg border border-neutral-200">
         <ToolButton
-          label="Eraser (E) — Click or drag to erase"
+          label="Eraser (E) — Click or swipe to erase"
           icon={Eraser}
           onClick={() => setCanvasState({ mode: CanvasMode.Eraser })}
           isActive={canvasState.mode === CanvasMode.Eraser}
         />
-        <ToolButton
-          label={`Connect (${arrowStyle === "sharp" ? "Sharp" : "Curvy"}) [C]`}
-          icon={arrowStyle === "sharp" ? CornerDownRight : Spline}
-          onClick={() => setCanvasState({ mode: CanvasMode.Connecting, from: null })}
-          isActive={canvasState.mode === CanvasMode.Connecting}
-        />
-        {onToggleArrowStyle && (
-          <ToolButton
-            label={`Arrow Style: ${arrowStyle === "sharp" ? "Sharp (90°)" : "Curvy"} — Click to switch`}
-            icon={arrowStyle === "sharp" ? CornerDownRight : Spline}
-            onClick={onToggleArrowStyle}
-          />
-        )}
-      </div>
-
-      <div className="bg-white/95 backdrop-blur-md rounded-2xl p-1.5 flex flex-col gap-y-1.5 items-center shadow-lg border border-neutral-200">
-        <ToolButton
-          label={isLibraryOpen ? "Close Library (L)" : "Architecture Library (L)"}
-          icon={LayoutGrid}
-          onClick={onToggleLibrary}
-          isActive={isLibraryOpen}
-        />
-        {onSelectAllArchitecture && (
-          <ToolButton
-            label="Move Entire Architecture (Ctrl+A)"
-            icon={Move}
-            onClick={onSelectAllArchitecture}
-          />
-        )}
-      </div>
-
-      <div className="bg-white/95 backdrop-blur-md rounded-2xl p-1.5 flex flex-col gap-y-1 items-center shadow-lg border border-neutral-200">
+        <div className="w-5 h-px bg-neutral-200 my-0.5" />
         <ToolButton
           label="Undo (Ctrl+Z)"
           icon={Undo2}

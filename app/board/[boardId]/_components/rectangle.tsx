@@ -15,7 +15,14 @@ export const Rectangle = ({
   onPointerDown,
   selectionColor,
 }: RectangleProps) => {
-  const { x, y, width, height, fill } = layer
+  const { x, y, width, height, fill, strokePattern } = layer
+
+  const dashArray =
+    strokePattern === "dotted"
+      ? "3 4"
+      : strokePattern === "dashed"
+      ? "8 6"
+      : undefined
 
   return (
     <rect
@@ -28,9 +35,10 @@ export const Rectangle = ({
       y={0}
       width={width}
       height={height}
-      stroke={selectionColor || "transparent"}
+      stroke={selectionColor || (strokePattern ? colorToCss(fill) : "transparent")}
+      strokeDasharray={dashArray}
       fill={fill ? colorToCss(fill) : "#000"}
-      strokeWidth={1}
+      strokeWidth={strokePattern ? 2 : 1}
     />
   )
 }
