@@ -81,10 +81,15 @@ export const useSelectionBounds = () => {
             arrow.toAnchor || "left"
           )
 
-          const minX = Math.min(fromPt.x, toPt.x)
-          const maxX = Math.max(fromPt.x, toPt.x)
-          const minY = Math.min(fromPt.y, toPt.y)
-          const maxY = Math.max(fromPt.y, toPt.y)
+          const ox = arrow.controlOffset?.x || 0
+          const oy = arrow.controlOffset?.y || 0
+          const midX = (fromPt.x + toPt.x) / 2 + ox
+          const midY = (fromPt.y + toPt.y) / 2 + oy
+
+          const minX = Math.min(fromPt.x, toPt.x, midX)
+          const maxX = Math.max(fromPt.x, toPt.x, midX)
+          const minY = Math.min(fromPt.y, toPt.y, midY)
+          const maxY = Math.max(fromPt.y, toPt.y, midY)
 
           boundsList.push({
             x: minX,

@@ -184,6 +184,7 @@ export type ArrowLayer = {
   strokePattern?: StrokePattern
   direction?: ArrowDirection
   isAnimated?: boolean
+  controlOffset?: Point
 }
 
 export type SimulationMode = "idle" | "playing" | "spike" | "chaos"

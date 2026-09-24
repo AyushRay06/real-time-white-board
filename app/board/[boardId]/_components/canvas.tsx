@@ -114,15 +114,16 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
     }
   }, [layerIds, layers, startTour])
 
-  // Layer rendering order: Sections (background zones) -> Shapes -> Arrows -> Components/Notes/Text
+  // Layer rendering order: Sections (background zones) -> Shapes -> Components/Notes/Text -> Arrows (on top)
   const sortedLayerIds = useMemo(() => {
     const getPriority = (id: string) => {
       const l = layers.get(id)
       if (!l) return 2
       if (l.type === LayerType.Section) return 0 // background zones
       if (l.type === LayerType.Rectangle || l.type === LayerType.Ellipse || l.type === LayerType.Path) return 1 // shapes
-      if (l.type === LayerType.Arrow) return 2 // connections
-      return 3 // components, text, notes on top
+      if (l.type === LayerType.Component || l.type === LayerType.Note || l.type === LayerType.Text) return 2 // components, text, notes
+      if (l.type === LayerType.Arrow) return 3 // arrows and arrowheads rendered crisp on top of components!
+      return 2
     }
     return [...layerIds].sort((a, b) => getPriority(a) - getPriority(b))
   }, [layerIds, layers])
@@ -473,10 +474,15 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       self.presence.selection.forEach((id) => {
         const layer = liveLayers.get(id)
         if (layer) {
-          layer.update({
-            x: layer.get("x") + dx,
-            y: layer.get("y") + dy,
-          })
+          if (layer.get("type") === LayerType.Arrow) {
+            const cur = (layer as any).get("controlOffset") || { x: 0, y: 0 }
+            ;(layer as any).set("controlOffset", { x: cur.x + dx, y: cur.y + dy })
+          } else {
+            layer.update({
+              x: layer.get("x") + dx,
+              y: layer.get("y") + dy,
+            })
+          }
         }
       })
     },
@@ -751,7 +757,17 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
 
       layersToMove.forEach((id) => {
         const layer = liveLayers.get(id)
-        if (layer) layer.update({ x: layer.get("x") + offset.x, y: layer.get("y") + offset.y })
+        if (layer) {
+          if (layer.get("type") === LayerType.Arrow) {
+            const cur = (layer as any).get("controlOffset") || { x: 0, y: 0 }
+            ;(layer as any).set("controlOffset", {
+              x: cur.x + offset.x,
+              y: cur.y + offset.y,
+            })
+          } else {
+            layer.update({ x: layer.get("x") + offset.x, y: layer.get("y") + offset.y })
+          }
+        }
       })
       setCanvasState({ mode: CanvasMode.Translating, current: point })
     },

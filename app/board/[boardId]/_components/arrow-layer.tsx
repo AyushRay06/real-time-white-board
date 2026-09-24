@@ -16,61 +16,81 @@ interface ArrowLayerProps {
 }
 
 function buildCubicPath(
-  from: Point, to: Point,
-  fromAnchor: AnchorSide, toAnchor: AnchorSide
-): { d: string; cp1: Point; cp2: Point } {
+  from: Point,
+  to: Point,
+  fromAnchor: AnchorSide,
+  toAnchor: AnchorSide,
+  controlOffset?: Point
+): { d: string; cp1: Point; cp2: Point; mid: Point } {
   const dx = Math.abs(to.x - from.x)
   const dy = Math.abs(to.y - from.y)
   const tension = Math.max(60, Math.max(dx, dy) * 0.45)
 
+  const ox = controlOffset?.x ?? 0
+  const oy = controlOffset?.y ?? 0
+
   let cp1: Point
   switch (fromAnchor) {
-    case "right":  cp1 = { x: from.x + tension, y: from.y }; break
-    case "left":   cp1 = { x: from.x - tension, y: from.y }; break
-    case "bottom": cp1 = { x: from.x, y: from.y + tension }; break
-    default:       cp1 = { x: from.x, y: from.y - tension }; break
+    case "right":  cp1 = { x: from.x + tension + ox, y: from.y + oy }; break
+    case "left":   cp1 = { x: from.x - tension + ox, y: from.y + oy }; break
+    case "bottom": cp1 = { x: from.x + ox, y: from.y + tension + oy }; break
+    default:       cp1 = { x: from.x + ox, y: from.y - tension + oy }; break
   }
 
   let cp2: Point
   switch (toAnchor) {
-    case "left":   cp2 = { x: to.x - tension, y: to.y }; break
-    case "right":  cp2 = { x: to.x + tension, y: to.y }; break
-    case "top":    cp2 = { x: to.x, y: to.y - tension }; break
-    default:       cp2 = { x: to.x, y: to.y + tension }; break
+    case "left":   cp2 = { x: to.x - tension + ox, y: to.y + oy }; break
+    case "right":  cp2 = { x: to.x + tension + ox, y: to.y + oy }; break
+    case "top":    cp2 = { x: to.x + ox, y: to.y - tension + oy }; break
+    default:       cp2 = { x: to.x + ox, y: to.y + tension + oy }; break
   }
+
+  const mid = bezierMidpoint(from, cp1, cp2, to)
 
   return {
     d: `M ${from.x} ${from.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${to.x} ${to.y}`,
     cp1,
     cp2,
+    mid,
   }
 }
 
-/** Crisp orthogonal / sharp right-angle routing */
+/** Crisp orthogonal / sharp right-angle routing with flow bend offset */
 function buildSharpPath(
-  from: Point, to: Point,
-  fromAnchor: AnchorSide, toAnchor: AnchorSide
+  from: Point,
+  to: Point,
+  fromAnchor: AnchorSide,
+  toAnchor: AnchorSide,
+  controlOffset?: Point
 ): { d: string; mid: Point } {
+  const ox = controlOffset?.x ?? 0
+  const oy = controlOffset?.y ?? 0
+
   if ((fromAnchor === "right" || fromAnchor === "left") && (toAnchor === "left" || toAnchor === "right")) {
-    const midX = (from.x + to.x) / 2
+    const midX = (from.x + to.x) / 2 + ox
+    const midY = (from.y + to.y) / 2 + oy
     return {
       d: `M ${from.x} ${from.y} L ${midX} ${from.y} L ${midX} ${to.y} L ${to.x} ${to.y}`,
-      mid: { x: midX, y: (from.y + to.y) / 2 },
+      mid: { x: midX, y: midY },
     }
   } else if ((fromAnchor === "bottom" || fromAnchor === "top") && (toAnchor === "top" || toAnchor === "bottom")) {
-    const midY = (from.y + to.y) / 2
+    const midX = (from.x + to.x) / 2 + ox
+    const midY = (from.y + to.y) / 2 + oy
     return {
       d: `M ${from.x} ${from.y} L ${from.x} ${midY} L ${to.x} ${midY} L ${to.x} ${to.y}`,
-      mid: { x: (from.x + to.x) / 2, y: midY },
+      mid: { x: midX, y: midY },
     }
   } else {
     // Corner turn
-    const corner = (fromAnchor === "right" || fromAnchor === "left")
-      ? { x: to.x, y: from.y }
-      : { x: from.x, y: to.y }
+    const cornerX = (fromAnchor === "right" || fromAnchor === "left")
+      ? to.x + ox
+      : from.x + ox
+    const cornerY = (fromAnchor === "right" || fromAnchor === "left")
+      ? from.y + oy
+      : to.y + oy
     return {
-      d: `M ${from.x} ${from.y} L ${corner.x} ${corner.y} L ${to.x} ${to.y}`,
-      mid: { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 },
+      d: `M ${from.x} ${from.y} L ${cornerX} ${cornerY} L ${to.x} ${to.y}`,
+      mid: { x: cornerX, y: cornerY },
     }
   }
 }
@@ -85,19 +105,44 @@ function bezierMidpoint(p0: Point, p1: Point, p2: Point, p3: Point): Point {
   }
 }
 
-function arrowheadPoints(to: Point, toAnchor: AnchorSide): string {
-  const size = 10
-  let angle: number
+/**
+ * Computes arrowhead polygon points such that the tip touches the component edge
+ * and the wings/base extend BACKWARDS outside the component, preventing any overlap.
+ */
+function arrowheadPoints(tip: Point, toAnchor: AnchorSide, size: number = 10): string {
+  const half = size * 0.58
+  let p1: Point // tip (at component edge)
+  let p2: Point // wing 1 (outside component)
+  let p3: Point // wing 2 (outside component)
+
   switch (toAnchor) {
-    case "left":   angle = 0;             break
-    case "right":  angle = Math.PI;       break
-    case "top":    angle = Math.PI / 2;   break
-    default:       angle = -Math.PI / 2;  break
+    case "left":
+      // Arrow approaches from left -> points right into left edge of component
+      p1 = { x: tip.x, y: tip.y }
+      p2 = { x: tip.x - size, y: tip.y - half }
+      p3 = { x: tip.x - size, y: tip.y + half }
+      break
+    case "right":
+      // Arrow approaches from right -> points left into right edge of component
+      p1 = { x: tip.x, y: tip.y }
+      p2 = { x: tip.x + size, y: tip.y - half }
+      p3 = { x: tip.x + size, y: tip.y + half }
+      break
+    case "top":
+      // Arrow approaches from above -> points down into top edge of component
+      p1 = { x: tip.x, y: tip.y }
+      p2 = { x: tip.x - half, y: tip.y - size }
+      p3 = { x: tip.x + half, y: tip.y - size }
+      break
+    case "bottom":
+    default:
+      // Arrow approaches from below -> points up into bottom edge of component
+      p1 = { x: tip.x, y: tip.y }
+      p2 = { x: tip.x - half, y: tip.y + size }
+      p3 = { x: tip.x + half, y: tip.y + size }
+      break
   }
-  const a = { x: to.x + size * Math.cos(angle),         y: to.y + size * Math.sin(angle) }
-  const b = { x: to.x + (size / 2) * Math.cos(angle + (2 * Math.PI) / 3), y: to.y + (size / 2) * Math.sin(angle + (2 * Math.PI) / 3) }
-  const c = { x: to.x + (size / 2) * Math.cos(angle - (2 * Math.PI) / 3), y: to.y + (size / 2) * Math.sin(angle - (2 * Math.PI) / 3) }
-  return `${a.x},${a.y} ${b.x},${b.y} ${c.x},${c.y}`
+  return `${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y}`
 }
 
 export const ArrowLayerComponent = memo(function ArrowLayerComponent({
@@ -151,22 +196,117 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
   const toPt   = getAnchorPoint(toLayer.x,   toLayer.y,   toLayer.width,   toLayer.height,   layer.toAnchor)
 
   const isSharp = layer.arrowStyle === "sharp" || layer.arrowStyle === "orthogonal"
+  const controlOffset = layer.controlOffset
 
   let pathD: string
   let mid: Point
 
   if (isSharp) {
-    const sharp = buildSharpPath(fromPt, toPt, layer.fromAnchor, layer.toAnchor)
+    const sharp = buildSharpPath(fromPt, toPt, layer.fromAnchor, layer.toAnchor, controlOffset)
     pathD = sharp.d
     mid = sharp.mid
   } else {
-    const cubic = buildCubicPath(fromPt, toPt, layer.fromAnchor, layer.toAnchor)
+    const cubic = buildCubicPath(fromPt, toPt, layer.fromAnchor, layer.toAnchor, controlOffset)
     pathD = cubic.d
-    mid = bezierMidpoint(fromPt, cubic.cp1, cubic.cp2, toPt)
+    mid = cubic.mid
   }
 
   const arrowPts = arrowheadPoints(toPt, layer.toAnchor)
   const stroke   = selectionColor || (layer.fill ? colorToCss(layer.fill) : "#6366f1")
+
+  // Mutations to edit arrow flow and anchors
+  const updateControlOffset = useMutation(({ storage }, offset: Point) => {
+    ;(storage.get("layers").get(id) as any)?.set("controlOffset", offset)
+  }, [id])
+
+  const updateFromAnchor = useMutation(({ storage }, anchor: AnchorSide) => {
+    ;(storage.get("layers").get(id) as any)?.set("fromAnchor", anchor)
+  }, [id])
+
+  const updateToAnchor = useMutation(({ storage }, anchor: AnchorSide) => {
+    ;(storage.get("layers").get(id) as any)?.set("toAnchor", anchor)
+  }, [id])
+
+  // Drag the arrow bend / flow controller handle
+  const handleBendPointerDown = useCallback((e: React.PointerEvent) => {
+    e.stopPropagation()
+    e.preventDefault()
+
+    const target = (e.target as SVGElement).ownerSVGElement
+    const ctm = target?.getScreenCTM()
+    const scaleX = ctm ? ctm.a : 1
+    const scaleY = ctm ? ctm.d : 1
+
+    const startClientX = e.clientX
+    const startClientY = e.clientY
+    const startOffset = layer.controlOffset || { x: 0, y: 0 }
+
+    const onPointerMove = (ev: PointerEvent) => {
+      const dx = (ev.clientX - startClientX) / scaleX
+      const dy = (ev.clientY - startClientY) / scaleY
+      updateControlOffset({
+        x: Math.round(startOffset.x + dx),
+        y: Math.round(startOffset.y + dy),
+      })
+    }
+
+    const onPointerUp = () => {
+      window.removeEventListener("pointermove", onPointerMove)
+      window.removeEventListener("pointerup", onPointerUp)
+    }
+
+    window.addEventListener("pointermove", onPointerMove)
+    window.addEventListener("pointerup", onPointerUp)
+  }, [layer.controlOffset, updateControlOffset])
+
+  // Drag the source or destination endpoint to change the attached component anchor
+  const handleAnchorDrag = useCallback((e: React.PointerEvent, type: "from" | "to") => {
+    e.stopPropagation()
+    e.preventDefault()
+
+    const targetLayer = type === "from" ? fromLayer : toLayer
+    if (!targetLayer) return
+
+    const target = (e.target as SVGElement).ownerSVGElement
+
+    const centerX = targetLayer.x + targetLayer.width / 2
+    const centerY = targetLayer.y + targetLayer.height / 2
+
+    const onPointerMove = (ev: PointerEvent) => {
+      if (!target) return
+      const currentCtm = target.getScreenCTM()
+      if (!currentCtm) return
+
+      const svgPoint = target.createSVGPoint()
+      svgPoint.x = ev.clientX
+      svgPoint.y = ev.clientY
+      const canvasPt = svgPoint.matrixTransform(currentCtm.inverse())
+
+      const dx = canvasPt.x - centerX
+      const dy = canvasPt.y - centerY
+
+      let nextAnchor: AnchorSide
+      if (Math.abs(dx) >= Math.abs(dy)) {
+        nextAnchor = dx >= 0 ? "right" : "left"
+      } else {
+        nextAnchor = dy >= 0 ? "bottom" : "top"
+      }
+
+      if (type === "from") {
+        if (layer.fromAnchor !== nextAnchor) updateFromAnchor(nextAnchor)
+      } else {
+        if (layer.toAnchor !== nextAnchor) updateToAnchor(nextAnchor)
+      }
+    }
+
+    const onPointerUp = () => {
+      window.removeEventListener("pointermove", onPointerMove)
+      window.removeEventListener("pointerup", onPointerUp)
+    }
+
+    window.addEventListener("pointermove", onPointerMove)
+    window.addEventListener("pointerup", onPointerUp)
+  }, [fromLayer, toLayer, layer.fromAnchor, layer.toAnchor, updateFromAnchor, updateToAnchor])
 
   // Label pill dimensions
   const labelText    = layer.value || ""
@@ -218,12 +358,12 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
       onDoubleClick={handleDblClick}
       style={{ cursor: "pointer" }}
     >
-      {/* Wide invisible hit area */}
-      <path d={pathD} fill="none" stroke="transparent" strokeWidth={24} />
+      {/* Wide invisible hit area for easy selection */}
+      <path d={pathD} fill="none" stroke="transparent" strokeWidth={26} />
 
-      {/* ── SELECTION HIGHLIGHT (Hugs arrow body with aura, contour & endpoints) ── */}
+      {/* ── SELECTION HIGHLIGHT & INTERACTIVE CONTROLLERS ── */}
       {selectionColor && (
-        <g className="pointer-events-none">
+        <g>
           {/* Outer glowing aura */}
           <path
             d={pathD}
@@ -233,6 +373,7 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
             strokeOpacity={0.22}
             strokeLinecap="round"
             strokeLinejoin="round"
+            className="pointer-events-none"
           />
           {/* Inner crisp selection contour */}
           <path
@@ -243,24 +384,75 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
             strokeOpacity={0.65}
             strokeLinecap="round"
             strokeLinejoin="round"
+            className="pointer-events-none"
           />
-          {/* Source & Destination Anchor Nodes */}
-          <circle
-            cx={fromPt.x}
-            cy={fromPt.y}
-            r={5}
-            fill="#ffffff"
-            stroke={selectionColor}
-            strokeWidth={2.5}
-          />
-          <circle
-            cx={toPt.x}
-            cy={toPt.y}
-            r={5}
-            fill="#ffffff"
-            stroke={selectionColor}
-            strokeWidth={2.5}
-          />
+
+          {/* Interactive Source Anchor Node Handle */}
+          <g
+            className="cursor-crosshair pointer-events-auto"
+            onPointerDown={(e) => handleAnchorDrag(e, "from")}
+          >
+            <circle cx={fromPt.x} cy={fromPt.y} r={14} fill="transparent" />
+            <circle
+              cx={fromPt.x}
+              cy={fromPt.y}
+              r={6.5}
+              fill="#ffffff"
+              stroke={selectionColor}
+              strokeWidth={2.5}
+              className="drop-shadow-sm hover:scale-125 transition-transform"
+            />
+            <title>Drag to change source anchor side (Top / Right / Bottom / Left)</title>
+          </g>
+
+          {/* Interactive Destination Anchor Node Handle */}
+          <g
+            className="cursor-crosshair pointer-events-auto"
+            onPointerDown={(e) => handleAnchorDrag(e, "to")}
+          >
+            <circle cx={toPt.x} cy={toPt.y} r={14} fill="transparent" />
+            <circle
+              cx={toPt.x}
+              cy={toPt.y}
+              r={6.5}
+              fill="#ffffff"
+              stroke={selectionColor}
+              strokeWidth={2.5}
+              className="drop-shadow-sm hover:scale-125 transition-transform"
+            />
+            <title>Drag to change destination anchor side (Top / Right / Bottom / Left)</title>
+          </g>
+
+          {/* Interactive Arrow Flow Bend / Edge Controller Handle */}
+          <g
+            className="cursor-move pointer-events-auto"
+            onPointerDown={handleBendPointerDown}
+            onDoubleClick={(e) => {
+              e.stopPropagation()
+              updateControlOffset({ x: 0, y: 0 })
+            }}
+          >
+            {/* Wide touch target */}
+            <circle cx={mid.x} cy={mid.y} r={16} fill="transparent" />
+            {/* Outer ring */}
+            <circle
+              cx={mid.x}
+              cy={mid.y}
+              r={8}
+              fill="#ffffff"
+              stroke={selectionColor}
+              strokeWidth={2.5}
+              className="drop-shadow-md hover:scale-125 transition-transform"
+            />
+            {/* Center dot */}
+            <circle
+              cx={mid.x}
+              cy={mid.y}
+              r={3.5}
+              fill={selectionColor}
+            />
+            <title>Drag to reshape arrow flow · Double-click to reset</title>
+          </g>
         </g>
       )}
 
@@ -281,7 +473,7 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
         }
       />
 
-      {/* Destination Arrowhead */}
+      {/* Destination Arrowhead (never overlapped: tip is outside on the boundary) */}
       {layer.direction !== "none" && (
         <>
           {selectionColor && (
@@ -304,18 +496,12 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
         </>
       )}
 
-      {/* Source Arrowhead for Bidirectional */}
+      {/* Source Arrowhead for Bidirectional (never overlapped: tip is outside on the boundary) */}
       {layer.direction === "bidirectional" && (
         <polygon
           points={arrowheadPoints(
             fromPt,
-            layer.fromAnchor === "right"
-              ? "left"
-              : layer.fromAnchor === "left"
-              ? "right"
-              : layer.fromAnchor === "top"
-              ? "bottom"
-              : "top"
+            layer.fromAnchor
           )}
           fill={stroke}
           stroke={stroke}
