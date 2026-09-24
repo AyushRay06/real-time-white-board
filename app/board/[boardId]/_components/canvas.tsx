@@ -33,6 +33,9 @@ import { CanvasContextMenu } from "./context-menu"
 import { ShortcutsModal } from "./shortcuts-modal"
 import { ComponentRenameDialog } from "./component-rename-dialog"
 import { Minimap } from "./minimap"
+import { SimulationProvider, useSimulation } from "./simulation-context"
+import { ArchitectureSimulator } from "./architecture-simulator"
+import { ArchitectureTourBar } from "./architecture-tour-bar"
 
 // ─── Preview line while connecting ──────────────────────────────────────────
 function ConnectingPreviewLine({ fromLayerId, to }: { fromLayerId: string; to: Point }) {
@@ -54,6 +57,14 @@ const MAX_LAYERS = 200
 interface CanvasProps { boardId: string }
 
 export const Canvas = ({ boardId }: CanvasProps) => {
+  return (
+    <SimulationProvider>
+      <CanvasInner boardId={boardId} />
+    </SimulationProvider>
+  )
+}
+
+const CanvasInner = ({ boardId }: CanvasProps) => {
   const layerIds = useStorage((root) => root.layerIds)
   const layers = useStorage((root) => root.layers)
   const pencilDraft = useSelf((me) => me.presence.pencilDraft)
@@ -68,6 +79,42 @@ export const Canvas = ({ boardId }: CanvasProps) => {
   const [renamingLayerId, setRenamingLayerId] = useState<string | null>(null)
   const [arrowStyle, setArrowStyle] = useState<"curvy" | "sharp">("curvy")
   const [isMinimapOpen, setIsMinimapOpen] = useState(true)
+
+  const { startTour, stopTour, isTourActive } = useSimulation()
+
+  const handleStartTour = useCallback(() => {
+    const compIds: string[] = []
+    layerIds.forEach((id) => {
+      const l = layers.get(id)
+      if (l && (l.type === LayerType.Component || l.type === LayerType.Section)) {
+        compIds.push(id)
+      }
+    })
+    compIds.sort((a, b) => {
+      const la = layers.get(a)
+      const lb = layers.get(b)
+      if (!la || !lb) return 0
+      return la.x - lb.x
+    })
+    if (compIds.length === 0) {
+      layerIds.forEach((id) => {
+        const l = layers.get(id)
+        if (l && l.type !== LayerType.Arrow) compIds.push(id)
+      })
+    }
+    if (compIds.length > 0) {
+      startTour(compIds)
+    }
+  }, [layerIds, layers, startTour])
+
+  const handleFocusTourLayer = useCallback((targetId: string) => {
+    const l = layers.get(targetId)
+    if (!l) return
+    const targetZoom = 1.15
+    const centerX = window.innerWidth / 2 - (l.x + l.width / 2) * targetZoom
+    const centerY = window.innerHeight / 2 - (l.y + l.height / 2) * targetZoom
+    setCamera({ x: centerX, y: centerY, zoom: targetZoom })
+  }, [layers])
 
   const toggleDefaultArrowStyle = useCallback(() => {
     setArrowStyle((s) => s === "sharp" ? "curvy" : "sharp")
@@ -1086,6 +1133,9 @@ export const Canvas = ({ boardId }: CanvasProps) => {
       // Non-ctrl shortcuts
       switch (e.key) {
         case "Escape":
+          if (isTourActive) {
+            stopTour()
+          }
           if (canvasState.mode === CanvasMode.Connecting) {
             setCanvasState({ mode: CanvasMode.None })
             setConnectPreview(null)
@@ -1386,32 +1436,38 @@ export const Canvas = ({ boardId }: CanvasProps) => {
         onSelectTemplate={insertTemplate}
       />
 
-      {/* Status hints */}
+      {/* Status hints (placed below top simulator bar) */}
       {canvasState.mode === CanvasMode.Connecting && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-xl z-50 pointer-events-none select-none flex items-center gap-2 animate-bounce">
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-xl z-50 pointer-events-none select-none flex items-center gap-2 animate-bounce">
           <span>{canvasState.from ? "✓ Source selected — click destination component · Esc to cancel" : "Click source component to start arrow connection"}</span>
         </div>
       )}
       {canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Component && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-xl z-50 pointer-events-none select-none">
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-xl z-50 pointer-events-none select-none">
           Click anywhere on canvas to place this system component
         </div>
       )}
       {canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Section && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-xl z-50 pointer-events-none select-none">
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-xl z-50 pointer-events-none select-none">
           Click anywhere on canvas to create an Architecture Section / Zone Box
         </div>
       )}
       {canvasState.mode === CanvasMode.Eraser && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-rose-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-xl z-50 pointer-events-none select-none flex items-center gap-2 animate-pulse">
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-rose-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-xl z-50 pointer-events-none select-none flex items-center gap-2 animate-pulse">
           <span>🧹 Eraser Active — Click or drag through any component, arrow, drawing, or text to erase · Esc to finish</span>
         </div>
       )}
       {isPanActive && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 bg-neutral-800/90 text-white text-xs font-medium px-4 py-1.5 rounded-full shadow-lg z-50 pointer-events-none select-none flex items-center gap-1.5 backdrop-blur-sm">
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-neutral-800/90 text-white text-xs font-medium px-4 py-1.5 rounded-full shadow-lg z-50 pointer-events-none select-none flex items-center gap-1.5 backdrop-blur-sm">
           <span>Click & drag to pan canvas in any direction</span>
         </div>
       )}
+
+      {/* Floating Architecture Simulator Bar */}
+      <ArchitectureSimulator onStartTour={handleStartTour} />
+
+      {/* Step-by-Step Architecture Presentation / Tour Bar */}
+      <ArchitectureTourBar onFocusLayer={handleFocusTourLayer} />
 
       {/* Floating Selection Tools */}
       <SelectionTools

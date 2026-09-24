@@ -54,7 +54,19 @@ const SHORTCUT_GROUPS = [
       { key: "Shift + 1", desc: "Fit diagram to screen" },
       { key: "G", desc: "Toggle background grid" },
       { key: "M", desc: "Toggle minimap navigator" },
-      { key: "Esc", desc: "Deselect / Cancel active tool" },
+      { key: "Esc", desc: "Deselect / Cancel active tool / Exit tour" },
+    ],
+  },
+  {
+    category: "Simulation & Architecture Presentation",
+    items: [
+      { key: "Simulate Flow (▶)", desc: "Play live animated data packet traffic along arrows" },
+      { key: "Traffic Modes", desc: "Normal (cyan), Spike (amber), Chaos (red alerts)" },
+      { key: "Speed (0.5x-2x)", desc: "Adjust data packet travel speed" },
+      { key: "Telemetry HUD", desc: "Toggle live QPS, latency, IOPS, and pod metrics" },
+      { key: "Tour Mode (🧭)", desc: "Step-by-step architecture presentation walkthrough" },
+      { key: "Chaos Monkey (🔥)", desc: "Simulate node outage & test resilience" },
+      { key: "Energy Arrow (✨)", desc: "Toggle live laser data stream on selected arrow" },
     ],
   },
 ]

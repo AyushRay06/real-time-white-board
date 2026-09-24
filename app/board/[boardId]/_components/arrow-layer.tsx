@@ -4,6 +4,7 @@ import { memo, useState, useRef, useEffect, useCallback } from "react"
 import { useStorage, useMutation } from "@liveblocks/react/suspense"
 import { ArrowLayer, AnchorSide, Point, ArrowStyle } from "@/types/canvas"
 import { getAnchorPoint } from "./sys-component-layer"
+import { useSimulation } from "./simulation-context"
 
 interface ArrowLayerProps {
   id: string
@@ -171,6 +172,24 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
   const pillH        = 22
   const charWidth    = 7
   const pillW        = Math.max(60, labelText.length * charWidth + pillPadX * 2)
+  let simContext: any = null
+  try {
+    simContext = useSimulation()
+  } catch {
+    // fallback if rendered outside provider
+  }
+
+  const isSimulating = (simContext && simContext.simMode !== "idle") || layer.isAnimated
+  const simMode = simContext?.simMode || (layer.isAnimated ? "playing" : "idle")
+  const simSpeed = simContext?.simSpeed || 1
+
+  const baseDur = Math.max(0.6, 2.4 / simSpeed)
+  const packetColor =
+    simMode === "chaos"
+      ? "#ef4444"
+      : simMode === "spike"
+      ? "#f59e0b"
+      : "#06b6d4" // electric cyan
 
   return (
     <g
@@ -228,6 +247,102 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
           stroke={stroke}
           strokeWidth={1}
         />
+      )}
+
+      {/* ── Animated Traffic Packets & Energy Flow ── */}
+      {isSimulating && (
+        <g style={{ pointerEvents: "none" }}>
+          {/* Glowing Energy Flow Overlay */}
+          <path
+            d={pathD}
+            fill="none"
+            stroke={packetColor}
+            strokeWidth={3}
+            strokeDasharray="8 12"
+            opacity={0.65}
+            strokeLinecap="round"
+          >
+            <animate
+              attributeName="stroke-dashoffset"
+              from="40"
+              to="0"
+              dur={`${Math.max(0.4, 1.2 / simSpeed)}s`}
+              repeatCount="indefinite"
+            />
+          </path>
+
+          {/* Packet 1 Glow Ring */}
+          <circle r={8} fill="none" stroke={packetColor} strokeWidth={1.5} opacity={0.45}>
+            <animateMotion
+              dur={`${baseDur}s`}
+              repeatCount="indefinite"
+              path={pathD}
+              rotate="auto"
+            />
+          </circle>
+
+          {/* Packet 1 Core */}
+          <circle r={4.5} fill={packetColor} opacity={0.95}>
+            <animateMotion
+              dur={`${baseDur}s`}
+              repeatCount="indefinite"
+              path={pathD}
+              rotate="auto"
+            />
+          </circle>
+
+          {/* Packet 2: Offset by 50% */}
+          <circle r={3.5} fill={packetColor} opacity={0.85}>
+            <animateMotion
+              dur={`${baseDur}s`}
+              begin={`${baseDur * 0.5}s`}
+              repeatCount="indefinite"
+              path={pathD}
+              rotate="auto"
+            />
+          </circle>
+
+          {/* Spike Mode: Extra rapid burst packet */}
+          {simMode === "spike" && (
+            <circle r={5} fill="#f97316" opacity={0.95}>
+              <animateMotion
+                dur={`${baseDur * 0.65}s`}
+                begin={`${baseDur * 0.25}s`}
+                repeatCount="indefinite"
+                path={pathD}
+                rotate="auto"
+              />
+            </circle>
+          )}
+
+          {/* Chaos Mode: Error alert burst */}
+          {simMode === "chaos" && (
+            <circle r={4} fill="#dc2626" opacity={0.95}>
+              <animateMotion
+                dur={`${baseDur * 0.8}s`}
+                begin={`${baseDur * 0.7}s`}
+                repeatCount="indefinite"
+                path={pathD}
+                rotate="auto"
+              />
+            </circle>
+          )}
+
+          {/* Bidirectional: Return ACK packet flowing in reverse */}
+          {layer.direction === "bidirectional" && (
+            <circle r={3.5} fill="#10b981" opacity={0.9}>
+              <animateMotion
+                dur={`${baseDur * 1.1}s`}
+                begin={`${baseDur * 0.35}s`}
+                keyPoints="1;0"
+                keyTimes="0;1"
+                repeatCount="indefinite"
+                path={pathD}
+                rotate="auto"
+              />
+            </circle>
+          )}
+        </g>
       )}
 
       {/* ── Midpoint label pill (view mode) ── */}

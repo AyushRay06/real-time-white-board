@@ -8,6 +8,7 @@ import {
   Workflow, Lock, Key, Gauge, FileCode2, Eye
 } from "lucide-react"
 import { ComponentLayer, SysComponent, AnchorSide, Point } from "@/types/canvas"
+import { useSimulation } from "./simulation-context"
 
 // ─── Anchor point geometry ────────────────────────────────────────────────────
 export function getAnchorPoint(
@@ -274,6 +275,61 @@ interface SysComponentLayerProps {
   onDoubleClick?: (layerId: string) => void
 }
 
+function getComponentTelemetry(compType: SysComponent, status?: string): { metric1: string; metric2: string } {
+  if (status === "error") {
+    return { metric1: "ERR: Outage", metric2: "0 req/s · 100% fail" }
+  }
+  switch (compType) {
+    case SysComponent.WebClient:
+    case SysComponent.MobileClient:
+    case SysComponent.DesktopClient:
+    case SysComponent.IoTDevice:
+      return { metric1: "18.4k Users", metric2: "Latency: 28ms" }
+    case SysComponent.LoadBalancer:
+    case SysComponent.APIGateway:
+    case SysComponent.ReverseProxy:
+      return { metric1: "34.2k QPS", metric2: "p99: 8.2ms · 99.99%" }
+    case SysComponent.DNS:
+    case SysComponent.CDN:
+      return { metric1: "Edge Hit: 98.4%", metric2: "12ms TTFB" }
+    case SysComponent.RateLimiter:
+    case SysComponent.FirewallWAF:
+      return { metric1: "Blocked: 2.1%", metric2: "Pass: 97.9%" }
+    case SysComponent.Server:
+    case SysComponent.Microservice:
+    case SysComponent.Kubernetes:
+    case SysComponent.Docker:
+      return { metric1: "CPU: 42% · RAM: 58%", metric2: "12/12 Pods Healthy" }
+    case SysComponent.Serverless:
+    case SysComponent.WorkerService:
+      return { metric1: "Concurrency: 450", metric2: "Avg Exec: 45ms" }
+    case SysComponent.Database:
+    case SysComponent.PrimaryDB:
+    case SysComponent.ReplicaDB:
+    case SysComponent.ShardedDB:
+    case SysComponent.DistributedSQL:
+      return { metric1: "1.8k TPS · IOPS 3.2k", metric2: "Conn: 64/100 · 4ms" }
+    case SysComponent.NoSQLDB:
+    case SysComponent.Cassandra:
+    case SysComponent.GraphDB:
+    case SysComponent.TimeSeriesDB:
+      return { metric1: "Write: 14k/s", metric2: "Read: 22k/s · 2ms" }
+    case SysComponent.Cache:
+    case SysComponent.DistributedCache:
+      return { metric1: "Hit Rate: 97.2%", metric2: "0.8ms p99 · 2.4 GB" }
+    case SysComponent.MessageQueue:
+    case SysComponent.EventStreaming:
+    case SysComponent.PubSub:
+    case SysComponent.DeadLetterQueue:
+      return { metric1: "Lag: 0 ms", metric2: "18.5 MB/s ingress" }
+    case SysComponent.AuthService:
+    case SysComponent.SecretManager:
+      return { metric1: "Valid Token: 99.99%", metric2: "4.2ms JWT verify" }
+    default:
+      return { metric1: "Active · Healthy", metric2: "Uptime: 99.98%" }
+  }
+}
+
 export const SysComponentLayer = memo(function SysComponentLayer({
   id,
   layer,
@@ -304,6 +360,16 @@ export const SysComponentLayer = memo(function SysComponentLayer({
       onPointerDown(e, id)
     }
   }
+
+  let simContext: any = null
+  try {
+    simContext = useSimulation()
+  } catch {}
+
+  const isSimulating = Boolean(simContext && simContext.simMode !== "idle")
+  const showMetrics = Boolean(simContext?.showMetrics)
+  const isFocused = Boolean(simContext?.isTourActive && simContext?.focusedLayerId === id)
+  const telemetry = showMetrics ? getComponentTelemetry(layer.componentType, layer.status) : null
 
   return (
     <g
@@ -448,6 +514,83 @@ export const SysComponentLayer = memo(function SysComponentLayer({
         fillOpacity={0.001}
         style={{ pointerEvents: "all" }}
       />
+
+      {/* ── Tour Focus Spotlight Halo ── */}
+      {isFocused && (
+        <rect
+          x={x - 6}
+          y={y - 6}
+          width={width + 12}
+          height={height + 12}
+          rx={16}
+          fill="none"
+          stroke="#6366f1"
+          strokeWidth={3}
+          strokeDasharray="6 4"
+          className="animate-pulse"
+          style={{ filter: "drop-shadow(0 0 10px rgba(99,102,241,0.9))", pointerEvents: "none" }}
+        />
+      )}
+
+      {/* ── Simulation Processing Energy Halo ── */}
+      {isSimulating && (
+        <rect
+          x={x - 3}
+          y={y - 3}
+          width={width + 6}
+          height={height + 6}
+          rx={14}
+          fill="none"
+          stroke={
+            layer.status === "error"
+              ? "#ef4444"
+              : simContext?.simMode === "spike"
+              ? "#f59e0b"
+              : "#06b6d4"
+          }
+          strokeWidth={1.5}
+          opacity={0.65}
+          className="animate-pulse"
+          style={{ pointerEvents: "none" }}
+        />
+      )}
+
+      {/* ── Live Telemetry Metrics HUD Card ── */}
+      {showMetrics && telemetry && (
+        <foreignObject
+          x={x - 20}
+          y={y + height + 5}
+          width={width + 40}
+          height={42}
+          style={{ overflow: "visible", pointerEvents: "none" }}
+        >
+          <div
+            style={{
+              background: "rgba(15, 23, 42, 0.92)",
+              backdropFilter: "blur(6px)",
+              color: "#e2e8f0",
+              borderRadius: 8,
+              padding: "4px 8px",
+              fontSize: 9,
+              fontFamily: "ui-monospace, SFMono-Regular, monospace",
+              textAlign: "center",
+              boxShadow: "0 4px 14px rgba(0,0,0,0.35)",
+              border: "1px solid rgba(255,255,255,0.18)",
+              display: "flex",
+              flexDirection: "column",
+              gap: 1.5,
+              userSelect: "none",
+            }}
+          >
+            <div style={{ color: "#38bdf8", fontWeight: 700, letterSpacing: "0.02em" }}>
+              {telemetry.metric1}
+            </div>
+            <div style={{ color: "#94a3b8", fontSize: 8 }}>
+              {telemetry.metric2}
+            </div>
+          </div>
+        </foreignObject>
+      )}
     </g>
   )
 })

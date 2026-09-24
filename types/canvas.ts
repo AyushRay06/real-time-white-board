@@ -182,7 +182,11 @@ export type ArrowLayer = {
   arrowStyle?: ArrowStyle
   strokePattern?: StrokePattern
   direction?: ArrowDirection
+  isAnimated?: boolean
 }
+
+export type SimulationMode = "idle" | "playing" | "spike" | "chaos"
+export type SimulationSpeed = 0.5 | 1 | 2 | 3
 
 export type SectionLayer = {
   type: LayerType.Section

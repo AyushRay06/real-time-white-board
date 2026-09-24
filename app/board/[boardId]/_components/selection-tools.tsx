@@ -23,6 +23,8 @@ import {
   MoreHorizontal,
   Activity,
   Layers,
+  Sparkles,
+  Flame,
 } from "lucide-react"
 
 interface SelectionToolsProps {
@@ -92,6 +94,32 @@ export const SelectionTools = memo(
           const cur = ((layer as any).get("status") as string) || "none"
           const next = cur === "none" ? "healthy" : cur === "healthy" ? "warning" : cur === "warning" ? "error" : "none"
           ;(layer as any).set("status", next === "none" ? undefined : next)
+        }
+      })
+    }, [selection])
+
+    const toggleAnimatedFlow = useMutation(({ storage }) => {
+      if (!soleLayerId) return
+      const layer = storage.get("layers").get(soleLayerId)
+      if (layer && layer.get("type") === LayerType.Arrow) {
+        const cur = Boolean((layer as any).get("isAnimated"))
+        ;(layer as any).set("isAnimated", !cur)
+      }
+    }, [soleLayerId])
+
+    const injectFault = useMutation(({ storage }) => {
+      const liveLayers = storage.get("layers")
+      selection.forEach((id) => {
+        const layer = liveLayers.get(id)
+        if (layer && layer.get("type") === LayerType.Component) {
+          const cur = (layer as any).get("status") as string
+          if (cur === "error") {
+            ;(layer as any).set("status", "healthy")
+            ;(layer as any).set("statusText", "HEALTHY")
+          } else {
+            ;(layer as any).set("status", "error")
+            ;(layer as any).set("statusText", "OUTAGE")
+          }
         }
       })
     }, [selection])
@@ -292,16 +320,33 @@ export const SelectionTools = memo(
                 <ArrowRightLeft className="w-4 h-4" />
               </Button>
             </Hint>
+            <Hint label={`Live Energy Flow: ${(soleLayer as any)?.isAnimated ? "ON" : "OFF"}`}>
+              <Button
+                variant="board"
+                size="icon"
+                onClick={toggleAnimatedFlow}
+                className={(soleLayer as any)?.isAnimated ? "text-cyan-600 bg-cyan-50" : "text-neutral-600 hover:text-cyan-600"}
+              >
+                <Sparkles className="w-4 h-4" />
+              </Button>
+            </Hint>
           </>
         )}
 
-        {/* Component Health Status Badge */}
+        {/* Component Health Status Badge & Fault Injection */}
         {isComponent && (
-          <Hint label="Toggle Health / Status Badge (🟢 Healthy, 🟡 Warning, 🔴 Error)">
-            <Button variant="board" size="icon" onClick={cycleComponentStatus} className="text-neutral-600 hover:text-indigo-600">
-              <Activity className="w-4 h-4" />
-            </Button>
-          </Hint>
+          <>
+            <Hint label="Toggle Health Badge (🟢 Healthy, 🟡 Warning, 🔴 Error)">
+              <Button variant="board" size="icon" onClick={cycleComponentStatus} className="text-neutral-600 hover:text-indigo-600">
+                <Activity className="w-4 h-4" />
+              </Button>
+            </Hint>
+            <Hint label="Inject Fault / Outage (Simulate Node Down)">
+              <Button variant="board" size="icon" onClick={injectFault} className="text-neutral-600 hover:text-rose-600 hover:bg-rose-50">
+                <Flame className="w-4 h-4" />
+              </Button>
+            </Hint>
+          </>
         )}
 
         {/* Multi-Selection Alignment Tools */}
