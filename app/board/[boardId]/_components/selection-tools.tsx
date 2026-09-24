@@ -1,32 +1,55 @@
 "use client"
 
 import { memo, useEffect, useState } from "react"
-import { Camera, Color } from "@/types/canvas"
+import { Camera, Color, LayerType } from "@/types/canvas"
 import { useSelectionBounds } from "@/hooks/use-selection-bound"
-import { useMutation, useSelf } from "@liveblocks/react/suspense"
+import { useMutation, useSelf, useStorage } from "@liveblocks/react/suspense"
 import { ColorPicker } from "./color-picker"
 import { useDeleteLayers } from "@/hooks/use-delete-layers"
 import { Hint } from "@/components/hint"
 import { Button } from "@/components/ui/button"
-import { BringToFront, SendToBack, Trash2 } from "lucide-react"
+import { BringToFront, SendToBack, Trash2, Copy, Edit3, Network, Spline, CornerDownRight } from "lucide-react"
 
 interface SelectionToolsProps {
   camera: Camera
   setLastUsedColor: (color: Color) => void
+  onDuplicate?: () => void
+  onRename?: () => void
+  onSelectConnected?: () => void
 }
 
 export const SelectionTools = memo(
-  ({ camera, setLastUsedColor }: SelectionToolsProps) => {
+  ({ camera, setLastUsedColor, onDuplicate, onRename, onSelectConnected }: SelectionToolsProps) => {
     const selection = useSelf((me) => me.presence.selection)
     const selectionBounds = useSelectionBounds()
     const [position, setPosition] = useState({ x: 0, y: 0 })
 
-    //to bring layer front
+    const soleLayerId = selection.length === 1 ? selection[0] : null
+    const soleLayer = useStorage((root) =>
+      soleLayerId ? root.layers.get(soleLayerId) : null
+    )
+    const canRename =
+      soleLayer?.type === LayerType.Component ||
+      soleLayer?.type === LayerType.Text ||
+      soleLayer?.type === LayerType.Section
+    const isArrow = soleLayer?.type === LayerType.Arrow
+    const currentArrowStyle = isArrow && "arrowStyle" in soleLayer ? (soleLayer.arrowStyle || "curvy") : "curvy"
+
+    const toggleArrowStyle = useMutation(({ storage }) => {
+      if (!soleLayerId) return
+      const layer = storage.get("layers").get(soleLayerId)
+      if (layer && layer.get("type") === LayerType.Arrow) {
+        const cur = ((layer as any).get("arrowStyle") as any) || "curvy"
+        const next = cur === "sharp" ? "curvy" : "sharp"
+        ;(layer as any).set("arrowStyle", next)
+      }
+    }, [soleLayerId])
+
+    // To bring layer to front
     const bringToFront = useMutation(
       ({ storage }) => {
         const liveLayersIds = storage.get("layerIds")
         const indices: number[] = []
-
         const arr = liveLayersIds.toImmutable()
 
         for (let i = 0; i < arr.length; i++) {
@@ -41,12 +64,12 @@ export const SelectionTools = memo(
       },
       [selection]
     )
-    //to move layer back
+
+    // To move layer back
     const moveToBack = useMutation(
       ({ storage }) => {
         const liveLayersIds = storage.get("layerIds")
         const indices: number[] = []
-
         const arr = liveLayersIds.toImmutable()
 
         for (let i = 0; i < arr.length; i++) {
@@ -78,8 +101,9 @@ export const SelectionTools = memo(
 
     useEffect(() => {
       if (selectionBounds) {
-        const x = selectionBounds.x + selectionBounds.width / 2 + camera.x
-        const y = selectionBounds.y + camera.y
+        const zoom = camera.zoom || 1
+        const x = (selectionBounds.x + selectionBounds.width / 2) * zoom + camera.x
+        const y = selectionBounds.y * zoom + camera.y
 
         setPosition({ x, y })
       }
@@ -91,74 +115,75 @@ export const SelectionTools = memo(
 
     return (
       <div
-        className="absolute p-3 rounded-xl bg-white shadow-sm border flex select-none"
+        className="absolute p-2.5 rounded-2xl bg-white shadow-xl border border-neutral-200 flex items-center gap-1.5 select-none z-40 animate-in fade-in zoom-in-95 duration-100"
         style={{
-          left: `calc(${position.x - 160}px)`,
-          top: `${position.y - 128}px`, // Adjusted to be slightly above the selection
+          left: `calc(${position.x}px - 140px)`,
+          top: `${position.y - 65}px`,
         }}
       >
         <ColorPicker onChange={setFill} />
-        <div className="flex flex-col gap-y-0.5">
+
+        <div className="h-6 w-px bg-neutral-200 mx-1" />
+
+        {/* Duplicate button */}
+        {onDuplicate && (
+          <Hint label="Duplicate (Ctrl+D)">
+            <Button variant="board" size="icon" onClick={onDuplicate} className="text-neutral-600">
+              <Copy className="w-4 h-4" />
+            </Button>
+          </Hint>
+        )}
+
+        {/* Rename button */}
+        {canRename && onRename && (
+          <Hint label="Rename / Label">
+            <Button variant="board" size="icon" onClick={onRename} className="text-neutral-600">
+              <Edit3 className="w-4 h-4" />
+            </Button>
+          </Hint>
+        )}
+
+        {/* Select connected layout button */}
+        {onSelectConnected && (
+          <Hint label="Select Entire Layout / Architecture">
+            <Button variant="board" size="icon" onClick={onSelectConnected} className="text-neutral-600 hover:text-indigo-600">
+              <Network className="w-4 h-4" />
+            </Button>
+          </Hint>
+        )}
+
+        {/* Toggle Curvy vs Sharp Arrow */}
+        {isArrow && (
+          <Hint label={currentArrowStyle === "sharp" ? "Switch to Curvy Arrow" : "Switch to Sharp Arrow"}>
+            <Button variant="board" size="icon" onClick={toggleArrowStyle} className="text-neutral-600 hover:text-indigo-600">
+              {currentArrowStyle === "sharp" ? <Spline className="w-4 h-4" /> : <CornerDownRight className="w-4 h-4" />}
+            </Button>
+          </Hint>
+        )}
+
+        <div className="flex gap-x-0.5">
           <Hint label="Bring to front">
-            <Button variant="board" size="icon" onClick={bringToFront}>
-              <BringToFront />
+            <Button variant="board" size="icon" onClick={bringToFront} className="text-neutral-600">
+              <BringToFront className="w-4 h-4" />
             </Button>
           </Hint>
           <Hint label="Send back">
-            <Button variant="board" size="icon" onClick={moveToBack}>
-              <SendToBack />
+            <Button variant="board" size="icon" onClick={moveToBack} className="text-neutral-600">
+              <SendToBack className="w-4 h-4" />
             </Button>
           </Hint>
         </div>
-        <div className="flex items-center pl-2 ml-2 border-l border-neutral-200">
-          <Hint label="Delete">
-            <Button variant="board" size="icon" onClick={deleteLayers}>
-              <Trash2 className="h-6 w-6 text-neutral-500" />
-            </Button>
-          </Hint>
-        </div>
+
+        <div className="h-6 w-px bg-neutral-200 mx-1" />
+
+        <Hint label="Delete (Del)">
+          <Button variant="board" size="icon" onClick={deleteLayers} className="text-red-500 hover:text-red-600 hover:bg-red-50">
+            <Trash2 className="w-4 h-4" />
+          </Button>
+        </Hint>
       </div>
     )
   }
 )
 
 SelectionTools.displayName = "SelectionTools"
-
-// "use client"
-
-// import { memo } from "react"
-// import { Camera, Color } from "@/types/canvas"
-// import { useSelectionBounds } from "@/hooks/use-selection-bound"
-// import { useSelf } from "@liveblocks/react/suspense"
-
-// interface SelectionToolsProps {
-//   camera: Camera
-//   setLastUsedColor: (color: Color) => void
-// }
-
-// export const SelectionTools = memo(
-//   ({ camera, setLastUsedColor }: SelectionToolsProps) => {
-//     const selection = useSelf((me) => me.presence.selection)
-//     const selectionBounds = useSelectionBounds()
-
-//     if (!selectionBounds) {
-//       return null
-//     }
-
-//     const x = selectionBounds.width / 2 + selectionBounds.x + camera.x
-//     const y = selectionBounds.y + camera.y
-
-//     return (
-//       <div
-//         className="absolute p-3 rounded-xl bg-white shadow-sm border flex select-none"
-//         style={{
-//           transform: translate(
-//           calc(${x}px-50%),
-//           calc(${y - 16}px-100%)),
-//         }}
-//       >
-//         Selection tools
-//       </div>
-//     )
-//   }
-// )

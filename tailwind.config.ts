@@ -18,6 +18,10 @@ const config = {
       },
     },
     extend: {
+      fontFamily: {
+        comico: ["var(--font-comico)", "sans-serif"],
+        zodiak: ["var(--font-zodiak)", "serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

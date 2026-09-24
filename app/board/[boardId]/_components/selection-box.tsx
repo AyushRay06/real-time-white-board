@@ -7,18 +7,22 @@ import { useSelectionBounds } from "@/hooks/use-selection-bound"
 
 interface SelecetionBoxProps {
   onResizeHandlePointerDown: (corner: Side, initialBounds: XYWH) => void
+  onDragSelectionStart?: (e: React.PointerEvent) => void
 }
 
 const HANDLE_WIDTH = 8
 
 export const SelectionBox = memo(
-  ({ onResizeHandlePointerDown }: SelecetionBoxProps) => {
+  ({ onResizeHandlePointerDown, onDragSelectionStart }: SelecetionBoxProps) => {
     const soleLayerId = useSelf((me) =>
       me.presence.selection.length === 1 ? me.presence.selection[0] : null
     )
+    const selectionCount = useSelf((me) => me.presence.selection.length)
     const isShowingHandles = useStorage(
       (root) =>
-        soleLayerId && root.layers.get(soleLayerId)?.type !== LayerType.Path
+        soleLayerId &&
+        root.layers.get(soleLayerId)?.type !== LayerType.Path &&
+        root.layers.get(soleLayerId)?.type !== LayerType.Arrow
     )
     const bounds = useSelectionBounds()
     if (!bounds) {
@@ -27,8 +31,47 @@ export const SelectionBox = memo(
 
     return (
       <>
+        {/* Multi-Selection Draggable Header Bar */}
+        {selectionCount > 1 && onDragSelectionStart && (
+          <g
+            style={{
+              transform: `translate(${bounds.x}px, ${bounds.y - 36}px)`,
+            }}
+            onPointerDown={(e) => {
+              e.stopPropagation()
+              onDragSelectionStart(e)
+            }}
+            className="cursor-grab active:cursor-grabbing select-none"
+          >
+            <rect
+              x={0}
+              y={0}
+              width={Math.max(240, Math.min(bounds.width, 360))}
+              height={30}
+              rx={8}
+              className="fill-indigo-600 hover:fill-indigo-700 shadow-md transition-colors"
+            />
+            <foreignObject
+              x={0}
+              y={0}
+              width={Math.max(240, Math.min(bounds.width, 360))}
+              height={30}
+              className="pointer-events-none"
+            >
+              <div className="h-full w-full flex items-center justify-center gap-2 text-white text-xs font-semibold px-3">
+                <span className="text-sm">❖</span>
+                <span>Move Architecture ({selectionCount} items)</span>
+              </div>
+            </foreignObject>
+          </g>
+        )}
+
         <rect
-          className="fill-transparent stroke-blue-500 stroke-1 pointer-events-none"
+          className={
+            selectionCount > 1
+              ? "fill-indigo-500/5 stroke-indigo-500 stroke-2 cursor-grab active:cursor-grabbing"
+              : "fill-transparent stroke-blue-500 stroke-1 pointer-events-none"
+          }
           style={{
             transform: `translate(${bounds.x}px, ${bounds.y}px)`,
           }}
@@ -36,6 +79,15 @@ export const SelectionBox = memo(
           y={0}
           width={bounds.width}
           height={bounds.height}
+          strokeDasharray={selectionCount > 1 ? "6 4" : undefined}
+          onPointerDown={
+            selectionCount > 1 && onDragSelectionStart
+              ? (e) => {
+                  e.stopPropagation()
+                  onDragSelectionStart(e)
+                }
+              : undefined
+          }
         />
         {isShowingHandles && (
           <>

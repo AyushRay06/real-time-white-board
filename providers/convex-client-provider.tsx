@@ -1,6 +1,6 @@
 "use client"
 
-import { ClerkProvider, SignInButton, useAuth } from "@clerk/nextjs"
+import { ClerkProvider, useAuth } from "@clerk/nextjs"
 import { ConvexProviderWithClerk } from "convex/react-clerk"
 import {
   AuthLoading,
@@ -23,8 +23,7 @@ export const ConvexClientProvider = ({
   children,
 }: ConvexClientProviderProps) => {
   return (
-    //need to add <Authenticated></Authenticated> on {childeren} for now having an erroe so removed
-    <ClerkProvider publishableKey="pk_test_ZXBpYy1sZW11ci04My5jbGVyay5hY2NvdW50cy5kZXYk">
+    <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY!}>
       <ConvexProviderWithClerk useAuth={useAuth} client={convex}>
         <Unauthenticated>
           <LandingPage />

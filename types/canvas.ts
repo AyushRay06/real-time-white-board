@@ -7,6 +7,78 @@ export type Color = {
 export type Camera = {
   x: number
   y: number
+  zoom: number
+}
+
+export type AnchorSide = "top" | "bottom" | "left" | "right"
+
+export enum SysComponent {
+  // Clients & Ingress
+  WebClient = "WebClient",
+  MobileClient = "MobileClient",
+  IoTDevice = "IoTDevice",
+  DesktopClient = "DesktopClient",
+
+  // Networking & Edge
+  DNS = "DNS",
+  CDN = "CDN",
+  LoadBalancer = "LoadBalancer",
+  APIGateway = "APIGateway",
+  ReverseProxy = "ReverseProxy",
+  FirewallWAF = "FirewallWAF",
+  RateLimiter = "RateLimiter",
+
+  // Compute & Services
+  Server = "Server",
+  Microservice = "Microservice",
+  Serverless = "Serverless",
+  Docker = "Docker",
+  Kubernetes = "Kubernetes",
+  WorkerService = "WorkerService",
+  CronScheduler = "CronScheduler",
+  ServiceDiscovery = "ServiceDiscovery",
+
+  // Relational & Distributed Databases
+  Database = "Database",
+  PrimaryDB = "PrimaryDB",
+  ReplicaDB = "ReplicaDB",
+  ShardedDB = "ShardedDB",
+  DistributedSQL = "DistributedSQL",
+
+  // NoSQL & Specialized Data Stores
+  NoSQLDB = "NoSQLDB",
+  Cassandra = "Cassandra",
+  GraphDB = "GraphDB",
+  TimeSeriesDB = "TimeSeriesDB",
+
+  // Caching & In-Memory
+  Cache = "Cache",
+  DistributedCache = "DistributedCache",
+
+  // Messaging & Streaming
+  MessageQueue = "MessageQueue",
+  EventStreaming = "EventStreaming",
+  PubSub = "PubSub",
+  DeadLetterQueue = "DeadLetterQueue",
+
+  // Storage & Files
+  ObjectStorage = "ObjectStorage",
+  BlockStorage = "BlockStorage",
+  FileSystem = "FileSystem",
+
+  // Search & Big Data
+  SearchEngine = "SearchEngine",
+  DataWarehouse = "DataWarehouse",
+  DataLake = "DataLake",
+  StreamProcessing = "StreamProcessing",
+  BatchProcessing = "BatchProcessing",
+
+  // Security & Observability
+  AuthService = "AuthService",
+  SecretManager = "SecretManager",
+  Monitoring = "Monitoring",
+  LogAggregator = "LogAggregator",
+  DistributedTracing = "DistributedTracing",
 }
 
 export enum LayerType {
@@ -15,6 +87,9 @@ export enum LayerType {
   Path,
   Text,
   Note,
+  Component,
+  Arrow,
+  Section,
 }
 
 export type RectangleLayer = {
@@ -68,6 +143,46 @@ export type NoteLayer = {
   value?: string
 }
 
+export type ComponentLayer = {
+  type: LayerType.Component
+  x: number
+  y: number
+  width: number
+  height: number
+  fill: Color
+  componentType: SysComponent
+  value?: string
+}
+
+export type ArrowStyle = "curvy" | "sharp" | "orthogonal"
+
+export type ArrowLayer = {
+  type: LayerType.Arrow
+  // Connected layer IDs and their anchor sides
+  fromLayerId: string
+  toLayerId: string
+  fromAnchor: AnchorSide
+  toAnchor: AnchorSide
+  // x, y, width, height kept for bounding-box compatibility (selection)
+  x: number
+  y: number
+  width: number
+  height: number
+  fill: Color
+  value?: string
+  arrowStyle?: ArrowStyle
+}
+
+export type SectionLayer = {
+  type: LayerType.Section
+  x: number
+  y: number
+  width: number
+  height: number
+  fill: Color
+  value?: string
+}
+
 export type Point = {
   x: number
   y: number
@@ -107,6 +222,9 @@ export type CanvasState =
         | LayerType.Rectangle
         | LayerType.Note
         | LayerType.Text
+        | LayerType.Component
+        | LayerType.Section
+      componentType?: SysComponent
     }
   | {
       mode: CanvasMode.Pressing
@@ -120,6 +238,19 @@ export type CanvasState =
   | {
       mode: CanvasMode.Pencil
     }
+  | {
+      mode: CanvasMode.Connecting
+      // null = waiting for first click; string = layerId of starting component
+      from: string | null
+    }
+  | {
+      mode: CanvasMode.Panning
+      origin: Point
+      cameraOrigin: Point
+    }
+  | {
+      mode: CanvasMode.Eraser
+    }
 
 export enum CanvasMode {
   None,
@@ -129,6 +260,9 @@ export enum CanvasMode {
   Inserting,
   Resizing,
   Pencil,
+  Connecting,
+  Panning,
+  Eraser,
 }
 
 export type Layer =
@@ -137,3 +271,7 @@ export type Layer =
   | TextLayer
   | PathLayer
   | NoteLayer
+  | ComponentLayer
+  | ArrowLayer
+  | SectionLayer
+
