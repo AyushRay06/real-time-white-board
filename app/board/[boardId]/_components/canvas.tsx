@@ -38,6 +38,7 @@ import { SimulationProvider, useSimulation } from "./simulation-context"
 import { ArchitectureSimulator } from "./architecture-simulator"
 import { ArchitectureTourBar } from "./architecture-tour-bar"
 import { useCanvasTheme } from "./canvas-theme-context"
+import { exportDiagram } from "./export-utils"
 
 // ─── Preview line while connecting ──────────────────────────────────────────
 function ConnectingPreviewLine({ fromLayerId, to }: { fromLayerId: string; to: Point }) {
@@ -1278,121 +1279,20 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   }, [])
 
   // ─── EXPORT DIAGRAM ──────────────────────────────────────────────────────
-  const handleExport = useCallback((format: "png" | "svg" | "json" | "mermaid") => {
-    if (format === "mermaid") {
-      let mmd = "flowchart LR\n"
-      layerIds.forEach((id) => {
-        const l = layers.get(id)
-        if (!l) return
-        const safeId = `node_${id.replace(/[^a-zA-Z0-9_]/g, "_")}`
-        if (l.type === LayerType.Component) {
-          const comp = l as any
-          const label = (comp.label || comp.componentType || "Node").replace(/["\n]/g, " ")
-          mmd += `  ${safeId}["${label}"]\n`
-        } else if (l.type === LayerType.Rectangle || l.type === LayerType.Note) {
-          const shape = l as any
-          const label = (shape.value || shape.label || (l.type === LayerType.Note ? "Note" : "Box")).replace(/["\n]/g, " ")
-          mmd += `  ${safeId}["${label || "Box"}"]\n`
-        }
+  const handleExport = useCallback(
+    (format: "png" | "svg" | "json" | "mermaid") => {
+      exportDiagram({
+        format,
+        boardId,
+        layers,
+        layerIds,
+        theme,
+        svgElement: svgRef.current,
+        camera,
       })
-
-      layerIds.forEach((id) => {
-        const l = layers.get(id)
-        if (!l || l.type !== LayerType.Arrow) return
-        const arrow = l as any
-        const fromId = arrow.fromLayerId
-        const toId = arrow.toLayerId
-        if (!fromId || !toId) return
-        const fromSafe = `node_${fromId.replace(/[^a-zA-Z0-9_]/g, "_")}`
-        const toSafe = `node_${toId.replace(/[^a-zA-Z0-9_]/g, "_")}`
-        const label = arrow.label ? `|"${arrow.label.replace(/["\n]/g, " ")}"|` : ""
-        const isDotted = arrow.strokePattern === "dotted" || arrow.strokePattern === "dashed"
-        const isBi = arrow.direction === "bidirectional"
-
-        let connector = "-->"
-        if (isDotted && isBi) connector = "<-.->"
-        else if (isDotted) connector = "-.->"
-        else if (isBi) connector = "<-->"
-
-        mmd += `  ${fromSafe} ${connector}${label} ${toSafe}\n`
-      })
-
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(mmd)
-      }
-      const blob = new Blob([mmd], { type: "text/plain;charset=utf-8" })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `architecture-flowchart-${boardId}.mmd`
-      a.click()
-      URL.revokeObjectURL(url)
-      return
-    }
-
-    if (format === "json") {
-      const data: Record<string, any> = {}
-      layerIds.forEach((id) => {
-        const l = layers.get(id)
-        if (l) data[id] = l
-      })
-      const blob = new Blob([JSON.stringify({ layerIds, layers: data }, null, 2)], {
-        type: "application/json",
-      })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `architecture-diagram-${boardId}.json`
-      a.click()
-      URL.revokeObjectURL(url)
-      return
-    }
-
-    if (!svgRef.current) return
-    const svgEl = svgRef.current.cloneNode(true) as SVGSVGElement
-
-    const selectionEls = svgEl.querySelectorAll(".selection-element")
-    selectionEls.forEach((el) => el.remove())
-
-    const serializer = new XMLSerializer()
-    const svgStr = serializer.serializeToString(svgEl)
-
-    if (format === "svg") {
-      const blob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement("a")
-      a.href = url
-      a.download = `architecture-diagram-${boardId}.svg`
-      a.click()
-      URL.revokeObjectURL(url)
-      return
-    }
-
-    if (format === "png") {
-      const img = new Image()
-      const svgBlob = new Blob([svgStr], { type: "image/svg+xml;charset=utf-8" })
-      const url = URL.createObjectURL(svgBlob)
-      img.onload = () => {
-        const canvas = document.createElement("canvas")
-        canvas.width = window.innerWidth * 2
-        canvas.height = window.innerHeight * 2
-        const ctx = canvas.getContext("2d")
-        if (ctx) {
-          ctx.scale(2, 2)
-          ctx.fillStyle = "#F5F5F7"
-          ctx.fillRect(0, 0, window.innerWidth, window.innerHeight)
-          ctx.drawImage(img, 0, 0)
-          const pngUrl = canvas.toDataURL("image/png")
-          const a = document.createElement("a")
-          a.href = pngUrl
-          a.download = `architecture-diagram-${boardId}.png`
-          a.click()
-        }
-        URL.revokeObjectURL(url)
-      }
-      img.src = url
-    }
-  }, [layerIds, layers, boardId])
+    },
+    [layerIds, layers, boardId, theme, camera]
+  )
 
   const connectingFromId = canvasState.mode === CanvasMode.Connecting ? canvasState.from : null
 
