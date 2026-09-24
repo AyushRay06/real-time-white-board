@@ -107,6 +107,19 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
     }
   }, [layerIds, layers, startTour])
 
+  // Layer rendering order: Sections (background zones) -> Shapes -> Arrows -> Components/Notes/Text
+  const sortedLayerIds = useMemo(() => {
+    const getPriority = (id: string) => {
+      const l = layers.get(id)
+      if (!l) return 2
+      if (l.type === LayerType.Section) return 0 // background zones
+      if (l.type === LayerType.Rectangle || l.type === LayerType.Ellipse || l.type === LayerType.Path) return 1 // shapes
+      if (l.type === LayerType.Arrow) return 2 // connections
+      return 3 // components, text, notes on top
+    }
+    return [...layerIds].sort((a, b) => getPriority(a) - getPriority(b))
+  }, [layerIds, layers])
+
   const handleFocusTourLayer = useCallback((targetId: string) => {
     const l = layers.get(targetId)
     if (!l) return
@@ -1586,7 +1599,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
             />
           )}
 
-          {layerIds.map((layerId) => (
+          {sortedLayerIds.map((layerId) => (
             <LayerPreview
               key={layerId}
               id={layerId}

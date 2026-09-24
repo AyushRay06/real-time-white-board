@@ -383,6 +383,18 @@ export const SysComponentLayer = memo(function SysComponentLayer({
       {/* Drop shadow */}
       <rect x={x + 2} y={y + 4} width={width} height={height} rx={12} fill="rgba(0,0,0,0.07)" />
 
+      {/* Native SVG Base Card (ensures 100% visibility even before foreignObject paints) */}
+      <rect
+        x={x}
+        y={y}
+        width={width}
+        height={height}
+        rx={12}
+        fill={theme.bg}
+        stroke={strokeColor}
+        strokeWidth={strokeWidth}
+      />
+
       {/* Rich card via foreignObject */}
       <foreignObject x={x} y={y} width={width} height={height}>
         {/* @ts-ignore – xmlns required for SVG foreignObject in some renderers */}
