@@ -161,6 +161,7 @@ export type ComponentLayer = {
   value?: string
   status?: ComponentStatus
   statusText?: string
+  customColor?: Color
 }
 
 export type ArrowStyle = "curvy" | "sharp" | "orthogonal"

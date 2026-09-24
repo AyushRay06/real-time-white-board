@@ -277,7 +277,7 @@ interface SysComponentLayerProps {
 
 
 
-export function getComponentTheme(componentType: SysComponent, fill?: Color): Theme {
+export function getComponentTheme(componentType: SysComponent, customColor?: Color): Theme {
   const defaultTheme = COMPONENT_COLORS[componentType] || {
     bg: "#EFF6FF",
     badge: "#DBEAFE",
@@ -286,14 +286,12 @@ export function getComponentTheme(componentType: SysComponent, fill?: Color): Th
     border: "#93C5FD",
   }
 
-  if (!fill) return defaultTheme
-
-  // If neutral black or pure white, use default component theme
-  if ((fill.r === 0 && fill.g === 0 && fill.b === 0) || (fill.r === 255 && fill.g === 255 && fill.b === 255)) {
+  // If no explicit customColor was set by the user, keep authentic original component theme!
+  if (!customColor) {
     return defaultTheme
   }
 
-  const { r, g, b } = fill
+  const { r, g, b } = customColor
   return {
     bg: `rgba(${r}, ${g}, ${b}, 0.09)`,
     badge: `rgba(${r}, ${g}, ${b}, 0.18)`,
@@ -314,7 +312,7 @@ export const SysComponentLayer = memo(function SysComponentLayer({
   onDoubleClick,
 }: SysComponentLayerProps) {
   const { x, y, width, height, componentType, value } = layer
-  const theme  = getComponentTheme(componentType, layer.fill)
+  const theme  = getComponentTheme(componentType, layer.customColor)
   const label  = value || COMPONENT_LABELS[componentType] || componentType
   const Icon   = ICON_MAP[componentType] || Box
 
