@@ -5,7 +5,7 @@ import { useOthers, useSelf } from "@liveblocks/react/suspense"
 import { UserAvatar } from "./user-avater"
 import { connectionIdToColor } from "@/lib/utils"
 
-const MAX_SHOWN_USERS = 1
+const MAX_SHOWN_USERS = 4
 
 export const Participants = () => {
   const users = useOthers()
@@ -21,7 +21,7 @@ export const Participants = () => {
               borderColor={connectionIdToColor(connectionId)}
               key={connectionId}
               src={info?.picture}
-              name={info?.name}
+              name={info?.name || "Teammate"}
               fallback={info?.name?.[0] || "T"}
             />
           )
@@ -30,14 +30,14 @@ export const Participants = () => {
           <UserAvatar
             borderColor={connectionIdToColor(currentUsers.connectionId)}
             src={currentUsers.info?.picture}
-            name={`${currentUsers.info?.name} (You)`}
-            fallback={currentUsers.info?.name?.[0]}
+            name={`${currentUsers.info?.name || "You"} (You)`}
+            fallback={currentUsers.info?.name?.[0] || "Y"}
           />
         )}
 
         {hasMoreUsers && (
           <UserAvatar
-            name={`${users.length - MAX_SHOWN_USERS}mare`}
+            name={`+${users.length - MAX_SHOWN_USERS} more`}
             fallback={`+${users.length - MAX_SHOWN_USERS}`}
           />
         )}
