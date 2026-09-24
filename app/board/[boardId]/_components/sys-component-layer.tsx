@@ -275,100 +275,7 @@ interface SysComponentLayerProps {
   onDoubleClick?: (layerId: string) => void
 }
 
-function getComponentTelemetry(
-  compType: SysComponent,
-  status?: string,
-  simMode?: string
-): { metric1: string; metric2: string } {
-  if (status === "error") {
-    return { metric1: "ERR 500: OUTAGE", metric2: "0 req/s · Packet Dropped" }
-  }
 
-  // High traffic surge metrics in Spike mode
-  if (simMode === "spike") {
-    switch (compType) {
-      case SysComponent.WebClient:
-      case SysComponent.MobileClient:
-      case SysComponent.DesktopClient:
-      case SysComponent.IoTDevice:
-        return { metric1: "84.2k Users (Surge)", metric2: "Latency: 142ms · +320%" }
-      case SysComponent.LoadBalancer:
-      case SysComponent.APIGateway:
-      case SysComponent.ReverseProxy:
-        return { metric1: "158.4k QPS", metric2: "p99: 46ms · Queue 82%" }
-      case SysComponent.DNS:
-      case SysComponent.CDN:
-        return { metric1: "Edge Hit: 92.1%", metric2: "Bandwidth: 14.8 Gbps" }
-      case SysComponent.Server:
-      case SysComponent.Microservice:
-      case SysComponent.Kubernetes:
-      case SysComponent.Docker:
-        return { metric1: "CPU: 89% · RAM: 84%", metric2: "Auto-Scaling +6 Pods" }
-      case SysComponent.Database:
-      case SysComponent.PrimaryDB:
-      case SysComponent.ReplicaDB:
-      case SysComponent.ShardedDB:
-      case SysComponent.DistributedSQL:
-        return { metric1: "9.2k TPS · IOPS 14.5k", metric2: "Conn Pool: 96/100" }
-      case SysComponent.Cache:
-      case SysComponent.DistributedCache:
-        return { metric1: "Hit Rate: 86.4%", metric2: "Eviction: 680/s · High" }
-      default:
-        return { metric1: "High Load (4x)", metric2: "Throughput: 94.2k req/s" }
-    }
-  }
-
-  // Normal / Baseline healthy metrics
-  switch (compType) {
-    case SysComponent.WebClient:
-    case SysComponent.MobileClient:
-    case SysComponent.DesktopClient:
-    case SysComponent.IoTDevice:
-      return { metric1: "18.4k Users", metric2: "Latency: 28ms" }
-    case SysComponent.LoadBalancer:
-    case SysComponent.APIGateway:
-    case SysComponent.ReverseProxy:
-      return { metric1: "34.2k QPS", metric2: "p99: 8.2ms · 99.99%" }
-    case SysComponent.DNS:
-    case SysComponent.CDN:
-      return { metric1: "Edge Hit: 98.4%", metric2: "12ms TTFB" }
-    case SysComponent.RateLimiter:
-    case SysComponent.FirewallWAF:
-      return { metric1: "Blocked: 2.1%", metric2: "Pass: 97.9%" }
-    case SysComponent.Server:
-    case SysComponent.Microservice:
-    case SysComponent.Kubernetes:
-    case SysComponent.Docker:
-      return { metric1: "CPU: 42% · RAM: 58%", metric2: "12/12 Pods Healthy" }
-    case SysComponent.Serverless:
-    case SysComponent.WorkerService:
-      return { metric1: "Concurrency: 450", metric2: "Avg Exec: 45ms" }
-    case SysComponent.Database:
-    case SysComponent.PrimaryDB:
-    case SysComponent.ReplicaDB:
-    case SysComponent.ShardedDB:
-    case SysComponent.DistributedSQL:
-      return { metric1: "1.8k TPS · IOPS 3.2k", metric2: "Conn: 64/100 · 4ms" }
-    case SysComponent.NoSQLDB:
-    case SysComponent.Cassandra:
-    case SysComponent.GraphDB:
-    case SysComponent.TimeSeriesDB:
-      return { metric1: "Write: 14k/s", metric2: "Read: 22k/s · 2ms" }
-    case SysComponent.Cache:
-    case SysComponent.DistributedCache:
-      return { metric1: "Hit Rate: 97.2%", metric2: "0.8ms p99 · 2.4 GB" }
-    case SysComponent.MessageQueue:
-    case SysComponent.EventStreaming:
-    case SysComponent.PubSub:
-    case SysComponent.DeadLetterQueue:
-      return { metric1: "Lag: 0 ms", metric2: "18.5 MB/s ingress" }
-    case SysComponent.AuthService:
-    case SysComponent.SecretManager:
-      return { metric1: "Valid Token: 99.99%", metric2: "4.2ms JWT verify" }
-    default:
-      return { metric1: "Active · Healthy", metric2: "Uptime: 99.98%" }
-  }
-}
 
 export const SysComponentLayer = memo(function SysComponentLayer({
   id,
@@ -403,17 +310,13 @@ export const SysComponentLayer = memo(function SysComponentLayer({
 
   const simContext = useSimulation()
 
-  const isSimulating = Boolean(simContext && simContext.simMode !== "idle")
-  const simMode = simContext?.simMode || "idle"
-  const showMetrics = Boolean(simContext?.showMetrics)
+  const isSimulating = Boolean(simContext && simContext.isSimulating)
   const isFocused = Boolean(simContext?.isTourActive && simContext?.focusedLayerId === id)
-  const telemetry = showMetrics ? getComponentTelemetry(layer.componentType, layer.status, simMode) : null
 
   const nodeStage = simContext?.graph?.nodeStages?.[id]
   const isActiveHopNode =
-    simMode === "playing" &&
+    isSimulating &&
     (nodeStage === simContext?.activeStage || nodeStage === (simContext?.activeStage ?? -99) + 1)
-  const isFailedNode = layer.status === "error"
 
   return (
     <g
@@ -588,8 +491,8 @@ export const SysComponentLayer = memo(function SysComponentLayer({
         />
       )}
 
-      {/* ── Simulation Processing Energy Halo ── */}
-      {isSimulating && (isFailedNode || simMode === "spike" || isActiveHopNode) && (
+      {/* ── Active Request Hop Pulse Halo ── */}
+      {isSimulating && isActiveHopNode && (
         <rect
           x={x - 4}
           y={y - 4}
@@ -597,62 +500,15 @@ export const SysComponentLayer = memo(function SysComponentLayer({
           height={height + 8}
           rx={15}
           fill="none"
-          stroke={
-            isFailedNode
-              ? "#ef4444"
-              : simMode === "spike"
-              ? "#f59e0b"
-              : "#06b6d4"
-          }
-          strokeWidth={isFailedNode ? 2.5 : 2}
-          opacity={0.8}
+          stroke="#06b6d4"
+          strokeWidth={2}
+          opacity={0.85}
           className="animate-pulse"
           style={{
-            filter: isFailedNode
-              ? "drop-shadow(0 0 8px rgba(239,68,68,0.7))"
-              : simMode === "spike"
-              ? "drop-shadow(0 0 6px rgba(245,158,11,0.5))"
-              : "drop-shadow(0 0 8px rgba(6,182,212,0.6))",
+            filter: "drop-shadow(0 0 8px rgba(6,182,212,0.6))",
             pointerEvents: "none",
           }}
         />
-      )}
-
-      {/* ── Live Telemetry Metrics HUD Card ── */}
-      {showMetrics && telemetry && (
-        <foreignObject
-          x={x - 20}
-          y={y + height + 5}
-          width={width + 40}
-          height={42}
-          style={{ overflow: "visible", pointerEvents: "none" }}
-        >
-          <div
-            style={{
-              background: "rgba(15, 23, 42, 0.92)",
-              backdropFilter: "blur(6px)",
-              color: "#e2e8f0",
-              borderRadius: 8,
-              padding: "4px 8px",
-              fontSize: 9,
-              fontFamily: "ui-monospace, SFMono-Regular, monospace",
-              textAlign: "center",
-              boxShadow: "0 4px 14px rgba(0,0,0,0.35)",
-              border: "1px solid rgba(255,255,255,0.18)",
-              display: "flex",
-              flexDirection: "column",
-              gap: 1.5,
-              userSelect: "none",
-            }}
-          >
-            <div style={{ color: "#38bdf8", fontWeight: 700, letterSpacing: "0.02em" }}>
-              {telemetry.metric1}
-            </div>
-            <div style={{ color: "#94a3b8", fontSize: 8 }}>
-              {telemetry.metric2}
-            </div>
-          </div>
-        </foreignObject>
       )}
     </g>
   )

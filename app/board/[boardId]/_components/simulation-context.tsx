@@ -19,14 +19,14 @@ import {
 } from "./architecture-graph"
 
 interface SimulationContextType {
+  isSimulating: boolean
+  toggleSimulate: () => void
+  startSimulate: () => void
+  stopSimulate: () => void
   simMode: SimulationMode
   setSimMode: (mode: SimulationMode) => void
   simSpeed: SimulationSpeed
   setSimSpeed: (speed: SimulationSpeed) => void
-  showMetrics: boolean
-  setShowMetrics: (v: boolean | ((prev: boolean) => boolean)) => void
-  soundEnabled: boolean
-  setSoundEnabled: (v: boolean | ((prev: boolean) => boolean)) => void
 
   // Architecture Graph & Causal Flow
   graph: ArchitectureGraphAnalysis
@@ -52,10 +52,8 @@ interface SimulationContextType {
 const SimulationContext = createContext<SimulationContextType | null>(null)
 
 export function SimulationProvider({ children }: { children: React.ReactNode }) {
-  const [simMode, setSimModeState] = useState<SimulationMode>("idle")
+  const [isSimulating, setIsSimulating] = useState<boolean>(false)
   const [simSpeed, setSimSpeed] = useState<SimulationSpeed>(1)
-  const [showMetrics, setShowMetrics] = useState<boolean>(false)
-  const [soundEnabled, setSoundEnabledState] = useState<boolean>(true)
 
   // Live storage of layers to build the DAG
   const layers = useStorage((root) => root.layers)
@@ -78,31 +76,47 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
   const activeStageRef = useRef(0)
   activeStageRef.current = activeStage
 
-  // Sound effects & state changes on mode switch
-  const setSimMode = useCallback((mode: SimulationMode) => {
-    setSimModeState(mode)
-    if (mode === "playing") {
-      sfx.playSimulateStart()
-      setActiveStage(0)
-      setStageProgress(0)
-    } else if (mode === "spike") {
-      sfx.playSimulateStart()
-    } else if (mode === "chaos") {
-      sfx.playChaos()
-    }
+  const startSimulate = useCallback(() => {
+    setIsSimulating(true)
+    setActiveStage(0)
+    setStageProgress(0)
+    sfx.playSimulateStart()
   }, [])
 
-  const setSoundEnabled = useCallback((action: boolean | ((prev: boolean) => boolean)) => {
-    setSoundEnabledState((prev) => {
-      const next = typeof action === "function" ? action(prev) : action
-      sfx.setMuted(!next)
+  const stopSimulate = useCallback(() => {
+    setIsSimulating(false)
+    setActiveStage(0)
+    setStageProgress(0)
+  }, [])
+
+  const toggleSimulate = useCallback(() => {
+    setIsSimulating((prev) => {
+      const next = !prev
+      if (next) {
+        setActiveStage(0)
+        setStageProgress(0)
+        sfx.playSimulateStart()
+      }
       return next
     })
   }, [])
 
-  // Causal simulation clock: drives sequential stages in Normal mode and syncs activeHop
+  // Backward compatibility for simMode
+  const simMode: SimulationMode = isSimulating ? "playing" : "idle"
+  const setSimMode = useCallback(
+    (mode: SimulationMode) => {
+      if (mode === "idle") {
+        stopSimulate()
+      } else {
+        startSimulate()
+      }
+    },
+    [startSimulate, stopSimulate]
+  )
+
+  // Causal simulation clock: drives sequential stages
   useEffect(() => {
-    if (simMode === "idle" || graph.totalStages === 0) {
+    if (!isSimulating || graph.totalStages === 0) {
       return
     }
 
@@ -126,14 +140,11 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
 
         if (stageIdx !== activeStageRef.current) {
           setActiveStage(stageIdx)
-          // Soft audio tick on stage advance in single-trace mode
-          if (soundEnabled && simMode === "playing") {
-            sfx.playStep()
-          }
+          sfx.playStep()
         }
         setStageProgress(progress)
       } else {
-        // In pause gap between request cycles
+        // Pause gap between request cycles
         const progress =
           (cycleElapsed - graph.totalStages * stageDurMs) / pauseDurMs
         setStageProgress(progress)
@@ -144,7 +155,7 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
 
     animId = requestAnimationFrame(tick)
     return () => cancelAnimationFrame(animId)
-  }, [simMode, simSpeed, graph.totalStages, soundEnabled])
+  }, [isSimulating, simSpeed, graph.totalStages])
 
   // Manual stepping forward/backward in pipeline
   const stepForward = useCallback(() => {
@@ -205,14 +216,14 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
 
   const value = useMemo(
     () => ({
+      isSimulating,
+      toggleSimulate,
+      startSimulate,
+      stopSimulate,
       simMode,
       setSimMode,
       simSpeed,
       setSimSpeed,
-      showMetrics,
-      setShowMetrics,
-      soundEnabled,
-      setSoundEnabled,
       graph,
       activeStage,
       stageProgress,
@@ -231,14 +242,14 @@ export function SimulationProvider({ children }: { children: React.ReactNode }) 
       setIsTourAutoPlaying,
     }),
     [
+      isSimulating,
+      toggleSimulate,
+      startSimulate,
+      stopSimulate,
       simMode,
       setSimMode,
       simSpeed,
       setSimSpeed,
-      showMetrics,
-      setShowMetrics,
-      soundEnabled,
-      setSoundEnabled,
       graph,
       activeStage,
       stageProgress,

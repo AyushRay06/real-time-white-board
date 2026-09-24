@@ -15,9 +15,12 @@ import {
   Layers,
   Move,
   Eraser,
+  Play,
+  Pause,
 } from "lucide-react"
 import { ToolButton } from "./tool-button"
 import { CanvasMode, CanvasState, LayerType } from "@/types/canvas"
+import { useSimulation } from "./simulation-context"
 
 interface ToolbarProps {
   canvasState: CanvasState
@@ -46,6 +49,7 @@ export const Toolbar = ({
   onToggleArrowStyle,
   onSelectAllArchitecture,
 }: ToolbarProps) => {
+  const { isSimulating, toggleSimulate } = useSimulation()
   return (
     <div className="absolute top-[50%] -translate-y-[50%] left-3 flex flex-col gap-y-3 z-40 select-none">
       {/* ── Group 1: Select & Navigation ── */}
@@ -117,6 +121,12 @@ export const Toolbar = ({
             onClick={onSelectAllArchitecture}
           />
         )}
+        <ToolButton
+          label={isSimulating ? "Pause Request Trace" : "Simulate Request Trace Flow"}
+          icon={isSimulating ? Pause : Play}
+          onClick={toggleSimulate}
+          isActive={isSimulating}
+        />
       </div>
 
       {/* ── Group 3: Shapes, Notes & Freehand ── */}

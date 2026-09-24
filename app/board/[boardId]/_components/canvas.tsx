@@ -1476,8 +1476,8 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         </div>
       )}
 
-      {/* Floating Architecture Simulator Bar */}
-      <ArchitectureSimulator onStartTour={handleStartTour} />
+      {/* Floating Architecture Trace Runner (only renders when active) */}
+      <ArchitectureSimulator />
 
       {/* Step-by-Step Architecture Presentation / Tour Bar */}
       <ArchitectureTourBar onFocusLayer={handleFocusTourLayer} />
