@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
-import { useMutation } from "convex/react"
 
 import { api } from "@/convex/_generated/api"
 import { useOrganization } from "@clerk/nextjs"
@@ -37,12 +36,24 @@ export const EmptySearch = ({ src, alt, desc1, desc2 }: EmptySearchProps) => {
   }
 
   return (
-    <div className="h-full flex flex-col items-center justify-center">
-      <Image src={src} alt={alt} width={300} height={300} />
-      <h2 className="text-3xl font-semibold my-4">{desc1}</h2>
-      <p className="text-lg text-muted-foreground">{desc2}</p>
-      <div className="pt-6">
-        <Button disabled={pending} onClick={onClick} size="lg">
+    <div className="h-full flex flex-col items-center justify-center py-12 text-center">
+      <div className="relative mb-6">
+        <Image
+          src={src}
+          alt={alt}
+          width={220}
+          height={220}
+          className="drop-shadow-sm"
+        />
+      </div>
+      <h2 className="text-xl font-bold tracking-tight text-slate-900 mb-1.5">{desc1}</h2>
+      <p className="text-sm text-slate-500 max-w-sm">{desc2}</p>
+      <div className="mt-6">
+        <Button
+          disabled={pending}
+          onClick={onClick}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl px-5 h-10 shadow-md shadow-indigo-600/20 transition-all hover:scale-105 cursor-pointer"
+        >
           Create Board
         </Button>
       </div>

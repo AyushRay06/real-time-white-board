@@ -2,7 +2,6 @@
 
 import { useQuery } from "convex/react"
 import { api } from "@/convex/_generated/api"
-import { Button } from "@/components/ui/button"
 import { EmptySearch } from "./empty-search"
 import { BoardCard } from "./board-card"
 import { NewBoardButton } from "./new-boardbutton"
@@ -21,13 +20,14 @@ export const BoardList = ({ orgId, query }: BoardListProps) => {
   if (data === undefined) {
     return (
       <div>
-        <h2 className="text-2xl font-extralight">
-          {query.favourites ? "Favourite Boards" : "Team Boards"}
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-5 mt-8 pb-10">
+        <div className="flex items-center gap-2.5">
+          <h2 className="text-xl font-bold tracking-tight text-slate-900">
+            {query.favourites ? "Favourite Boards" : "Team Boards"}
+          </h2>
+          <div className="h-5 w-14 rounded-full bg-slate-200 animate-pulse" />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 mt-6 pb-12">
           <NewBoardButton orgId={orgId} disabled />
-          <BoardCard.Skeleton />
-          <BoardCard.Skeleton />
           <BoardCard.Skeleton />
           <BoardCard.Skeleton />
           <BoardCard.Skeleton />
@@ -43,8 +43,8 @@ export const BoardList = ({ orgId, query }: BoardListProps) => {
       <EmptySearch
         src="/search.png"
         alt="Empty-search"
-        desc1="No Result Found"
-        desc2="Try searching something revelent."
+        desc1="No Results Found"
+        desc2="Try searching for something else."
       />
     )
   }
@@ -55,8 +55,8 @@ export const BoardList = ({ orgId, query }: BoardListProps) => {
         <EmptySearch
           src="/fav.png"
           alt="no favourites"
-          desc1="No favourites Board Found"
-          desc2="Try adding organizations to favourites if not."
+          desc1="No Favourite Boards"
+          desc2="Click the star on any board to add it to your favourites."
         />
       </div>
     )
@@ -69,19 +69,27 @@ export const BoardList = ({ orgId, query }: BoardListProps) => {
           src="/boardlist.png"
           alt="no Board list"
           desc1="Create your first Board"
-          desc2="Start by creating a board for your organization."
+          desc2="Start by creating a canvas for your team."
         />
       </div>
     )
   }
+
   return (
     <div>
-      <h2 className="text-2xl font-extralight">
-        {query.favourites ? "Favourite Boards" : "Team Boards"}
-      </h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-5 mt-8 pb-10">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2.5">
+          <h2 className="text-xl font-bold tracking-tight text-slate-900">
+            {query.favourites ? "Favourite Boards" : "Team Boards"}
+          </h2>
+          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100/80">
+            {data.length} {data.length === 1 ? "board" : "boards"}
+          </span>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 mt-6 pb-12">
         <NewBoardButton orgId={orgId} />
-        {data?.map((board) => (
+        {data.map((board) => (
           <BoardCard
             key={board._id}
             id={board._id}

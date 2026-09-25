@@ -1,4 +1,4 @@
-"use-client"
+"use client"
 
 import Image from "next/image"
 import Link from "next/link"
@@ -8,7 +8,6 @@ import { useAuth } from "@clerk/nextjs"
 import { Footer } from "./footer"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Actions } from "@/components/actions"
-import { Button } from "@/components/ui/button"
 import { MoreHorizontal } from "lucide-react"
 import { useApiMutation } from "@/hooks/use-api-mutaion"
 import { api } from "@/convex/_generated/api"
@@ -53,7 +52,7 @@ export const BoardCard = ({
 
   const toggleFavourite = () => {
     if (isFavourite) {
-      onUnfavourite({ id }).catch(() => toast.error("Failed to unFavourite"))
+      onUnfavourite({ id }).catch(() => toast.error("Failed to unfavourite"))
     } else {
       onFavourite({ id, orgId }).catch(() => toast.error("Failed to favourite"))
     }
@@ -61,13 +60,24 @@ export const BoardCard = ({
 
   return (
     <Link href={`/board/${id}`}>
-      <div className="group aspect-[100/127] border rounded-lg flex flex-col justify-between overflow-hidden">
-        <div className="relative flex-1 bg-purple-50">
-          <Image src={imageUrl} fill alt={title} />
+      <div className="group aspect-[100/127] rounded-2xl border border-slate-200/90 bg-white hover:border-indigo-300 hover:shadow-xl hover:shadow-indigo-500/8 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between overflow-hidden relative cursor-pointer">
+        <div className="relative flex-1 bg-gradient-to-br from-slate-50 to-indigo-50/30 overflow-hidden">
+          <Image
+            src={imageUrl}
+            fill
+            alt={title}
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+          />
           <Overlay />
-          <Actions id={id} title={title} side="right" sideOffset={3}>
-            <button className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity px-3 py-2 outline-none">
-              <MoreHorizontal className="text-white opacity-75 hover:opacity-100 transition-opacity" />
+          <Actions id={id} title={title} side="right" sideOffset={8}>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                e.preventDefault()
+              }}
+              className="absolute top-2.5 right-2.5 opacity-0 group-hover:opacity-100 transition-all duration-150 p-1.5 rounded-lg bg-white/90 backdrop-blur-sm hover:bg-white text-slate-600 hover:text-slate-900 shadow-xs outline-none cursor-pointer"
+            >
+              <MoreHorizontal className="h-4 w-4" />
             </button>
           </Actions>
         </div>
@@ -86,7 +96,7 @@ export const BoardCard = ({
 
 BoardCard.Skeleton = function BoardCardSkeleton() {
   return (
-    <div className="aspect-[100/127] rounded-lg overflow-hidden">
+    <div className="aspect-[100/127] rounded-2xl overflow-hidden border border-slate-200/60 shadow-xs">
       <Skeleton className="h-full w-full" />
     </div>
   )

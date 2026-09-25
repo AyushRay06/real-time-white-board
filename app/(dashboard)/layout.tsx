@@ -8,14 +8,16 @@ interface DashboardLayoutprops {
 
 const DashboardLayout = ({ children }: DashboardLayoutprops) => {
   return (
-    <main className="h-full">
+    <main className="h-full bg-slate-50/60 selection:bg-indigo-500 selection:text-white">
       <Sidebar />
-      <div className="pl-[60px] h-full">
-        <div className="flex gap-x-3 h-full">
+      <div className="pl-[60px] h-full flex flex-col">
+        <div className="flex gap-x-0 h-full">
           <OrgSidebar />
-          <div className="h-full flex-1">
+          <div className="h-full flex-1 flex flex-col min-w-0 overflow-hidden">
             <Navbar />
-            {children}
+            <div className="flex-1 overflow-y-auto">
+              {children}
+            </div>
           </div>
         </div>
       </div>
