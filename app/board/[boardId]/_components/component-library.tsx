@@ -64,9 +64,11 @@ const LIBRARY_GROUPS: { label: string; items: SysComponent[] }[] = [
     ],
   },
   {
-    label: "NoSQL & Graph Stores",
+    label: "NoSQL, Vector & Graph",
     items: [
+      SysComponent.MongoDB,
       SysComponent.NoSQLDB,
+      SysComponent.VectorDB,
       SysComponent.Cassandra,
       SysComponent.GraphDB,
       SysComponent.TimeSeriesDB,
@@ -144,10 +146,8 @@ const TEMPLATES: ArchitectureTemplate[] = [
 
 export interface SpecItem {
   id: DocType
-  category: string
   name: string
   badge: string
-  description: string
   icon: React.ElementType
   color: "emerald" | "indigo" | "amber" | "cyan"
 }
@@ -156,46 +156,43 @@ export interface SpecItem {
 export const TABLE_SPECS: SpecItem[] = [
   {
     id: "schema",
-    category: "Data Modeling",
-    name: "Database Schema & ERD Table",
+    name: "Database Schema & ERD",
     badge: "SQL / Relational",
-    description: "Table with Primary [PK], Foreign [FK], Unique [UQ] keys, SQL types, and FK relation connectors.",
     icon: Database,
     color: "cyan",
   },
   {
+    id: "nosql-schema",
+    name: "Document Collection Schema",
+    badge: "NoSQL / MongoDB",
+    icon: Database,
+    color: "emerald",
+  },
+  {
     id: "functional-requirements",
-    category: "Requirements",
-    name: "Functional Requirement",
-    badge: "Scope & Capabilities",
-    description: "System capabilities, user workflows, and functional scope with P0/P1/P2 priorities.",
+    name: "Functional Requirements",
+    badge: "Requirements",
     icon: CheckSquare2,
     color: "emerald",
   },
   {
     id: "non-functional-requirements",
-    category: "Requirements",
-    name: "Non-Functional Requirement",
-    badge: "SLAs & Reliability",
-    description: "High availability, latency p99 thresholds, and scalability performance targets.",
+    name: "Non-Functional Requirements",
+    badge: "SLAs & Quality",
     icon: CheckSquare2,
     color: "indigo",
   },
   {
     id: "api",
-    category: "API Interface",
     name: "API Endpoints Specification",
     badge: "RESTful Endpoints",
-    description: "HTTP routes table with GET/POST/PUT/DELETE badges, URL paths & response status codes.",
     icon: Globe,
     color: "indigo",
   },
   {
     id: "estimation",
-    category: "Scale & Capacity",
     name: "Capacity & Estimation",
-    badge: "Back-of-Envelope",
-    description: "Capacity calculations for DAU, Read/Write throughput QPS, daily data storage & cache RAM.",
+    badge: "Scale & Sizing",
     icon: Calculator,
     color: "amber",
   },
@@ -205,37 +202,29 @@ export const TABLE_SPECS: SpecItem[] = [
 export const ARCHITECTURE_SPECS: SpecItem[] = [
   {
     id: "functional-requirements",
-    category: "Requirements",
-    name: "Functional Requirement",
-    badge: "Scope & Capabilities",
-    description: "System capabilities, user workflows, and functional scope with P0/P1/P2 priorities.",
+    name: "Functional Requirements",
+    badge: "Requirements",
     icon: CheckSquare2,
     color: "emerald",
   },
   {
     id: "non-functional-requirements",
-    category: "Requirements",
-    name: "Non-Functional Requirement",
-    badge: "SLAs & Reliability",
-    description: "High availability, latency p99 thresholds, and scalability performance targets.",
+    name: "Non-Functional Requirements",
+    badge: "SLAs & Quality",
     icon: CheckSquare2,
     color: "indigo",
   },
   {
     id: "api",
-    category: "API Interface",
     name: "API Endpoints Specification",
     badge: "RESTful Endpoints",
-    description: "HTTP routes table with GET/POST/PUT/DELETE badges, URL paths & response status codes.",
     icon: Globe,
     color: "indigo",
   },
   {
     id: "estimation",
-    category: "Scale & Capacity",
     name: "Capacity & Estimation",
-    badge: "Back-of-Envelope",
-    description: "Capacity calculations for DAU, Read/Write throughput QPS, daily data storage & cache RAM.",
+    badge: "Scale & Sizing",
     icon: Calculator,
     color: "amber",
   },
@@ -302,8 +291,8 @@ export function ComponentLibrary({
             {activeSpace === "templates" && "Templates"}
           </span>
           <span className="px-1.5 py-0.5 text-[9px] font-semibold bg-indigo-500/15 text-indigo-400 rounded-full border border-indigo-500/30 shrink-0">
-            {activeSpace === "components" && "47"}
-            {activeSpace === "tables" && "5"}
+            {activeSpace === "components" && "49"}
+            {activeSpace === "tables" && "6"}
             {activeSpace === "specs" && "4"}
             {activeSpace === "templates" && "3"}
           </span>
@@ -409,9 +398,9 @@ export function ComponentLibrary({
 
       {/* ── SPACE 2: DATA MODELING & TABLES ── */}
       {activeSpace === "tables" && (
-        <div className="overflow-y-auto flex-1 p-2.5 space-y-2 [scrollbar-width:none]">
-          <div className={`text-[10px] font-medium mb-0.5 ${isDark ? "text-slate-400" : "text-neutral-500"}`}>
-            Database schema & system specification tables:
+        <div className="overflow-y-auto flex-1 p-2 space-y-1.5 [scrollbar-width:none]">
+          <div className={`text-[10px] font-medium px-1 mb-1 ${isDark ? "text-slate-400" : "text-neutral-500"}`}>
+            Database & System Tables:
           </div>
 
           {TABLE_SPECS.map((spec) => {
@@ -425,34 +414,25 @@ export function ComponentLibrary({
                   onSelectDoc?.(spec.id)
                   onClose()
                 }}
-                className={`p-2.5 rounded-xl border cursor-pointer transition-all group shadow-2xs ${cardBorder}`}
+                className={`p-2 rounded-xl border cursor-pointer transition-all group flex items-center justify-between gap-2 shadow-2xs ${cardBorder}`}
               >
-                <div className="flex items-center justify-between gap-1.5 mb-1">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <div className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 border ${badgeClasses}`}>
-                      <Icon className="w-3.5 h-3.5" />
-                    </div>
-                    <span className="text-xs font-bold leading-tight group-hover:text-indigo-500 transition-colors truncate">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${badgeClasses}`}>
+                    <Icon className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-xs font-semibold leading-tight group-hover:text-indigo-500 transition-colors block truncate">
                       {spec.name}
                     </span>
+                    <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded border inline-block mt-0.5 ${badgeClasses}`}>
+                      {spec.badge}
+                    </span>
                   </div>
-                  <span className={`text-[9px] font-semibold px-1 py-0.5 rounded border shrink-0 ${isDark ? "bg-slate-800/80 text-slate-400 border-slate-700" : "bg-slate-100 text-slate-600 border-slate-200"}`}>
-                    {spec.category}
-                  </span>
                 </div>
 
-                <p className={`text-[10.5px] leading-snug mb-1.5 line-clamp-2 ${isDark ? "text-slate-400" : "text-neutral-500"}`}>
-                  {spec.description}
-                </p>
-
-                <div className="flex items-center justify-between pt-1 border-t border-dashed border-neutral-200/50 dark:border-slate-800">
-                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${badgeClasses}`}>
-                    {spec.badge}
-                  </span>
-                  <span className="text-[10px] font-semibold text-indigo-500 group-hover:underline">
-                    Add Table →
-                  </span>
-                </div>
+                <span className="text-[10px] font-semibold text-indigo-500 group-hover:underline shrink-0">
+                  Add Table →
+                </span>
               </div>
             )
           })}
@@ -461,9 +441,9 @@ export function ComponentLibrary({
 
       {/* ── SPACE 3: SYSTEM ARCHITECTURE SPECS ── */}
       {activeSpace === "specs" && (
-        <div className="overflow-y-auto flex-1 p-2.5 space-y-2 [scrollbar-width:none]">
-          <div className={`text-[10px] font-medium mb-0.5 ${isDark ? "text-slate-400" : "text-neutral-500"}`}>
-            System design specifications & requirements:
+        <div className="overflow-y-auto flex-1 p-2 space-y-1.5 [scrollbar-width:none]">
+          <div className={`text-[10px] font-medium px-1 mb-1 ${isDark ? "text-slate-400" : "text-neutral-500"}`}>
+            System Specifications:
           </div>
 
           {ARCHITECTURE_SPECS.map((spec) => {
@@ -477,34 +457,25 @@ export function ComponentLibrary({
                   onSelectDoc?.(spec.id)
                   onClose()
                 }}
-                className={`p-2.5 rounded-xl border cursor-pointer transition-all group shadow-2xs ${cardBorder}`}
+                className={`p-2 rounded-xl border cursor-pointer transition-all group flex items-center justify-between gap-2 shadow-2xs ${cardBorder}`}
               >
-                <div className="flex items-center justify-between gap-1.5 mb-1">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <div className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 border ${badgeClasses}`}>
-                      <Icon className="w-3.5 h-3.5" />
-                    </div>
-                    <span className="text-xs font-bold leading-tight group-hover:text-indigo-500 transition-colors truncate">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${badgeClasses}`}>
+                    <Icon className="w-3.5 h-3.5" />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-xs font-semibold leading-tight group-hover:text-indigo-500 transition-colors block truncate">
                       {spec.name}
                     </span>
+                    <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded border inline-block mt-0.5 ${badgeClasses}`}>
+                      {spec.badge}
+                    </span>
                   </div>
-                  <span className={`text-[9px] font-semibold px-1 py-0.5 rounded border shrink-0 ${isDark ? "bg-slate-800/80 text-slate-400 border-slate-700" : "bg-slate-100 text-slate-600 border-slate-200"}`}>
-                    {spec.category}
-                  </span>
                 </div>
 
-                <p className={`text-[10.5px] leading-snug mb-1.5 line-clamp-2 ${isDark ? "text-slate-400" : "text-neutral-500"}`}>
-                  {spec.description}
-                </p>
-
-                <div className="flex items-center justify-between pt-1 border-t border-dashed border-neutral-200/50 dark:border-slate-800">
-                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${badgeClasses}`}>
-                    {spec.badge}
-                  </span>
-                  <span className="text-[10px] font-semibold text-indigo-500 group-hover:underline">
-                    Add Table →
-                  </span>
-                </div>
+                <span className="text-[10px] font-semibold text-indigo-500 group-hover:underline shrink-0">
+                  Add Table →
+                </span>
               </div>
             )
           })}
@@ -513,9 +484,9 @@ export function ComponentLibrary({
 
       {/* ── SPACE 4: ARCHITECTURE TEMPLATES ── */}
       {activeSpace === "templates" && (
-        <div className="overflow-y-auto flex-1 p-2.5 space-y-2 [scrollbar-width:none]">
-          <div className={`text-[10px] font-medium mb-0.5 ${isDark ? "text-slate-400" : "text-neutral-400"}`}>
-            Production architecture blueprints:
+        <div className="overflow-y-auto flex-1 p-2 space-y-1.5 [scrollbar-width:none]">
+          <div className={`text-[10px] font-medium px-1 mb-1 ${isDark ? "text-slate-400" : "text-neutral-400"}`}>
+            Production Blueprints:
           </div>
           {TEMPLATES.map((tpl) => {
             const Icon = tpl.icon

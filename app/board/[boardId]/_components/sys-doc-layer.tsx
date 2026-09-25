@@ -71,6 +71,7 @@ const FLOW_PROTOCOLS: FlowProtocol[] = ["HTTPS", "gRPC", "WebSocket", "Kafka", "
 
 export const BASE_TABLE_WIDTHS: Record<DocType, number> = {
   schema: 460,
+  "nosql-schema": 460,
   estimation: 480,
   requirements: 520,
   "functional-requirements": 500,
@@ -320,9 +321,17 @@ export const SysDocLayer = memo(
           return {
             title: title || "users",
             icon: Database,
-            typeLabel: "Table Schema",
+            typeLabel: "SQL Table",
             defaultAccent: "#06b6d4",
             defaultRgba: isDark ? "rgba(6, 182, 212, 0.18)" : "rgba(6, 182, 212, 0.10)",
+          }
+        case "nosql-schema":
+          return {
+            title: title || "users_collection",
+            icon: Database,
+            typeLabel: "MongoDB Collection",
+            defaultAccent: "#10b981",
+            defaultRgba: isDark ? "rgba(16, 185, 129, 0.18)" : "rgba(16, 185, 129, 0.10)",
           }
         case "flow":
           return {
@@ -690,7 +699,7 @@ export const SysDocLayer = memo(
               })}
 
             {/* 5. DATABASE SCHEMA & ERD TABLE (Sleek Flat Rows + FK Relation Link) */}
-            {docType === "schema" &&
+            {(docType === "schema" || docType === "nosql-schema") &&
               items.map((item: SchemaColumnItem) => {
                 const keyColors: Record<string, string> = {
                   PK: "bg-amber-500/15 text-amber-500 font-bold",
@@ -940,7 +949,7 @@ export const SysDocLayer = memo(
               </button>
             )}
 
-            {docType === "schema" && (
+            {(docType === "schema" || docType === "nosql-schema") && (
               <div className="flex items-center justify-between w-full">
                 <button
                   onClick={addSchemaColumn}

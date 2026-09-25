@@ -47,6 +47,8 @@ export enum SysComponent {
 
   // NoSQL & Specialized Data Stores
   NoSQLDB = "NoSQLDB",
+  MongoDB = "MongoDB",
+  VectorDB = "VectorDB",
   Cassandra = "Cassandra",
   GraphDB = "GraphDB",
   TimeSeriesDB = "TimeSeriesDB",
@@ -93,7 +95,7 @@ export enum LayerType {
   Doc,
 }
 
-export type DocType = "requirements" | "functional-requirements" | "non-functional-requirements" | "api" | "estimation" | "bottlenecks" | "schema" | "flow"
+export type DocType = "requirements" | "functional-requirements" | "non-functional-requirements" | "api" | "estimation" | "bottlenecks" | "schema" | "nosql-schema" | "flow"
 
 export type RequirementItem = {
   id: string

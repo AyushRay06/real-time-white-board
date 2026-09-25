@@ -509,6 +509,16 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
           { id: nanoid(), name: "is_active", dataType: "boolean", keyType: "none", isNullable: false },
           { id: nanoid(), name: "created_at", dataType: "timestamp", keyType: "none", isNullable: false },
         ]
+      } else if (docType === "nosql-schema") {
+        title = "users_collection"
+        defaultItems = [
+          { id: nanoid(), name: "_id", dataType: "uuid", keyType: "PK", isNullable: false },
+          { id: nanoid(), name: "username", dataType: "varchar", keyType: "UQ", isNullable: false },
+          { id: nanoid(), name: "email", dataType: "varchar", keyType: "UQ", isNullable: false },
+          { id: nanoid(), name: "profile_data", dataType: "jsonb", keyType: "none", isNullable: true },
+          { id: nanoid(), name: "tags", dataType: "varchar", keyType: "none", isNullable: true },
+          { id: nanoid(), name: "created_at", dataType: "timestamp", keyType: "none", isNullable: false },
+        ]
       } else if (docType === "flow") {
         title = "Authentication & Feed Request Flow"
         defaultItems = [

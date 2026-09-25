@@ -5,7 +5,7 @@ import {
   Cog, Clock, Compass, Database, HardDrive, Copy, Grid, Columns,
   Share2, Activity, Archive, Radio, Inbox, ListTree, Bell, AlertTriangle,
   FolderGit2, FileText, Disc, Search, BarChart3, TrendingUp, Waves,
-  Workflow, Lock, Key, Gauge, FileCode2, Eye
+  Workflow, Lock, Key, Gauge, FileCode2, Eye, Leaf, Sparkles
 } from "lucide-react"
 import { ComponentLayer, SysComponent, AnchorSide, Point, Color } from "@/types/canvas"
 import { useSimulation } from "./simulation-context"
@@ -83,7 +83,9 @@ export const COMPONENT_LABELS: Record<SysComponent, string> = {
   [SysComponent.DistributedSQL]:     "Distributed SQL",
 
   // NoSQL & Specialized Data Stores
-  [SysComponent.NoSQLDB]:            "NoSQL (Mongo/Dynamo)",
+  [SysComponent.NoSQLDB]:            "NoSQL Document DB",
+  [SysComponent.MongoDB]:            "MongoDB",
+  [SysComponent.VectorDB]:           "Vector DB (Pinecone)",
   [SysComponent.Cassandra]:          "Cassandra Store",
   [SysComponent.GraphDB]:            "Graph DB (Neo4j)",
   [SysComponent.TimeSeriesDB]:       "Time Series DB",
@@ -155,6 +157,8 @@ export const COMPONENT_COLORS: Record<SysComponent, Theme> = {
 
   // NoSQL & Specialized Data Stores
   [SysComponent.NoSQLDB]:            { bg: "#F0FDF4", badge: "#DCFCE7", icon: "#16A34A", text: "#15803D", border: "#86EFAC" },
+  [SysComponent.MongoDB]:            { bg: "#F0FDF4", badge: "#DCFCE7", icon: "#16A34A", text: "#15803D", border: "#86EFAC" },
+  [SysComponent.VectorDB]:           { bg: "#F5F3FF", badge: "#EDE9FE", icon: "#7C3AED", text: "#5B21B6", border: "#C4B5FD" },
   [SysComponent.Cassandra]:          { bg: "#EEF2FF", badge: "#E0E7FF", icon: "#4F46E5", text: "#3730A3", border: "#A5B4FC" },
   [SysComponent.GraphDB]:            { bg: "#F5F3FF", badge: "#EDE9FE", icon: "#7C3AED", text: "#5B21B6", border: "#C4B5FD" },
   [SysComponent.TimeSeriesDB]:       { bg: "#FDF2F8", badge: "#FCE7F3", icon: "#C026D3", text: "#86198F", border: "#F0ABFC" },
@@ -224,6 +228,8 @@ export const ICON_MAP: Record<SysComponent, React.ElementType> = {
 
   // NoSQL DBs
   [SysComponent.NoSQLDB]:            FileText,
+  [SysComponent.MongoDB]:            Leaf,
+  [SysComponent.VectorDB]:           Sparkles,
   [SysComponent.Cassandra]:          Columns,
   [SysComponent.GraphDB]:            Share2,
   [SysComponent.TimeSeriesDB]:       Activity,
