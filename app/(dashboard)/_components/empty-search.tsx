@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button"
 import Image from "next/image"
 
 import { api } from "@/convex/_generated/api"
-import { useOrganization } from "@clerk/nextjs"
 import { useApiMutation } from "@/hooks/use-api-mutaion"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
@@ -18,21 +17,19 @@ interface EmptySearchProps {
 
 export const EmptySearch = ({ src, alt, desc1, desc2 }: EmptySearchProps) => {
   const router = useRouter()
-  const { organization } = useOrganization()
   const { mutate, pending } = useApiMutation(api.board.create)
 
   const onClick = () => {
-    if (!organization) return
-
     mutate({
-      orgId: organization.id,
       title: "Untitled",
     })
       .then((id) => {
-        toast.success("Board Created")
-        router.push(`/board/${id}`)
+        toast.success("Board created")
+        if (id) {
+          router.push(`/board/${id}`)
+        }
       })
-      .catch(() => toast.error("Failed to create Board"))
+      .catch(() => toast.error("Failed to create board"))
   }
 
   return (

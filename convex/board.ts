@@ -17,7 +17,7 @@ const images = [
 
 export const create = mutation({
   args: {
-    orgId: v.string(),
+    orgId: v.optional(v.string()),
     title: v.string(),
   },
 
@@ -32,11 +32,13 @@ export const create = mutation({
 
     const board = await ctx.db.insert("boards", {
       title: args.title,
-      orgId: args.orgId,
+      orgId: args.orgId || "",
       authorId: identity.subject,
-      authorName: identity.name!,
+      authorName: identity.name || "Anonymous",
       imageUrl: randomImage,
     })
+
+    return board
   },
 })
 
@@ -98,7 +100,7 @@ export const update = mutation({
 export const favourite = mutation({
   args: {
     id: v.id("boards"),
-    orgId: v.string(),
+    orgId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity()
@@ -129,7 +131,7 @@ export const favourite = mutation({
     await ctx.db.insert("userFavourites", {
       userId,
       boardId: board._id,
-      orgId: args.orgId,
+      orgId: args.orgId || "",
     })
     return board
   },

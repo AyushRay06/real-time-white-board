@@ -48,7 +48,7 @@ const testimonials: Testimonial[] = [
     role: "CTO, ScaleOps",
   },
   {
-    text: "The organization workspaces make managing multi-project boards effortless. Permissions and invites are clean, fast, and simple.",
+    text: "The personal dashboard makes managing multiple project boards effortless. Searching, starring favourites, and link sharing are clean, fast, and simple.",
     image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80",
     name: "Sana Sheikh",
     role: "Technical Program Manager, DevMatrix",

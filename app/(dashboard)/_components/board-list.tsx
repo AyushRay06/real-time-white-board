@@ -7,28 +7,37 @@ import { BoardCard } from "./board-card"
 import { NewBoardButton } from "./new-boardbutton"
 
 interface BoardListProps {
-  orgId: string
+  orgId?: string
   query: {
     search?: string
     favourites?: string
   }
 }
 
-export const BoardList = ({ orgId, query }: BoardListProps) => {
-  const data = useQuery(api.boards.get, { orgId, favourites: query.favourites })
+export const BoardList = ({ query }: BoardListProps) => {
+  const data = useQuery(api.boards.get, {
+    favourites: query.favourites,
+    search: query.search,
+  })
 
   if (data === undefined) {
     return (
       <div>
-        <div className="flex items-center gap-2.5">
-          <h2 className="text-xl font-bold tracking-tight text-slate-900">
-            {query.favourites ? "Favourite Boards" : "Team Boards"}
-          </h2>
-          <div className="h-5 w-14 rounded-full bg-slate-200 animate-pulse" />
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+              {query.favourites ? "Favourite Boards" : "Your Boards"}
+            </h1>
+            <p className="text-xs text-slate-500 mt-1">
+              {query.favourites
+                ? "Quickly access your starred canvases"
+                : "Manage and create your system design canvases"}
+            </p>
+          </div>
+          <div className="h-6 w-14 rounded-full bg-slate-200 animate-pulse" />
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 mt-6 pb-12">
-          <NewBoardButton orgId={orgId} disabled />
-          <BoardCard.Skeleton />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 pb-12">
+          <NewBoardButton disabled />
           <BoardCard.Skeleton />
           <BoardCard.Skeleton />
           <BoardCard.Skeleton />
@@ -68,8 +77,8 @@ export const BoardList = ({ orgId, query }: BoardListProps) => {
         <EmptySearch
           src="/boardlist.png"
           alt="no Board list"
-          desc1="Create your first Board"
-          desc2="Start by creating a canvas for your team."
+          desc1="Create your first board"
+          desc2="Start by creating a blank canvas to design, sketch, and plan."
         />
       </div>
     )
@@ -77,18 +86,23 @@ export const BoardList = ({ orgId, query }: BoardListProps) => {
 
   return (
     <div>
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2.5">
-          <h2 className="text-xl font-bold tracking-tight text-slate-900">
-            {query.favourites ? "Favourite Boards" : "Team Boards"}
-          </h2>
-          <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100/80">
-            {data.length} {data.length === 1 ? "board" : "boards"}
-          </span>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            {query.favourites ? "Favourite Boards" : "Your Boards"}
+          </h1>
+          <p className="text-xs text-slate-500 mt-1">
+            {query.favourites
+              ? "Quickly access your starred canvases"
+              : "Manage and create your system design canvases"}
+          </p>
         </div>
+        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200/80">
+          {data.length} {data.length === 1 ? "board" : "boards"}
+        </span>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 mt-6 pb-12">
-        <NewBoardButton orgId={orgId} />
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 pb-12">
+        <NewBoardButton />
         {data.map((board) => (
           <BoardCard
             key={board._id}
@@ -98,7 +112,6 @@ export const BoardList = ({ orgId, query }: BoardListProps) => {
             authorId={board.authorId}
             authorName={board.authorName}
             createdAt={board._creationTime}
-            orgId={board.orgId}
             isFavourite={board.isFavourite}
           />
         ))}

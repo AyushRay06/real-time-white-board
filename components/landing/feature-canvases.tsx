@@ -5,8 +5,6 @@ import { motion } from "framer-motion"
 import {
   Users,
   PenTool,
-  Building2,
-  UserPlus,
   Move,
   Cloud,
   MousePointer2,
@@ -149,32 +147,32 @@ export function FeatureCanvases() {
       >
         {/* Canvas Viewport */}
         <div className="h-60 relative bg-white bg-[radial-gradient(#CBD5E1_1px,transparent_1px)] [background-size:14px_14px] p-5 flex flex-col justify-center gap-2.5 border-b border-slate-100">
-          {/* Org card item 1 */}
-          <div className="p-2.5 bg-white border border-slate-200 rounded-xl shadow-xs flex items-center justify-between">
+          {/* Board card item 1 */}
+          <div className="p-3 bg-white border border-slate-200 rounded-xl shadow-xs flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-6 h-6 rounded-md bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">
-                P
+              <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-600 font-bold text-xs flex items-center justify-center">
+                📐
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-800">Product Design</p>
-                <p className="text-[10px] text-slate-400">12 shared boards</p>
+                <p className="text-xs font-bold text-slate-800">System Architecture</p>
+                <p className="text-[10px] text-slate-400">Edited 2 hours ago</p>
               </div>
             </div>
-            <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">Active</span>
+            <span className="text-xs text-amber-500">★</span>
           </div>
 
-          {/* Org card item 2 */}
-          <div className="p-2.5 bg-white border border-slate-200 rounded-xl shadow-xs flex items-center justify-between">
+          {/* Board card item 2 */}
+          <div className="p-3 bg-white border border-slate-200 rounded-xl shadow-xs flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-6 h-6 rounded-md bg-emerald-600 text-white font-bold text-xs flex items-center justify-center">
-                E
+              <div className="w-7 h-7 rounded-lg bg-purple-50 border border-purple-200 text-purple-600 font-bold text-xs flex items-center justify-center">
+                ⚡
               </div>
               <div>
-                <p className="text-xs font-bold text-slate-800">Engineering Core</p>
-                <p className="text-[10px] text-slate-400">8 shared boards</p>
+                <p className="text-xs font-bold text-slate-800">API Gateway Design</p>
+                <p className="text-[10px] text-slate-400">Edited yesterday</p>
               </div>
             </div>
-            <span className="text-[10px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md font-medium">Active</span>
+            <span className="text-xs text-amber-500">★</span>
           </div>
         </div>
 
@@ -183,20 +181,20 @@ export function FeatureCanvases() {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <div className="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600">
-                <Building2 className="w-4 h-4" />
+                <Cloud className="w-4 h-4" />
               </div>
               <h3 className="font-comico text-lg font-bold text-slate-900">
-                Organizations & Workspaces
+                Personal Dashboard & Favourites
               </h3>
             </div>
             <p className="text-slate-600 text-sm leading-relaxed">
-              Create organizations and manage multiple boards in dedicated spaces with role-based member access and personal separation.
+              All your boards in one clean, minimal dashboard. Search instantly, star your favourite canvases, and open your ideas with zero friction.
             </p>
           </div>
         </div>
       </motion.div>
 
-      {/* 4. Invite Team Members */}
+      {/* 4. Instant Link Sharing */}
       <motion.div
         whileHover={{ y: -5 }}
         transition={{ duration: 0.2 }}
@@ -205,21 +203,21 @@ export function FeatureCanvases() {
         {/* Canvas Viewport */}
         <div className="h-60 relative bg-white bg-[radial-gradient(#CBD5E1_1px,transparent_1px)] [background-size:14px_14px] p-5 flex items-center justify-center border-b border-slate-100">
           <div className="w-full max-w-[240px] bg-white border border-slate-200/90 rounded-2xl p-3.5 shadow-md">
-            <p className="text-xs font-bold text-slate-900 mb-2">Invite colleague</p>
+            <p className="text-xs font-bold text-slate-900 mb-2">Share Board Link</p>
             <div className="flex items-center gap-2 mb-2">
               <input
                 type="text"
                 readOnly
-                value="developer@team.com"
+                value="board.app/board/xyz-789"
                 className="w-full text-[11px] bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-slate-600 outline-none"
               />
             </div>
             <div className="flex items-center justify-between">
               <span className="text-[10px] text-emerald-600 font-semibold flex items-center gap-1">
-                <Check className="w-3 h-3" /> Sent Invite
+                <Check className="w-3 h-3" /> Link Copied
               </span>
               <span className="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-medium">
-                Editor
+                Live Access
               </span>
             </div>
           </div>
@@ -230,14 +228,14 @@ export function FeatureCanvases() {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <div className="w-7 h-7 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
-                <UserPlus className="w-4 h-4" />
+                <Users className="w-4 h-4" />
               </div>
               <h3 className="font-comico text-lg font-bold text-slate-900">
-                Invite Team Members
+                Instant Link Collaboration
               </h3>
             </div>
             <p className="text-slate-600 text-sm leading-relaxed">
-              Invite colleagues directly to your organization using email so everyone can enter rooms and whiteboard together.
+              Collaborate seamlessly by sharing your board link. Anyone with the URL can join with real-time live cursors and sub-second sync.
             </p>
           </div>
         </div>

@@ -206,10 +206,10 @@ export function LandingPage() {
                 className="border border-slate-200/90 rounded-2xl px-6 bg-white shadow-xs overflow-hidden transition-colors data-[state=open]:border-indigo-200 data-[state=open]:bg-indigo-50/20"
               >
                 <AccordionTrigger className="font-comico text-base sm:text-lg font-bold text-slate-900 hover:text-indigo-600 hover:no-underline transition-colors py-5 text-left">
-                  How do organizations and team workspaces work?
+                  How do I manage my canvases and boards?
                 </AccordionTrigger>
                 <AccordionContent className="text-slate-600 text-sm sm:text-base leading-relaxed pb-5">
-                  You can create dedicated organizations for your company or team, invite members, and organize boards under shared workspaces. You can switch between different organizations or manage personal boards independently.
+                  You have your own clean personal dashboard where all your boards are organized in one place. You can search, star your favourite canvases, and create new boards in one click.
                 </AccordionContent>
               </AccordionItem>
 
@@ -242,10 +242,10 @@ export function LandingPage() {
                 className="border border-slate-200/90 rounded-2xl px-6 bg-white shadow-xs overflow-hidden transition-colors data-[state=open]:border-indigo-200 data-[state=open]:bg-indigo-50/20"
               >
                 <AccordionTrigger className="font-comico text-base sm:text-lg font-bold text-slate-900 hover:text-indigo-600 hover:no-underline transition-colors py-5 text-left">
-                  How do I invite members to join my board?
+                  How do I collaborate with others on a board?
                 </AccordionTrigger>
                 <AccordionContent className="text-slate-600 text-sm sm:text-base leading-relaxed pb-5">
-                  You can invite teammates directly to your organization using their email address. Once accepted, they gain immediate access to view and collaborate on all boards in that workspace.
+                  Simply share the link to any board. When others open the canvas, everyone can brainstorm, draw, plan architectures, and collaborate in real-time with live cursors.
                 </AccordionContent>
               </AccordionItem>
 
