@@ -1,7 +1,7 @@
 "use client"
 import { useRouter } from "next/navigation"
 import qs from "query-string"
-import { useState, useEffect, ChangeEvent } from "react"
+import { useState, useEffect, useRef, ChangeEvent } from "react"
 
 import { Input } from "@/components/ui/input"
 import { Search, X } from "lucide-react"
@@ -10,6 +10,7 @@ export const SearchInput = () => {
   const router = useRouter()
   const [value, setValue] = useState<string>("")
   const [debouncedValue, setDebouncedValue] = useState<string>("")
+  const isFirstRender = useRef(true)
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setValue(e.target.value)
@@ -24,7 +25,7 @@ export const SearchInput = () => {
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedValue(value)
-    }, 400)
+    }, 350)
 
     // Cleanup the timeout if the value changes within the delay
     return () => {
@@ -33,11 +34,20 @@ export const SearchInput = () => {
   }, [value])
 
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+
+    const currentSearch = typeof window !== "undefined" ? window.location.search : ""
+    const currentParams = qs.parse(currentSearch)
+
     const url = qs.stringifyUrl(
       {
         url: "/",
         query: {
-          search: debouncedValue || "",
+          ...currentParams,
+          search: debouncedValue || undefined,
         },
       },
       { skipEmptyString: true, skipNull: true }
