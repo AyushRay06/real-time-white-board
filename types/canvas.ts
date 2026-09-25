@@ -90,7 +90,56 @@ export enum LayerType {
   Component,
   Arrow,
   Section,
+  Doc,
 }
+
+export type DocType = "requirements" | "api" | "estimation" | "bottlenecks"
+
+export type RequirementItem = {
+  id: string
+  type: "functional" | "non-functional"
+  text: string
+  priority?: "P0" | "P1" | "P2"
+}
+
+export type ApiEndpointItem = {
+  id: string
+  method: "GET" | "POST" | "PUT" | "DELETE" | "PATCH"
+  path: string
+  description: string
+  responseCode?: string
+}
+
+export type EstimationItem = {
+  id: string
+  metric: string
+  value: string
+  unit: string
+  notes?: string
+}
+
+export type BottleneckItem = {
+  id: string
+  component: string
+  risk: string
+  severity: "High" | "Medium" | "Critical"
+  mitigation: string
+}
+
+export type DocLayer = {
+  type: LayerType.Doc
+  x: number
+  y: number
+  width: number
+  height: number
+  fill: Color
+  docType: DocType
+  title: string
+  itemsJson: string
+  activeTab?: string
+  value?: string
+}
+
 
 export type StrokePattern = "solid" | "dashed" | "dotted"
 export type ArrowDirection = "forward" | "bidirectional" | "none"
@@ -273,7 +322,9 @@ export type CanvasState =
         | LayerType.Text
         | LayerType.Component
         | LayerType.Section
+        | LayerType.Doc
       componentType?: SysComponent
+      docType?: DocType
     }
   | {
       mode: CanvasMode.Pressing
@@ -323,4 +374,5 @@ export type Layer =
   | ComponentLayer
   | ArrowLayer
   | SectionLayer
+  | DocLayer
 

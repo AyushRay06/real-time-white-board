@@ -12,6 +12,7 @@ import { colorToCss } from "@/lib/utils"
 import { SysComponentLayer } from "./sys-component-layer"
 import { ArrowLayerComponent } from "./arrow-layer"
 import { SectionLayerComponent } from "./section-layer"
+import { SysDocLayer } from "./sys-doc-layer"
 
 interface LayerPreviewProps {
   id: string
@@ -52,6 +53,16 @@ export const LayerPreview = memo(
         return <Rectangle id={id} layer={layer} onPointerDown={onLayerPointerDown} selectionColor={selectionColor} />
       case LayerType.Ellipse:
         return <Ellipse id={id} layer={layer} onPointerDown={onLayerPointerDown} selectionColor={selectionColor} />
+      case LayerType.Doc:
+        return (
+          <SysDocLayer
+            id={id}
+            layer={layer}
+            onPointerDown={onLayerPointerDown}
+            selectionColor={selectionColor}
+            onDoubleClick={onLayerDoubleClick}
+          />
+        )
       case LayerType.Component:
         return (
           <SysComponentLayer

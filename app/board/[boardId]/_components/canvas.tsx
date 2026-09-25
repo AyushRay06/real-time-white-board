@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import {
   Camera, CanvasMode, CanvasState, Color,
-  LayerType, Point, Side, XYWH, SysComponent,
+  LayerType, Point, Side, XYWH, SysComponent, DocType,
 } from "@/types/canvas"
 import { Info } from "./info"
 import { Participants } from "./participants"
@@ -78,6 +78,18 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   const [camera, setCamera] = useState<Camera>({ x: 0, y: 0, zoom: 1 })
   const [lastUsedColour, setLastUsedColor] = useState<Color>({ r: 0, g: 0, b: 0 })
   const [isLibraryOpen, setIsLibraryOpen] = useState(false)
+  const [libraryTab, setLibraryTab] = useState<"components" | "specs" | "templates">("components")
+  const openSpecs = useCallback(() => {
+    setLibraryTab("specs")
+    setIsLibraryOpen(true)
+  }, [])
+  const onDocSelect = useCallback((docType: DocType) => {
+    setCanvasState({
+      mode: CanvasMode.Inserting,
+      layerType: LayerType.Doc,
+      docType,
+    })
+  }, [])
   const [gridType, setGridType] = useState<"dots" | "cross" | "none">("dots")
   const toggleGrid = useCallback(() => {
     setGridType((prev) => (prev === "dots" ? "cross" : prev === "cross" ? "none" : "dots"))
@@ -403,6 +415,89 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       setCanvasState({ mode: CanvasMode.None })
       return layerId
     }, []
+  )
+
+  // ─── INSERT SYSTEM DESIGN DOC / TABLE ───────────────────────────────────
+  const insertDoc = useMutation(
+    ({ storage, setMyPresence }, docType: DocType, position: Point) => {
+      const liveLayers = storage.get("layers")
+      if (liveLayers.size >= MAX_LAYERS) return
+      const liveLayerIds = storage.get("layerIds")
+      const layerId = nanoid()
+
+      let width = 500
+      let height = 360
+      let title = "System Requirements"
+      let defaultItems: any[] = []
+
+      if (docType === "requirements") {
+        width = 520
+        height = 380
+        title = "System Requirements"
+        defaultItems = [
+          { id: nanoid(), type: "functional", text: "User can create and publish posts with rich media", priority: "P0" },
+          { id: nanoid(), type: "functional", text: "Followers receive real-time timeline feed updates", priority: "P0" },
+          { id: nanoid(), type: "functional", text: "Search tweets and user accounts by keyword", priority: "P1" },
+          { id: nanoid(), type: "functional", text: "Push notifications dispatched on mentions & likes", priority: "P2" },
+          { id: nanoid(), type: "non-functional", text: "High Availability: 99.99% multi-region uptime SLA", priority: "P0" },
+          { id: nanoid(), type: "non-functional", text: "Low Latency: Timeline read latency < 100ms (p99)", priority: "P0" },
+          { id: nanoid(), type: "non-functional", text: "Scalability: 100M DAU and 50,000 peak read QPS", priority: "P0" },
+          { id: nanoid(), type: "non-functional", text: "Eventual Consistency: Acceptable for follower feeds", priority: "P1" },
+        ]
+      } else if (docType === "api") {
+        width = 540
+        height = 360
+        title = "API Endpoints Specification"
+        defaultItems = [
+          { id: nanoid(), method: "POST", path: "/api/v1/posts", description: "Create a new post with text & media", responseCode: "201" },
+          { id: nanoid(), method: "GET", path: "/api/v1/feed", description: "Fetch paginated home timeline feed", responseCode: "200" },
+          { id: nanoid(), method: "GET", path: "/api/v1/users/{id}", description: "Retrieve user profile & follower count", responseCode: "200" },
+          { id: nanoid(), method: "POST", path: "/api/v1/follow/{id}", description: "Follow target user & subscribe to feed", responseCode: "200" },
+          { id: nanoid(), method: "DELETE", path: "/api/v1/posts/{id}", description: "Delete post & invalidate cache tags", responseCode: "204" },
+        ]
+      } else if (docType === "estimation") {
+        width = 480
+        height = 360
+        title = "Capacity & Estimations (Back-of-Envelope)"
+        defaultItems = [
+          { id: nanoid(), metric: "Daily Active Users (DAU)", value: "100 Million", unit: "Users / Day", notes: "10:1 Read to Write ratio" },
+          { id: nanoid(), metric: "Write Throughput (QPS)", value: "1,150 QPS", unit: "Writes / sec", notes: "Peak: 2,500 QPS (2.5x spike)" },
+          { id: nanoid(), metric: "Read Throughput (QPS)", value: "115,000 QPS", unit: "Reads / sec", notes: "Peak: 250,000 QPS" },
+          { id: nanoid(), metric: "Daily Data Storage", value: "50 GB / day", unit: "GB / Day", notes: "~18 TB per year text metadata" },
+          { id: nanoid(), metric: "Media / Blob Storage", value: "5 TB / day", unit: "TB / Day", notes: "Offloaded to S3 / Object Store" },
+          { id: nanoid(), metric: "Memory Cache (RAM)", value: "1.2 TB RAM", unit: "RAM", notes: "80/20 rule: Cache 20% hot daily read data" },
+        ]
+      } else if (docType === "bottlenecks") {
+        width = 540
+        height = 380
+        title = "Bottlenecks & SPOF Analysis"
+        defaultItems = [
+          { id: nanoid(), component: "Database Primary Write Hotspot", severity: "Critical", risk: "Single primary database instance will saturate on write IOPS", mitigation: "Horizontal range/hash sharding by user_id + write buffer" },
+          { id: nanoid(), component: "Cache Stampede on Viral Posts", severity: "High", risk: "Simultaneous key expiry causes thundering herd to database", mitigation: "Distributed mutex lock + probabilistic early expiry (XFetch)" },
+          { id: nanoid(), component: "Celebrity / Hot-Key Fanout", severity: "Critical", risk: "Users with 50M+ followers cause unbounded write queue backpressure", mitigation: "Hybrid push/pull model: pull for celebrities, push for standard users" },
+          { id: nanoid(), component: "Network Egress Saturation", severity: "Medium", risk: "Global video streaming saturates datacenter bandwidth", mitigation: "Geo-distributed CDN edge caching with TLS session resumption" },
+        ]
+      }
+
+      const layer = new LiveObject({
+        type: LayerType.Doc,
+        x: position.x - width / 2,
+        y: position.y - height / 2,
+        width,
+        height,
+        fill: { r: 99, g: 102, b: 241 },
+        docType,
+        title,
+        itemsJson: JSON.stringify(defaultItems),
+      })
+
+      liveLayerIds.push(layerId)
+      liveLayers.set(layerId, layer as any)
+      setMyPresence({ selection: [layerId] }, { addToHistory: true })
+      setCanvasState({ mode: CanvasMode.None })
+      return layerId
+    },
+    []
   )
 
   // ─── INSERT ARROW ────────────────────────────────────────────────────────
@@ -1080,14 +1175,16 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
     } else if (canvasState.mode === CanvasMode.Inserting) {
       if (canvasState.layerType === LayerType.Component && canvasState.componentType) {
         insertComponent(canvasState.componentType, point)
-      } else if (canvasState.layerType !== LayerType.Component) {
+      } else if (canvasState.layerType === LayerType.Doc && canvasState.docType) {
+        insertDoc(canvasState.docType, point)
+      } else if (canvasState.layerType !== LayerType.Component && canvasState.layerType !== LayerType.Doc) {
         insertLayer(canvasState.layerType as any, point)
       }
     } else if (canvasState.mode !== CanvasMode.Connecting) {
       setCanvasState({ mode: CanvasMode.None })
     }
     history.resume()
-  }, [camera, canvasState, history, insertLayer, insertComponent, unselectLayer, insertPath, isSpacePressed])
+  }, [camera, canvasState, history, insertLayer, insertComponent, insertDoc, unselectLayer, insertPath, isSpacePressed])
 
   const selections = useOthersMapped((other) => other.presence.selection)
 
@@ -1408,7 +1505,12 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         canRedo={canRedo}
         canUndo={canUndo}
         isLibraryOpen={isLibraryOpen}
-        onToggleLibrary={() => setIsLibraryOpen((v) => !v)}
+        onToggleLibrary={() => {
+          setLibraryTab("components")
+          setIsLibraryOpen((v) => !v)
+        }}
+        onOpenSpecs={openSpecs}
+        isSpecsActive={isLibraryOpen && libraryTab === "specs"}
         arrowStyle={arrowStyle}
         onToggleArrowStyle={toggleDefaultArrowStyle}
         onSelectAllArchitecture={selectAllLayers}
@@ -1419,6 +1521,8 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         onClose={() => setIsLibraryOpen(false)}
         onSelect={onLibrarySelect}
         onSelectTemplate={insertTemplate}
+        onSelectDoc={onDocSelect}
+        initialTab={libraryTab}
       />
 
       {/* Status hints (placed below top simulator bar) */}
@@ -1430,6 +1534,11 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       {canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Component && (
         <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-xl z-50 pointer-events-none select-none">
           Click anywhere on canvas to place this system component
+        </div>
+      )}
+      {canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Doc && (
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-xl z-50 pointer-events-none select-none">
+          Click anywhere on canvas to place this system design table
         </div>
       )}
       {canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Section && (

@@ -15,6 +15,7 @@ import {
   FillStyle,
   StrokeWidth,
   Roundness,
+  DocType,
 } from "@/types/canvas"
 import { useSelectionBounds } from "@/hooks/use-selection-bound"
 import { useMutation, useSelf, useStorage } from "@liveblocks/react/suspense"
@@ -49,6 +50,10 @@ import {
   AlignLeft,
   AlignCenter,
   AlignRight,
+  CheckSquare2,
+  Globe,
+  Calculator,
+  AlertTriangle,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -95,15 +100,20 @@ export const SelectionTools = memo(
     // Local label state for snappy inline editing
     const [labelInput, setLabelInput] = useState("")
     const soleLayerValue = soleLayer && "value" in soleLayer ? (soleLayer.value as string) : null
+    const soleLayerTitle = soleLayer && "title" in soleLayer ? (soleLayer.title as string) : null
 
     useEffect(() => {
-      setLabelInput(soleLayerValue || "")
-    }, [soleLayerId, soleLayerValue])
+      setLabelInput(soleLayerValue || soleLayerTitle || "")
+    }, [soleLayerId, soleLayerValue, soleLayerTitle])
 
     // Save label on blur or Enter
     const saveLabel = useMutation(({ storage }, value: string) => {
       if (!soleLayerId) return
-      storage.get("layers").get(soleLayerId)?.set("value", value)
+      const l = storage.get("layers").get(soleLayerId)
+      l?.set("value", value)
+      if (l && l.get("type") === LayerType.Doc) {
+        ;(l as any).set("title", value)
+      }
     }, [soleLayerId])
 
     // Change layer color (updates customColor for components, fill for arrows/shapes/text)
@@ -343,6 +353,8 @@ export const SelectionTools = memo(
     const isEllipse = layerType === LayerType.Ellipse
     const isShape = isRect || isEllipse
     const isNote = layerType === LayerType.Note
+    const isDoc = layerType === LayerType.Doc
+    const docType: DocType | null = isDoc && soleLayer && "docType" in soleLayer ? (soleLayer.docType as DocType) : null
 
     const currentArrowStyle = isArrow && soleLayer && "arrowStyle" in soleLayer ? (soleLayer.arrowStyle || "curvy") : "curvy"
     const currentStrokePattern = soleLayer && "strokePattern" in soleLayer ? (soleLayer.strokePattern || "solid") : "solid"
@@ -549,6 +561,46 @@ export const SelectionTools = memo(
           </div>
         )}
 
+        {isDoc && (
+          <div className={`flex items-center gap-1.5 border-r pr-2 ${dividerClass}`}>
+            <div
+              className={`p-1 rounded-md ${
+                docType === "requirements"
+                  ? isLight ? "bg-emerald-50 text-emerald-600" : "bg-emerald-500/20 text-emerald-400"
+                  : docType === "api"
+                  ? isLight ? "bg-indigo-50 text-indigo-600" : "bg-indigo-500/20 text-indigo-400"
+                  : docType === "estimation"
+                  ? isLight ? "bg-amber-50 text-amber-600" : "bg-amber-500/20 text-amber-400"
+                  : isLight ? "bg-rose-50 text-rose-600" : "bg-rose-500/20 text-rose-400"
+              }`}
+            >
+              {docType === "requirements" ? (
+                <CheckSquare2 className="w-3.5 h-3.5" />
+              ) : docType === "api" ? (
+                <Globe className="w-3.5 h-3.5" />
+              ) : docType === "estimation" ? (
+                <Calculator className="w-3.5 h-3.5" />
+              ) : (
+                <AlertTriangle className="w-3.5 h-3.5" />
+              )}
+            </div>
+            <input
+              type="text"
+              value={labelInput}
+              placeholder="Table title..."
+              onChange={(e) => setLabelInput(e.target.value)}
+              onBlur={(e) => saveLabel(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  saveLabel(e.currentTarget.value)
+                  e.currentTarget.blur()
+                }
+              }}
+              className={`outline-none rounded-lg px-2 py-0.5 text-xs font-semibold w-32 sm:w-44 transition border ${inputClassComp}`}
+            />
+          </div>
+        )}
+
         {isMultiple && (
           <div className={`flex items-center gap-1 border-r pr-2 font-medium text-[11px] ${dividerClass} ${isLight ? "text-slate-600" : "text-neutral-300"}`}>
             <span className={`font-semibold ${isLight ? "text-indigo-600" : "text-indigo-400"}`}>{selection.length}</span>
@@ -557,6 +609,31 @@ export const SelectionTools = memo(
         )}
 
         {/* ── SECTION 2: CONTEXT-RELEVANT CONTROLS (ZERO MISMATCH) ── */}
+
+        {/* ─── SYSTEM DESIGN SPEC BADGE (DOC) ─── */}
+        {isDoc && (
+          <div className={`flex items-center gap-1.5 border-r pr-2 ${dividerClass}`}>
+            <span
+              className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${
+                docType === "requirements"
+                  ? isLight ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                  : docType === "api"
+                  ? isLight ? "bg-indigo-50 text-indigo-700 border-indigo-200" : "bg-indigo-500/20 text-indigo-400 border-indigo-500/30"
+                  : docType === "estimation"
+                  ? isLight ? "bg-amber-50 text-amber-700 border-amber-200" : "bg-amber-500/20 text-amber-400 border-amber-500/30"
+                  : isLight ? "bg-rose-50 text-rose-700 border-rose-200" : "bg-rose-500/20 text-rose-400 border-rose-500/30"
+              }`}
+            >
+              {docType === "requirements"
+                ? "Requirements Table"
+                : docType === "api"
+                ? "RESTful API Spec"
+                : docType === "estimation"
+                ? "Capacity Estimations"
+                : "Bottlenecks & SPOFs"}
+            </span>
+          </div>
+        )}
 
         {/* ─── TYPOGRAPHY CONTROLS (TEXT & NOTE) ─── */}
         {(isText || isNote) && (

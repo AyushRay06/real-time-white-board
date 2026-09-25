@@ -1,9 +1,21 @@
 "use client"
 
-import React, { useState } from "react"
-import { SysComponent } from "@/types/canvas"
+import React, { useState, useEffect } from "react"
+import { SysComponent, DocType } from "@/types/canvas"
 import { COMPONENT_LABELS, COMPONENT_COLORS, ComponentIcon } from "./sys-component-layer"
-import { Network, Server, Layers, Search, X } from "lucide-react"
+import {
+  Network,
+  Server,
+  Layers,
+  Search,
+  X,
+  CheckSquare2,
+  Globe,
+  Calculator,
+  AlertTriangle,
+  TableProperties,
+} from "lucide-react"
+import { useCanvasTheme } from "./canvas-theme-context"
 
 const LIBRARY_GROUPS: { label: string; items: SysComponent[] }[] = [
   {
@@ -133,71 +145,153 @@ const TEMPLATES: ArchitectureTemplate[] = [
   },
 ]
 
+export interface SystemSpecItem {
+  id: DocType
+  name: string
+  badge: string
+  description: string
+  icon: React.ElementType
+  color: "emerald" | "indigo" | "amber" | "rose"
+}
+
+const SYSTEM_SPECS: SystemSpecItem[] = [
+  {
+    id: "requirements",
+    name: "Functional & Non-Functional Requirements",
+    badge: "Requirements Table",
+    description: "Ready-made matrix with P0/P1/P2 priorities, functional scope & non-functional SLAs.",
+    icon: CheckSquare2,
+    color: "emerald",
+  },
+  {
+    id: "api",
+    name: "API Endpoints Specification",
+    badge: "RESTful Endpoints",
+    description: "HTTP routes table with GET/POST/PUT/DELETE badges, URL paths & response status codes.",
+    icon: Globe,
+    color: "indigo",
+  },
+  {
+    id: "estimation",
+    name: "Capacity & Back-of-the-Envelope",
+    badge: "Scale Estimation",
+    description: "Capacity calculations for DAU, Read/Write QPS, daily data storage & cache RAM.",
+    icon: Calculator,
+    color: "amber",
+  },
+  {
+    id: "bottlenecks",
+    name: "Bottlenecks & SPOF Analysis",
+    badge: "Risk & Mitigation",
+    description: "Deep dive failure mode assessment, single points of failure & architectural mitigations.",
+    icon: AlertTriangle,
+    color: "rose",
+  },
+]
+
 interface ComponentLibraryProps {
   onSelect: (type: SysComponent) => void
   onSelectTemplate?: (templateId: "three-tier" | "microservices" | "cdn-caching") => void
+  onSelectDoc?: (docType: DocType) => void
   isOpen: boolean
   onClose: () => void
+  initialTab?: "components" | "specs" | "templates"
 }
 
-export function ComponentLibrary({ onSelect, onSelectTemplate, isOpen, onClose }: ComponentLibraryProps) {
-  const [activeTab, setActiveTab] = useState<"components" | "templates">("components")
+export function ComponentLibrary({
+  onSelect,
+  onSelectTemplate,
+  onSelectDoc,
+  isOpen,
+  onClose,
+  initialTab = "components",
+}: ComponentLibraryProps) {
+  const [activeTab, setActiveTab] = useState<"components" | "specs" | "templates">(initialTab)
   const [search, setSearch] = useState("")
   const [selectedCategory, setSelectedCategory] = useState<string>("All")
+  const { theme } = useCanvasTheme()
+  const isDark = theme === "dark"
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab)
+    }
+  }, [initialTab, isOpen])
 
   if (!isOpen) return null
 
-  const lowerSearch = search.toLowerCase()
-
   const categories = ["All", ...LIBRARY_GROUPS.map((g) => g.label)]
+
+  const containerBg = isDark
+    ? "bg-slate-900/95 border-slate-800 text-slate-100 shadow-[0_12px_40px_rgba(0,0,0,0.6)]"
+    : "bg-white/95 border-neutral-200 text-neutral-800 shadow-2xl"
+
+  const headerBg = isDark
+    ? "border-slate-800 bg-slate-900/80"
+    : "border-neutral-100 bg-neutral-50/70"
+
+  const tabContainerBg = isDark ? "bg-slate-800/60" : "bg-neutral-100/70"
+  const tabActiveBg = isDark ? "bg-slate-700 text-indigo-400 shadow-xs" : "bg-white text-indigo-600 shadow-xs"
+  const tabInactiveColor = isDark ? "text-slate-400 hover:text-slate-200" : "text-neutral-500 hover:text-neutral-800"
+
+  const cardBorder = isDark
+    ? "border-slate-800 hover:border-indigo-500/50 hover:bg-slate-800/40 bg-slate-900/40"
+    : "border-neutral-200 hover:border-indigo-400 hover:bg-indigo-50/40 bg-white"
 
   return (
     <div
-      className="absolute right-4 top-1/2 -translate-y-1/2 z-50 w-72 bg-white rounded-2xl shadow-2xl border border-neutral-200 flex flex-col overflow-hidden select-none animate-in fade-in zoom-in-95 duration-100"
-      style={{ maxHeight: "84vh" }}
+      className={`absolute right-4 top-1/2 -translate-y-1/2 z-50 w-80 rounded-2xl border flex flex-col overflow-hidden select-none animate-in fade-in zoom-in-95 duration-100 backdrop-blur-xl ${containerBg}`}
+      style={{ maxHeight: "86vh" }}
       onPointerDown={(e) => e.stopPropagation()}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-3.5 py-2.5 border-b border-neutral-100 bg-neutral-50/70">
+      <div className={`flex items-center justify-between px-3.5 py-2.5 border-b ${headerBg}`}>
         <div className="flex items-center gap-1.5">
-          <span className="text-xs font-bold text-neutral-800 tracking-wide">System Architecture</span>
-          <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-indigo-100 text-indigo-700 rounded-full">
-            47 Components
+          <span className="text-xs font-bold tracking-wide">System Architecture</span>
+          <span className="px-1.5 py-0.5 text-[10px] font-semibold bg-indigo-500/20 text-indigo-400 rounded-full border border-indigo-500/30">
+            {activeTab === "components" ? "47 Items" : activeTab === "specs" ? "4 Tables" : "3 Stacks"}
           </span>
         </div>
         <button
           onClick={onClose}
-          className="w-5 h-5 flex items-center justify-center rounded-md text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100 transition-colors"
+          className={`w-5 h-5 flex items-center justify-center rounded-md transition-colors ${
+            isDark ? "text-slate-400 hover:text-slate-200 hover:bg-slate-800" : "text-neutral-400 hover:text-neutral-700 hover:bg-neutral-100"
+          }`}
         >
           ✕
         </button>
       </div>
 
       {/* Tabs */}
-      <div className="flex border-b border-neutral-100 p-1 bg-neutral-100/70 m-2 rounded-xl text-xs font-semibold">
+      <div className={`flex p-1 m-2 rounded-xl text-xs font-semibold ${tabContainerBg}`}>
         <button
           onClick={() => setActiveTab("components")}
           className={`flex-1 py-1.5 rounded-lg transition-all ${
-            activeTab === "components"
-              ? "bg-white text-indigo-600 shadow-xs"
-              : "text-neutral-500 hover:text-neutral-800"
+            activeTab === "components" ? tabActiveBg : tabInactiveColor
           }`}
         >
           Components
         </button>
         <button
+          onClick={() => setActiveTab("specs")}
+          className={`flex-1 py-1.5 rounded-lg transition-all ${
+            activeTab === "specs" ? tabActiveBg : tabInactiveColor
+          }`}
+        >
+          Tables & Specs
+        </button>
+        <button
           onClick={() => setActiveTab("templates")}
           className={`flex-1 py-1.5 rounded-lg transition-all ${
-            activeTab === "templates"
-              ? "bg-white text-indigo-600 shadow-xs"
-              : "text-neutral-500 hover:text-neutral-800"
+            activeTab === "templates" ? tabActiveBg : tabInactiveColor
           }`}
         >
           Templates
         </button>
       </div>
 
-      {activeTab === "components" ? (
+      {/* TAB 1: COMPONENTS */}
+      {activeTab === "components" && (
         <>
           {/* Search Box */}
           <div className="px-2.5 pb-2">
@@ -207,7 +301,11 @@ export function ComponentLibrary({ onSelect, onSelectTemplate, isOpen, onClose }
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search components (e.g. Kafka, Redis, S3)..."
-                className="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg border border-neutral-200 bg-neutral-50 outline-none focus:border-indigo-400 focus:bg-white transition-colors"
+                className={`w-full pl-8 pr-7 py-1.5 text-xs rounded-lg border outline-none transition-colors ${
+                  isDark
+                    ? "border-slate-800 bg-slate-800/60 text-slate-100 focus:border-indigo-500 focus:bg-slate-800"
+                    : "border-neutral-200 bg-neutral-50 focus:border-indigo-400 focus:bg-white"
+                }`}
               />
               {search && (
                 <button
@@ -229,7 +327,9 @@ export function ComponentLibrary({ onSelect, onSelectTemplate, isOpen, onClose }
                   onClick={() => setSelectedCategory(cat)}
                   className={`px-2 py-0.5 rounded-full whitespace-nowrap transition-colors font-medium ${
                     selectedCategory === cat
-                      ? "bg-indigo-600 text-white"
+                      ? "bg-indigo-600 text-white font-semibold"
+                      : isDark
+                      ? "bg-slate-800 text-slate-300 hover:bg-slate-700"
                       : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
                   }`}
                 >
@@ -248,46 +348,45 @@ export function ComponentLibrary({ onSelect, onSelectTemplate, isOpen, onClose }
 
               const filtered = group.items.filter(
                 (item) =>
-                  !lowerSearch ||
-                  (COMPONENT_LABELS[item] && COMPONENT_LABELS[item].toLowerCase().includes(lowerSearch)) ||
-                  item.toLowerCase().includes(lowerSearch)
+                  !search ||
+                  COMPONENT_LABELS[item]?.toLowerCase().includes(search.toLowerCase()) ||
+                  item.toLowerCase().includes(search.toLowerCase())
               )
-              if (!filtered.length) return null
+
+              if (filtered.length === 0) return null
 
               return (
                 <div key={group.label}>
-                  <div className="flex items-center justify-between px-0.5 mb-1.5">
-                    <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
-                      {group.label}
-                    </span>
-                    <span className="text-[9px] font-semibold text-neutral-400">
-                      {filtered.length}
-                    </span>
+                  <div className={`text-[10px] font-bold uppercase tracking-wider px-1 mb-1.5 ${isDark ? "text-slate-400" : "text-neutral-400"}`}>
+                    {group.label}
                   </div>
-
                   <div className="grid grid-cols-2 gap-1.5">
-                    {filtered.map((type) => {
-                      const theme = COMPONENT_COLORS[type] || { bg: "#EFF6FF", badge: "#DBEAFE", icon: "#2563EB", text: "#1E40AF", border: "#93C5FD" }
-                      const label = COMPONENT_LABELS[type] || type
+                    {filtered.map((item) => {
+                      const colors = COMPONENT_COLORS[item] || {
+                        border: "border-slate-300",
+                        badge: "bg-slate-100 text-slate-700",
+                        text: "text-slate-800",
+                        icon: "text-slate-600",
+                      }
+                      const label = COMPONENT_LABELS[item] || item
 
                       return (
                         <button
-                          key={type}
-                          onClick={() => onSelect(type)}
-                          className="flex flex-col items-center gap-1 py-2 px-1.5 rounded-xl border border-neutral-100 hover:border-indigo-300 hover:bg-neutral-50 transition-all cursor-pointer group shadow-2xs text-left"
+                          key={item}
+                          onClick={() => {
+                            onSelect(item)
+                            onClose()
+                          }}
+                          className={`flex items-center gap-1.5 p-1.5 rounded-xl border text-left transition-all group ${
+                            isDark
+                              ? "border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-700 text-slate-200"
+                              : "border-neutral-200 hover:border-indigo-300 hover:bg-indigo-50/50 bg-white"
+                          }`}
                         >
-                          <div
-                            className="w-9 h-9 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105"
-                            style={{ background: theme.bg, border: `1.5px solid ${theme.border}` }}
-                          >
-                            <svg viewBox="0 0 32 32" width={22} height={22}>
-                              <ComponentIcon type={type} color={theme.icon} />
-                            </svg>
+                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${colors.badge}`}>
+                            <ComponentIcon type={item} color={colors.icon} />
                           </div>
-                          <span
-                            className="text-[10px] font-semibold text-center leading-tight truncate w-full"
-                            style={{ color: theme.icon }}
-                          >
+                          <span className="text-[11px] font-medium leading-tight line-clamp-2">
                             {label}
                           </span>
                         </button>
@@ -299,13 +398,70 @@ export function ComponentLibrary({ onSelect, onSelectTemplate, isOpen, onClose }
             })}
           </div>
 
-          <div className="px-3 py-2 border-t border-neutral-100 text-[10px] text-neutral-400 text-center bg-neutral-50/50">
+          <div className={`px-3 py-2 border-t text-[10px] text-center ${isDark ? "border-slate-800 text-slate-500 bg-slate-900/60" : "border-neutral-100 text-neutral-400 bg-neutral-50/50"}`}>
             Click component, then click canvas to place
           </div>
         </>
-      ) : (
+      )}
+
+      {/* TAB 2: SYSTEM DESIGN TABLES & SPECS */}
+      {activeTab === "specs" && (
         <div className="overflow-y-auto flex-1 p-3 space-y-2.5">
-          <div className="text-[10px] font-medium text-neutral-400 mb-1">
+          <div className={`text-[10px] font-medium mb-1 ${isDark ? "text-slate-400" : "text-neutral-500"}`}>
+            Ready-made system design tables & calculation matrices:
+          </div>
+
+          {SYSTEM_SPECS.map((spec) => {
+            const Icon = spec.icon
+            const badgeClasses = {
+              emerald: isDark ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-emerald-50 text-emerald-700 border-emerald-200",
+              indigo: isDark ? "bg-indigo-500/20 text-indigo-400 border-indigo-500/30" : "bg-indigo-50 text-indigo-700 border-indigo-200",
+              amber: isDark ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-amber-50 text-amber-700 border-amber-200",
+              rose: isDark ? "bg-rose-500/20 text-rose-400 border-rose-500/30" : "bg-rose-50 text-rose-700 border-rose-200",
+            }[spec.color]
+
+            return (
+              <div
+                key={spec.id}
+                onClick={() => {
+                  onSelectDoc?.(spec.id)
+                  onClose()
+                }}
+                className={`p-3 rounded-xl border cursor-pointer transition-all group shadow-2xs ${cardBorder}`}
+              >
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${badgeClasses}`}>
+                      <Icon className="w-4 h-4" />
+                    </div>
+                    <span className="text-xs font-bold leading-tight group-hover:text-indigo-500 transition-colors">
+                      {spec.name}
+                    </span>
+                  </div>
+                </div>
+
+                <p className={`text-[11px] leading-snug mb-2 ${isDark ? "text-slate-400" : "text-neutral-500"}`}>
+                  {spec.description}
+                </p>
+
+                <div className="flex items-center justify-between pt-1 border-t border-dashed border-neutral-200/50">
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded border ${badgeClasses}`}>
+                    {spec.badge}
+                  </span>
+                  <span className="text-[10px] font-semibold text-indigo-500 group-hover:underline">
+                    Add to Canvas →
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* TAB 3: TEMPLATES */}
+      {activeTab === "templates" && (
+        <div className="overflow-y-auto flex-1 p-3 space-y-2.5">
+          <div className={`text-[10px] font-medium mb-1 ${isDark ? "text-slate-400" : "text-neutral-400"}`}>
             Instantly load full production architectures onto your canvas:
           </div>
           {TEMPLATES.map((tpl) => {
@@ -313,22 +469,25 @@ export function ComponentLibrary({ onSelect, onSelectTemplate, isOpen, onClose }
             return (
               <div
                 key={tpl.id}
-                onClick={() => onSelectTemplate?.(tpl.id)}
-                className="p-3 rounded-xl border border-neutral-200 hover:border-indigo-400 hover:bg-indigo-50/40 cursor-pointer transition-all group shadow-2xs"
+                onClick={() => {
+                  onSelectTemplate?.(tpl.id)
+                  onClose()
+                }}
+                className={`p-3 rounded-xl border cursor-pointer transition-all group shadow-2xs ${cardBorder}`}
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                  <div className="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-500 flex items-center justify-center">
                     <Icon className="w-3.5 h-3.5" />
                   </div>
-                  <h4 className="text-xs font-bold text-neutral-800 group-hover:text-indigo-600 transition-colors">
+                  <h4 className="text-xs font-bold group-hover:text-indigo-500 transition-colors">
                     {tpl.name}
                   </h4>
                 </div>
-                <p className="text-[11px] text-neutral-500 leading-snug">
+                <p className={`text-[11px] leading-snug ${isDark ? "text-slate-400" : "text-neutral-500"}`}>
                   {tpl.description}
                 </p>
                 <div className="mt-2 text-right">
-                  <span className="text-[10px] font-semibold text-indigo-600 group-hover:underline">
+                  <span className="text-[10px] font-semibold text-indigo-500 group-hover:underline">
                     Load Architecture →
                   </span>
                 </div>

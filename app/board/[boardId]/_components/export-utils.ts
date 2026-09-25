@@ -1,4 +1,4 @@
-import { Layer, LayerType, Color, Camera, SysComponent, ComponentLayer, ArrowLayer, SectionLayer } from "@/types/canvas"
+import { Layer, LayerType, Color, Camera, SysComponent, ComponentLayer, ArrowLayer, SectionLayer, DocLayer } from "@/types/canvas"
 import { colorToCss, getFontFamilyCss, getContrastingTextColor } from "@/lib/utils"
 import { COMPONENT_LABELS, getComponentTheme } from "./sys-component-layer"
 import { toast } from "sonner"
@@ -383,6 +383,110 @@ function renderDiagramDirectToCanvas({
         ctx.textAlign = "left"
         ctx.textBaseline = "middle"
         ctx.fillText(sec.value || "Architecture Zone", sec.x + 24, sec.y + 25)
+        break
+      }
+
+      case LayerType.Doc: {
+        const doc = layer as DocLayer
+        const docType = doc.docType || "requirements"
+
+        // Drop shadow
+        ctx.fillStyle = isDark ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.08)"
+        ctx.beginPath()
+        ctx.roundRect(doc.x + 2, doc.y + 4, doc.width, doc.height, 16)
+        ctx.fill()
+
+        // Card body
+        ctx.fillStyle = isDark ? "#0f172a" : "#ffffff"
+        ctx.strokeStyle = isDark ? "#334155" : "#e2e8f0"
+        ctx.lineWidth = 1.5
+        ctx.beginPath()
+        ctx.roundRect(doc.x, doc.y, doc.width, doc.height, 16)
+        ctx.fill()
+        ctx.stroke()
+
+        // Header bar
+        ctx.fillStyle = isDark ? "#1e293b" : "#f8fafc"
+        ctx.beginPath()
+        ctx.roundRect(doc.x, doc.y, doc.width, 42, [16, 16, 0, 0])
+        ctx.fill()
+
+        // Header bottom border
+        ctx.strokeStyle = isDark ? "#334155" : "#e2e8f0"
+        ctx.beginPath()
+        ctx.moveTo(doc.x, doc.y + 42)
+        ctx.lineTo(doc.x + doc.width, doc.y + 42)
+        ctx.stroke()
+
+        // Header title
+        ctx.fillStyle = isDark ? "#f8fafc" : "#0f172a"
+        ctx.font = "bold 12px Inter, system-ui, sans-serif"
+        ctx.textAlign = "left"
+        ctx.textBaseline = "middle"
+        ctx.fillText(doc.title || "System Design Specification", doc.x + 16, doc.y + 21)
+
+        // Parse items
+        let items: any[] = []
+        try {
+          items = doc.itemsJson ? JSON.parse(doc.itemsJson) : []
+        } catch {}
+
+        // Render rows
+        let rowY = doc.y + 54
+        items.slice(0, 8).forEach((item) => {
+          if (rowY + 28 > doc.y + doc.height) return
+
+          if (docType === "requirements") {
+            const isFunc = item.type === "functional"
+            ctx.fillStyle = isFunc ? "#6366f1" : "#a855f7"
+            ctx.font = "bold 9px Inter, sans-serif"
+            ctx.fillText(isFunc ? "FUNC" : "NON-FUNC", doc.x + 16, rowY + 10)
+
+            ctx.fillStyle = item.priority === "P0" ? "#f43f5e" : "#f59e0b"
+            ctx.fillText(item.priority || "P0", doc.x + 80, rowY + 10)
+
+            ctx.fillStyle = isDark ? "#cbd5e1" : "#334155"
+            ctx.font = "11px Inter, sans-serif"
+            ctx.fillText(item.text || "", doc.x + 110, rowY + 10, doc.width - 125)
+          } else if (docType === "api") {
+            ctx.fillStyle = item.method === "GET" ? "#10b981" : item.method === "POST" ? "#3b82f6" : item.method === "DELETE" ? "#f43f5e" : "#f59e0b"
+            ctx.font = "bold 10px monospace"
+            ctx.fillText(item.method || "GET", doc.x + 16, rowY + 10)
+
+            ctx.fillStyle = isDark ? "#93c5fd" : "#1d4ed8"
+            ctx.fillText(item.path || "", doc.x + 75, rowY + 10, 160)
+
+            ctx.fillStyle = isDark ? "#cbd5e1" : "#334155"
+            ctx.font = "11px Inter, sans-serif"
+            ctx.fillText(item.description || "", doc.x + 245, rowY + 10, doc.width - 260)
+          } else if (docType === "estimation") {
+            ctx.fillStyle = isDark ? "#f8fafc" : "#0f172a"
+            ctx.font = "bold 11px Inter, sans-serif"
+            ctx.fillText(item.metric || "", doc.x + 16, rowY + 10, 140)
+
+            ctx.fillStyle = "#f59e0b"
+            ctx.font = "bold 11px monospace"
+            ctx.fillText(item.value || "", doc.x + 165, rowY + 10, 90)
+
+            ctx.fillStyle = isDark ? "#94a3b8" : "#64748b"
+            ctx.font = "10px Inter, sans-serif"
+            ctx.fillText(item.notes || "", doc.x + 265, rowY + 10, doc.width - 280)
+          } else if (docType === "bottlenecks") {
+            ctx.fillStyle = item.severity === "Critical" ? "#f43f5e" : "#f59e0b"
+            ctx.font = "bold 10px Inter, sans-serif"
+            ctx.fillText(`[${item.severity || "Risk"}]`, doc.x + 16, rowY + 10)
+
+            ctx.fillStyle = isDark ? "#f8fafc" : "#0f172a"
+            ctx.fillText(item.component || "", doc.x + 80, rowY + 10, 160)
+
+            ctx.fillStyle = isDark ? "#818cf8" : "#4f46e5"
+            ctx.font = "10px Inter, sans-serif"
+            ctx.fillText(`→ ${item.mitigation || ""}`, doc.x + 250, rowY + 10, doc.width - 265)
+          }
+
+          rowY += 28
+        })
+
         break
       }
 

@@ -17,6 +17,7 @@ import {
   Eraser,
   Play,
   Pause,
+  TableProperties,
 } from "lucide-react"
 import { ToolButton } from "./tool-button"
 import { CanvasMode, CanvasState, LayerType } from "@/types/canvas"
@@ -33,6 +34,8 @@ interface ToolbarProps {
   canRedo: boolean
   isLibraryOpen: boolean
   onToggleLibrary: () => void
+  onOpenSpecs?: () => void
+  isSpecsActive?: boolean
   arrowStyle?: "curvy" | "sharp"
   onToggleArrowStyle?: () => void
   onSelectAllArchitecture?: () => void
@@ -47,6 +50,8 @@ export const Toolbar = ({
   canUndo,
   isLibraryOpen,
   onToggleLibrary,
+  onOpenSpecs,
+  isSpecsActive,
   arrowStyle = "curvy",
   onToggleArrowStyle,
   onSelectAllArchitecture,
@@ -94,11 +99,19 @@ export const Toolbar = ({
       {/* ── Group 2: System Architecture Tools ── */}
       <div className={groupClass}>
         <ToolButton
-          label={isLibraryOpen ? "Close Architecture Library (L)" : "Architecture Components Library (L)"}
+          label={isLibraryOpen && !isSpecsActive ? "Close Architecture Library (L)" : "Architecture Components Library (L)"}
           icon={LayoutGrid}
           onClick={onToggleLibrary}
-          isActive={isLibraryOpen}
+          isActive={isLibraryOpen && !isSpecsActive}
         />
+        {onOpenSpecs && (
+          <ToolButton
+            label="System Design Specs & Tables (Requirements, API, Estimations)"
+            icon={TableProperties}
+            onClick={onOpenSpecs}
+            isActive={isLibraryOpen && !!isSpecsActive}
+          />
+        )}
         <ToolButton
           label="Architecture Section / Zone Box (S)"
           icon={Layers}
