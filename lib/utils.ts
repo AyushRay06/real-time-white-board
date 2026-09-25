@@ -107,8 +107,8 @@ export function resizeBounds(
     const scaleY = result.height / bounds.height
     const dominantScale = Math.abs(scaleX - 1) > Math.abs(scaleY - 1) ? scaleX : scaleY
 
-    const newWidth = Math.max(20, Math.round(bounds.width * dominantScale))
-    const newHeight = Math.max(20, Math.round(bounds.height * dominantScale))
+    const newWidth = Math.max(120, Math.round(bounds.width * dominantScale))
+    const newHeight = Math.max(80, Math.round(bounds.height * dominantScale))
 
     if ((corner & Side.Left) === Side.Left) {
       result.x = bounds.x + bounds.width - newWidth

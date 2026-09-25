@@ -69,6 +69,15 @@ const SCHEMA_DATA_TYPES: SchemaDataType[] = [
 const SCHEMA_KEYS: SchemaKeyType[] = ["none", "PK", "FK", "UQ"]
 const FLOW_PROTOCOLS: FlowProtocol[] = ["HTTPS", "gRPC", "WebSocket", "Kafka", "SQL", "Redis"]
 
+const BASE_DIMENSIONS: Record<DocType, { width: number; height: number }> = {
+  schema: { width: 460, height: 360 },
+  estimation: { width: 480, height: 360 },
+  requirements: { width: 520, height: 380 },
+  bottlenecks: { width: 540, height: 380 },
+  api: { width: 540, height: 360 },
+  flow: { width: 540, height: 360 },
+}
+
 export const SysDocLayer = memo(
   ({
     id,
@@ -83,6 +92,9 @@ export const SysDocLayer = memo(
     const { x, y, width, height, docType, title, itemsJson, fill } = layer
     const { theme } = useCanvasTheme()
     const isDark = theme === "dark"
+
+    const baseWidth = BASE_DIMENSIONS[docType]?.width || 480
+    const scale = Math.max(0.2, width / baseWidth)
 
     const [activeTab, setActiveTab] = useState<string>("all")
 
@@ -102,9 +114,19 @@ export const SysDocLayer = memo(
         const currentLayer = liveLayers.get(id)
         if (currentLayer) {
           ;(currentLayer as any).set("itemsJson", JSON.stringify(newItems))
+          const rowHeight = docType === "bottlenecks" ? 40 : docType === "api" || docType === "flow" ? 38 : 34
+          const headerHeight = 44
+          const tabsHeight = docType === "requirements" ? 36 : 0
+          const footerHeight = 42
+          const naturalBaseH = Math.max(
+            BASE_DIMENSIONS[docType]?.height || 360,
+            headerHeight + tabsHeight + newItems.length * rowHeight + footerHeight
+          )
+          const currentScale = ((currentLayer as any).get("width") || baseWidth) / baseWidth
+          ;(currentLayer as any).set("height", Math.round(naturalBaseH * currentScale))
         }
       },
-      [id]
+      [id, docType, baseWidth]
     )
 
     // Liveblocks mutation to update title
@@ -280,10 +302,10 @@ export const SysDocLayer = memo(
     const accentRgba = customRgba || config.defaultRgba
     const HeaderIcon = config.icon
 
-    // Card styling
+    // Card styling: translucent glassmorphism
     const cardBg = isDark
-      ? "bg-slate-900/95 border-slate-800 text-slate-100 shadow-[0_12px_36px_rgba(0,0,0,0.55)]"
-      : "bg-white/98 border-slate-200/90 text-slate-900 shadow-xl shadow-slate-900/5"
+      ? "bg-slate-900/80 backdrop-blur-xl text-slate-100 shadow-[0_16px_40px_rgba(0,0,0,0.5)]"
+      : "bg-white/80 backdrop-blur-xl text-slate-900 shadow-[0_16px_40px_rgba(0,0,0,0.08)]"
 
     const rowDivider = isDark ? "border-slate-800/60" : "border-slate-100"
     const inputSeamless = "bg-transparent outline-none transition-colors"
@@ -311,24 +333,35 @@ export const SysDocLayer = memo(
             ? `2px solid ${selectionColor}`
             : "none",
           outlineOffset: "3px",
-          borderRadius: "14px",
+          borderRadius: `${14 * scale}px`,
           overflow: "visible",
           cursor: isConnecting ? "crosshair" : "default",
         }}
         className="select-none"
       >
         <div
-          className={`w-full h-full flex flex-col rounded-xl border transition-all duration-150 overflow-hidden font-sans ${cardBg} ${
+          style={{
+            width: `${baseWidth}px`,
+            height: `${Math.round(height / scale)}px`,
+            transform: `scale(${scale})`,
+            transformOrigin: "0 0",
+            borderColor: accentColor ? `${accentColor}85` : isDark ? "rgba(51, 65, 85, 0.8)" : "rgba(226, 232, 240, 0.9)",
+            borderWidth: "1.5px",
+            borderStyle: "solid",
+            boxShadow: accentColor
+              ? `0 0 20px ${accentColor}18, 0 16px 40px rgba(0,0,0,${isDark ? "0.55" : "0.08"})`
+              : isDark
+              ? "0 16px 40px rgba(0,0,0,0.55)"
+              : "0 16px 40px rgba(0,0,0,0.08)",
+          }}
+          className={`flex flex-col rounded-xl transition-all duration-150 overflow-hidden font-sans ${cardBg} ${
             isConnectingFrom ? "ring-2 ring-indigo-500 shadow-[0_0_24px_rgba(99,102,241,0.35)]" : ""
           }`}
         >
-          {/* ── TOP ACCENT COLOR BAR (Reflects Color Picker Instantly) ── */}
-          <div style={{ backgroundColor: accentColor }} className="h-1 w-full shrink-0" />
-
-          {/* ── CARD HEADER (Clean, Uncluttered, Flat) ── */}
+          {/* ── CARD HEADER (Clean, Uncluttered, Flat, Uniform Border) ── */}
           <div
             className={`px-3 py-2 border-b flex items-center justify-between gap-2 shrink-0 ${
-              isDark ? "border-slate-800/80 bg-slate-900/40" : "border-slate-100 bg-slate-50/50"
+              isDark ? "border-slate-800/80 bg-slate-900/50" : "border-slate-200/80 bg-slate-100/60"
             }`}
           >
             <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -381,9 +414,9 @@ export const SysDocLayer = memo(
             </div>
           )}
 
-          {/* ── CARD BODY (FLAT TABULAR LIST - NO BOX-INSIDE-A-BOX) ── */}
+          {/* ── CARD BODY (FLAT TABULAR LIST - NO SCROLLBARS) ── */}
           <div
-            className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60"
+            className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             onPointerDown={(e) => e.stopPropagation()}
           >
             {/* 1. REQUIREMENTS FLAT LIST */}

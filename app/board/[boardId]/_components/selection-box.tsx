@@ -27,6 +27,9 @@ export const SelectionBox = memo(
     const isSoleArrow = useStorage((root) =>
       soleLayerId ? root.layers.get(soleLayerId)?.type === LayerType.Arrow : false
     )
+    const isSoleDoc = useStorage((root) =>
+      soleLayerId ? root.layers.get(soleLayerId)?.type === LayerType.Doc : false
+    )
     const bounds = useSelectionBounds()
     if (!bounds || isSoleArrow) {
       return null
@@ -110,22 +113,24 @@ export const SelectionBox = memo(
                 onResizeHandlePointerDown(Side.Top + Side.Left, bounds)
               }}
             />
-            <rect
-              //middle-top
-              className="fill-white stroke-1 stroke-blue-500"
-              x={0}
-              y={0}
-              style={{
-                cursor: "ns-resize",
-                width: `${HANDLE_WIDTH}px`,
-                height: `${HANDLE_WIDTH}px`,
-                transform: `translate(${bounds.x + bounds.width / 2 - HANDLE_WIDTH / 2}px,${bounds.y - HANDLE_WIDTH / 2}px)`,
-              }}
-              onPointerDown={(e) => {
-                e.stopPropagation()
-                onResizeHandlePointerDown(Side.Top, bounds)
-              }}
-            />
+            {!isSoleDoc && (
+              <rect
+                //middle-top
+                className="fill-white stroke-1 stroke-blue-500"
+                x={0}
+                y={0}
+                style={{
+                  cursor: "ns-resize",
+                  width: `${HANDLE_WIDTH}px`,
+                  height: `${HANDLE_WIDTH}px`,
+                  transform: `translate(${bounds.x + bounds.width / 2 - HANDLE_WIDTH / 2}px,${bounds.y - HANDLE_WIDTH / 2}px)`,
+                }}
+                onPointerDown={(e) => {
+                  e.stopPropagation()
+                  onResizeHandlePointerDown(Side.Top, bounds)
+                }}
+              />
+            )}
             <rect
               //right-top
               className="fill-white stroke-1 stroke-blue-500"
@@ -142,22 +147,24 @@ export const SelectionBox = memo(
                 onResizeHandlePointerDown(Side.Top + Side.Right, bounds)
               }}
             />
-            <rect
-              //right-middle
-              className="fill-white stroke-1 stroke-blue-500"
-              x={0}
-              y={0}
-              style={{
-                cursor: "ew-resize",
-                width: `${HANDLE_WIDTH}px`,
-                height: `${HANDLE_WIDTH}px`,
-                transform: `translate(${bounds.x - HANDLE_WIDTH / 2 + bounds.width}px,${bounds.y + bounds.height / 2 - HANDLE_WIDTH / 2}px)`,
-              }}
-              onPointerDown={(e) => {
-                e.stopPropagation()
-                onResizeHandlePointerDown(Side.Right, bounds)
-              }}
-            />
+            {!isSoleDoc && (
+              <rect
+                //right-middle
+                className="fill-white stroke-1 stroke-blue-500"
+                x={0}
+                y={0}
+                style={{
+                  cursor: "ew-resize",
+                  width: `${HANDLE_WIDTH}px`,
+                  height: `${HANDLE_WIDTH}px`,
+                  transform: `translate(${bounds.x - HANDLE_WIDTH / 2 + bounds.width}px,${bounds.y + bounds.height / 2 - HANDLE_WIDTH / 2}px)`,
+                }}
+                onPointerDown={(e) => {
+                  e.stopPropagation()
+                  onResizeHandlePointerDown(Side.Right, bounds)
+                }}
+              />
+            )}
             <rect
               //right-bottom
               className="fill-white stroke-1 stroke-blue-500"
@@ -174,22 +181,24 @@ export const SelectionBox = memo(
                 onResizeHandlePointerDown(Side.Bottom + Side.Right, bounds)
               }}
             />
-            <rect
-              //middle-bottom
-              className="fill-white stroke-1 stroke-blue-500"
-              x={0}
-              y={0}
-              style={{
-                cursor: "ns-resize",
-                width: `${HANDLE_WIDTH}px`,
-                height: `${HANDLE_WIDTH}px`,
-                transform: `translate(${bounds.x + bounds.width / 2 - HANDLE_WIDTH / 2}px,${bounds.y - HANDLE_WIDTH / 2 + bounds.height}px)`,
-              }}
-              onPointerDown={(e) => {
-                e.stopPropagation()
-                onResizeHandlePointerDown(Side.Bottom, bounds)
-              }}
-            />
+            {!isSoleDoc && (
+              <rect
+                //middle-bottom
+                className="fill-white stroke-1 stroke-blue-500"
+                x={0}
+                y={0}
+                style={{
+                  cursor: "ns-resize",
+                  width: `${HANDLE_WIDTH}px`,
+                  height: `${HANDLE_WIDTH}px`,
+                  transform: `translate(${bounds.x + bounds.width / 2 - HANDLE_WIDTH / 2}px,${bounds.y - HANDLE_WIDTH / 2 + bounds.height}px)`,
+                }}
+                onPointerDown={(e) => {
+                  e.stopPropagation()
+                  onResizeHandlePointerDown(Side.Bottom, bounds)
+                }}
+              />
+            )}
             <rect
               //left-bottom
               className="fill-white stroke-1 stroke-blue-500"
@@ -207,23 +216,25 @@ export const SelectionBox = memo(
                 onResizeHandlePointerDown(Side.Bottom + Side.Left, bounds)
               }}
             />
-            <rect
-              //left-middle
-              className="fill-white stroke-1 stroke-blue-500"
-              x={0}
-              y={0}
-              style={{
-                cursor: "ew-resize",
-                width: `${HANDLE_WIDTH}px`,
-                height: `${HANDLE_WIDTH}px`,
-                transform: `translate(${bounds.x - HANDLE_WIDTH / 2}px,
-                ${bounds.y - HANDLE_WIDTH / 2 + bounds.height / 2}px)`,
-              }}
-              onPointerDown={(e) => {
-                e.stopPropagation()
-                onResizeHandlePointerDown(Side.Left, bounds)
-              }}
-            />
+            {!isSoleDoc && (
+              <rect
+                //left-middle
+                className="fill-white stroke-1 stroke-blue-500"
+                x={0}
+                y={0}
+                style={{
+                  cursor: "ew-resize",
+                  width: `${HANDLE_WIDTH}px`,
+                  height: `${HANDLE_WIDTH}px`,
+                  transform: `translate(${bounds.x - HANDLE_WIDTH / 2}px,
+                  ${bounds.y - HANDLE_WIDTH / 2 + bounds.height / 2}px)`,
+                }}
+                onPointerDown={(e) => {
+                  e.stopPropagation()
+                  onResizeHandlePointerDown(Side.Left, bounds)
+                }}
+              />
+            )}
           </>
         )}
       </>

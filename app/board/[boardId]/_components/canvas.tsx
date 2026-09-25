@@ -1005,9 +1005,16 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   const resizeSelectedLayer = useMutation(
     ({ storage, self }, point: Point) => {
       if (canvasState.mode !== CanvasMode.Resizing) return
-      const bounds = resizeBounds(canvasState.initialBounds, canvasState.corner, point)
       const layer = storage.get("layers").get(self.presence.selection[0])
-      if (layer) layer.update(bounds)
+      if (!layer) return
+      const isDoc = layer.get("type") === LayerType.Doc
+      const bounds = resizeBounds(
+        canvasState.initialBounds,
+        canvasState.corner,
+        point,
+        isDoc
+      )
+      layer.update(bounds)
     }, [canvasState]
   )
 
