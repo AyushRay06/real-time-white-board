@@ -27,7 +27,8 @@ import { SelectionTools } from "./selection-tools"
 import { Path } from "./path"
 import { useDisableScrollBounce } from "@/hooks/use-disable-scroll-bounce"
 import { useDeleteLayers } from "@/hooks/use-delete-layers"
-import { ComponentLibrary } from "./component-library"
+import { ComponentLibrary, ArchitectureSpace } from "./component-library"
+import { RightToolbar } from "./right-toolbar"
 import { getAnchorPoint, computeBestAnchors } from "./sys-component-layer"
 import { ZoomControls } from "./zoom-controls"
 import { CanvasContextMenu } from "./context-menu"
@@ -79,9 +80,22 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   const [camera, setCamera] = useState<Camera>({ x: 0, y: 0, zoom: 1 })
   const [lastUsedColour, setLastUsedColor] = useState<Color>({ r: 0, g: 0, b: 0 })
   const [isLibraryOpen, setIsLibraryOpen] = useState(false)
-  const [libraryTab, setLibraryTab] = useState<"components" | "specs" | "templates">("components")
+  const [activeSpace, setActiveSpace] = useState<ArchitectureSpace>("components")
+  const isMiddlePanningRef = useRef(false)
+  const prevModeBeforeMiddlePanRef = useRef<CanvasMode>(CanvasMode.None)
+
+  const handleToggleSpace = useCallback((space: ArchitectureSpace) => {
+    setIsLibraryOpen((prevOpen) => {
+      if (prevOpen && activeSpace === space) {
+        return false
+      }
+      setActiveSpace(space)
+      return true
+    })
+  }, [activeSpace])
+
   const openSpecs = useCallback(() => {
-    setLibraryTab("specs")
+    setActiveSpace("specs")
     setIsLibraryOpen(true)
   }, [])
   const onDocSelect = useCallback((docType: DocType) => {
@@ -1096,6 +1110,13 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
     ({ setMyPresence }, e: React.PointerEvent) => {
       e.preventDefault()
 
+      // Middle-click hold check: if middle panning was active but middle button is released
+      if (isMiddlePanningRef.current && (e.buttons & 4) === 0) {
+        isMiddlePanningRef.current = false
+        setCanvasState({ mode: CanvasMode.None })
+        return
+      }
+
       // Canvas Panning (Drag to Move Canvas)
       if (canvasState.mode === CanvasMode.Panning) {
         if (canvasState.origin.x !== 0 || canvasState.origin.y !== 0) {
@@ -1140,20 +1161,16 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     if (contextMenu) setContextMenu(null)
 
-    // Central scroll mouse button (middle-click): toggle between Move and default Select mode
+    // Central scroll mouse button (middle-click): ONLY active while holding/pressing
     if (e.button === 1) {
       e.preventDefault()
-      if (canvasState.mode === CanvasMode.Panning) {
-        // Toggle OFF: switch back to default arrow/click interaction
-        setCanvasState({ mode: CanvasMode.None })
-      } else {
-        // Toggle ON: switch to move canvas mode
-        setCanvasState({
-          mode: CanvasMode.Panning,
-          origin: { x: e.clientX, y: e.clientY },
-          cameraOrigin: { x: camera.x, y: camera.y },
-        })
-      }
+      isMiddlePanningRef.current = true
+      prevModeBeforeMiddlePanRef.current = canvasState.mode === CanvasMode.Panning ? CanvasMode.None : canvasState.mode
+      setCanvasState({
+        mode: CanvasMode.Panning,
+        origin: { x: e.clientX, y: e.clientY },
+        cameraOrigin: { x: camera.x, y: camera.y },
+      })
       return
     }
 
@@ -1186,16 +1203,10 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   }, [camera, canvasState, startDrawing, contextMenu, isSpacePressed, eraseAtPoint])
 
   const onPointerUp = useMutation(({}, e: React.PointerEvent) => {
-    // Releasing the middle button should not trigger layer selection/insertion
-    if (e.button === 1) {
-      if (canvasState.mode === CanvasMode.Panning) {
-        // Keep Hand tool active with reset origin so subsequent drags work
-        setCanvasState({
-          mode: CanvasMode.Panning,
-          origin: { x: 0, y: 0 },
-          cameraOrigin: { x: camera.x, y: camera.y },
-        })
-      }
+    // Releasing the middle mouse button immediately ends panning and switches back to default mode
+    if (e.button === 1 || isMiddlePanningRef.current) {
+      isMiddlePanningRef.current = false
+      setCanvasState({ mode: CanvasMode.None })
       return
     }
 
@@ -1204,7 +1215,8 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       return
     }
     if (canvasState.mode === CanvasMode.Panning) {
-      if (isSpacePressed) {
+      if (isMiddlePanningRef.current || isSpacePressed) {
+        isMiddlePanningRef.current = false
         setCanvasState({ mode: CanvasMode.None })
       } else {
         // Keep Hand tool active with reset origin so next drag works
@@ -1241,21 +1253,17 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
 
   const onLayerPointerDown = useMutation(
     ({ self, setMyPresence }, e: React.PointerEvent, layerId: string) => {
-      // Central scroll mouse button (middle-click): toggle between Move and default Select mode even over layers
+      // Central scroll mouse button (middle-click): ONLY active while holding/pressing, even over layers
       if (e.button === 1) {
         e.preventDefault()
         e.stopPropagation()
-        if (canvasState.mode === CanvasMode.Panning) {
-          // Toggle OFF: switch back to default arrow/click interaction
-          setCanvasState({ mode: CanvasMode.None })
-        } else {
-          // Toggle ON: switch to move canvas mode
-          setCanvasState({
-            mode: CanvasMode.Panning,
-            origin: { x: e.clientX, y: e.clientY },
-            cameraOrigin: { x: camera.x, y: camera.y },
-          })
-        }
+        isMiddlePanningRef.current = true
+        prevModeBeforeMiddlePanRef.current = canvasState.mode === CanvasMode.Panning ? CanvasMode.None : canvasState.mode
+        setCanvasState({
+          mode: CanvasMode.Panning,
+          origin: { x: e.clientX, y: e.clientY },
+          cameraOrigin: { x: camera.x, y: camera.y },
+        })
         return
       }
 
@@ -1390,6 +1398,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       // Non-ctrl shortcuts
       switch (e.key) {
         case "Escape":
+          setIsLibraryOpen(false)
           if (isTourActive) {
             stopTour()
           }
@@ -1403,6 +1412,18 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
             unselectLayer()
             setCanvasState({ mode: CanvasMode.None })
           }
+          break
+        case "1":
+          handleToggleSpace("components")
+          break
+        case "2":
+          handleToggleSpace("tables")
+          break
+        case "3":
+          handleToggleSpace("specs")
+          break
+        case "4":
+          handleToggleSpace("templates")
           break
         case "Delete":
         case "Backspace":
@@ -1511,8 +1532,21 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   }, [
     deleteLayers, history, canvasState.mode, duplicateSelectedLayers,
     copySelectedLayers, pasteLayers, selectAllLayers, selectConnectedLayout,
-    nudgeSelectedLayers, unselectLayer, zoomIn, zoomOut, resetZoom, mySelection.length
+    nudgeSelectedLayers, unselectLayer, zoomIn, zoomOut, resetZoom, mySelection.length,
+    handleToggleSpace
   ])
+
+  // Global pointerup listener to ensure middle mouse panning is immediately released
+  useEffect(() => {
+    const handleWindowPointerUp = (e: PointerEvent) => {
+      if (e.button === 1 || isMiddlePanningRef.current) {
+        isMiddlePanningRef.current = false
+        setCanvasState((prev) => (prev.mode === CanvasMode.Panning ? { mode: CanvasMode.None } : prev))
+      }
+    }
+    window.addEventListener("pointerup", handleWindowPointerUp)
+    return () => window.removeEventListener("pointerup", handleWindowPointerUp)
+  }, [])
 
   const onLibrarySelect = useCallback((type: SysComponent) => {
     setCanvasState({ mode: CanvasMode.Inserting, layerType: LayerType.Component, componentType: type })
@@ -1585,16 +1619,15 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         redo={history.redo}
         canRedo={canRedo}
         canUndo={canUndo}
-        isLibraryOpen={isLibraryOpen}
-        onToggleLibrary={() => {
-          setLibraryTab("components")
-          setIsLibraryOpen((v) => !v)
-        }}
-        onOpenSpecs={openSpecs}
-        isSpecsActive={isLibraryOpen && libraryTab === "specs"}
         arrowStyle={arrowStyle}
         onToggleArrowStyle={toggleDefaultArrowStyle}
         onSelectAllArchitecture={selectAllLayers}
+      />
+
+      <RightToolbar
+        activeSpace={activeSpace}
+        isOpen={isLibraryOpen}
+        onToggleSpace={handleToggleSpace}
       />
 
       <ComponentLibrary
@@ -1603,7 +1636,8 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         onSelect={onLibrarySelect}
         onSelectTemplate={insertTemplate}
         onSelectDoc={onDocSelect}
-        initialTab={libraryTab}
+        activeSpace={activeSpace}
+        onSpaceChange={setActiveSpace}
       />
 
       {/* Status hints (placed below top simulator bar) */}
@@ -1703,7 +1737,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
           currentArrowStyle={selectedArrowStyle}
           onSelectAll={selectAllLayers}
           onFitToScreen={fitToScreen}
-          onOpenLibrary={() => setIsLibraryOpen(true)}
+          onOpenLibrary={() => handleToggleSpace("components")}
         />
       )}
 
