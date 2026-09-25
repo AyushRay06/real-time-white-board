@@ -979,9 +979,9 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   )
 
   const resizeSelectedLayer = useMutation(
-    ({ storage, self }, point: Point) => {
+    ({ storage, self }, point: Point, lockAspectRatio: boolean = false) => {
       if (canvasState.mode !== CanvasMode.Resizing) return
-      const bounds = resizeBounds(canvasState.initialBounds, canvasState.corner, point)
+      const bounds = resizeBounds(canvasState.initialBounds, canvasState.corner, point, lockAspectRatio)
       const layer = storage.get("layers").get(self.presence.selection[0])
       if (layer) layer.update(bounds)
     }, [canvasState]
@@ -1102,7 +1102,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       if (canvasState.mode === CanvasMode.Pressing)          startMultiSelection(current, canvasState.origin)
       else if (canvasState.mode === CanvasMode.SelectionNet) updateSelectionNet(current, canvasState.origin)
       else if (canvasState.mode === CanvasMode.Translating)  translateSelectedLayer(current)
-      else if (canvasState.mode === CanvasMode.Resizing)     resizeSelectedLayer(current)
+      else if (canvasState.mode === CanvasMode.Resizing)     resizeSelectedLayer(current, e.shiftKey)
       else if (canvasState.mode === CanvasMode.Pencil)       continueDrawing(current, e)
       else if (canvasState.mode === CanvasMode.Connecting && canvasState.from) setConnectPreview(current)
       setMyPresence({ cursor: current })

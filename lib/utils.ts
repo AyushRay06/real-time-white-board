@@ -69,7 +69,12 @@ export function getFontFamilyCss(fontFamily?: FontFamily): string {
   }
 }
 
-export function resizeBounds(bounds: XYWH, corner: Side, point: Point): XYWH {
+export function resizeBounds(
+  bounds: XYWH,
+  corner: Side,
+  point: Point,
+  lockAspectRatio: boolean = false
+): XYWH {
   const result = {
     x: bounds.x,
     y: bounds.y,
@@ -95,6 +100,24 @@ export function resizeBounds(bounds: XYWH, corner: Side, point: Point): XYWH {
   if ((corner & Side.Bottom) === Side.Bottom) {
     result.y = Math.min(point.y, bounds.y)
     result.height = Math.abs(point.y - bounds.y)
+  }
+
+  if (lockAspectRatio && bounds.width > 0 && bounds.height > 0) {
+    const scaleX = result.width / bounds.width
+    const scaleY = result.height / bounds.height
+    const dominantScale = Math.abs(scaleX - 1) > Math.abs(scaleY - 1) ? scaleX : scaleY
+
+    const newWidth = Math.max(20, Math.round(bounds.width * dominantScale))
+    const newHeight = Math.max(20, Math.round(bounds.height * dominantScale))
+
+    if ((corner & Side.Left) === Side.Left) {
+      result.x = bounds.x + bounds.width - newWidth
+    }
+    if ((corner & Side.Top) === Side.Top) {
+      result.y = bounds.y + bounds.height - newHeight
+    }
+    result.width = newWidth
+    result.height = newHeight
   }
 
   return result
