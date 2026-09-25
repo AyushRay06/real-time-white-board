@@ -107,6 +107,9 @@ export const SelectionTools = memo(
     const soleLayer = useStorage((root) =>
       soleLayerId ? root.layers.get(soleLayerId) : null
     )
+    const isAnyLocked = useStorage((root) =>
+      selection.some((id) => (root.layers.get(id) as any)?.isLocked === true)
+    )
 
     // Local label state for snappy inline editing
     const [labelInput, setLabelInput] = useState("")
@@ -522,9 +525,6 @@ export const SelectionTools = memo(
     const currentDirection = isArrow && soleLayer && "direction" in soleLayer ? (soleLayer.direction || "forward") : "forward"
     const currentSequenceStep: number | undefined = isArrow && soleLayer && "sequenceStep" in soleLayer ? (soleLayer.sequenceStep as number | undefined) : undefined
     const currentProtocol: string | undefined = isArrow && soleLayer && "protocol" in soleLayer ? ((soleLayer as any).protocol as string | undefined) : undefined
-    const isAnyLocked = useStorage((root) =>
-      selection.some((id) => (root.layers.get(id) as any)?.isLocked === true)
-    )
     const currentStatus: ComponentStatus = isComponent && soleLayer && "status" in soleLayer && soleLayer.status ? (soleLayer.status as ComponentStatus) : "none"
     const compType = isComponent && soleLayer && "componentType" in soleLayer ? (soleLayer.componentType as SysComponent) : null
     const CompIcon = compType ? ICON_MAP[compType] || Box : Box
