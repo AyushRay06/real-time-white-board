@@ -1,4 +1,6 @@
 "use client"
+
+import { useAuth } from "@clerk/nextjs"
 import { useApiMutation } from "@/hooks/use-api-mutaion"
 import { api } from "@/convex/_generated/api"
 import { cn } from "@/lib/utils"
@@ -13,12 +15,14 @@ interface NewBoardButtonProps {
 
 export const NewBoardButton = ({ disabled, orgId }: NewBoardButtonProps) => {
   const router = useRouter()
+  const { orgId: clerkOrgId, userId } = useAuth()
+  const effectiveOrgId = orgId || clerkOrgId || userId || "personal"
   const { mutate, pending } = useApiMutation(api.board.create)
 
   const onClick = () => {
     mutate({
       title: "Untitled",
-      orgId: orgId || "",
+      orgId: effectiveOrgId,
     })
       .then((id) => {
         toast.success("Board created")

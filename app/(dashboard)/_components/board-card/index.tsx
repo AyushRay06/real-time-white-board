@@ -34,7 +34,8 @@ export const BoardCard = ({
   createdAt,
   imageUrl,
 }: BoardCardProps) => {
-  const { userId } = useAuth()
+  const { userId, orgId: clerkOrgId } = useAuth()
+  const effectiveOrgId = orgId || clerkOrgId || userId || "personal"
 
   const authorLabel = userId === authorId ? "You" : authorName
 
@@ -54,7 +55,7 @@ export const BoardCard = ({
     if (isFavourite) {
       onUnfavourite({ id }).catch(() => toast.error("Failed to unfavourite"))
     } else {
-      onFavourite({ id, orgId: orgId || "" }).catch(() => toast.error("Failed to favourite"))
+      onFavourite({ id, orgId: effectiveOrgId }).catch(() => toast.error("Failed to favourite"))
     }
   }
 

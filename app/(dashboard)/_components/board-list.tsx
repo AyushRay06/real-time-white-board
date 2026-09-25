@@ -1,5 +1,6 @@
 "use client"
 
+import { useAuth } from "@clerk/nextjs"
 import { useQuery } from "convex/react"
 import { api } from "@/convex/_generated/api"
 import { EmptySearch } from "./empty-search"
@@ -14,13 +15,22 @@ interface BoardListProps {
   }
 }
 
-export const BoardList = ({ query }: BoardListProps) => {
-  const data = useQuery(api.boards.get, {
-    favourites: query.favourites,
-    search: query.search,
-  })
+export const BoardList = ({ query, orgId: propOrgId }: BoardListProps) => {
+  const { isLoaded, orgId: clerkOrgId, userId } = useAuth()
+  const effectiveOrgId = propOrgId || clerkOrgId || userId || "personal"
 
-  if (data === undefined) {
+  const data = useQuery(
+    api.boards.get,
+    isLoaded
+      ? {
+          orgId: effectiveOrgId,
+          favourites: query.favourites,
+          search: query.search,
+        }
+      : "skip"
+  )
+
+  if (!isLoaded || data === undefined) {
     return (
       <div>
         <div className="flex items-center justify-between mb-6">
@@ -102,7 +112,7 @@ export const BoardList = ({ query }: BoardListProps) => {
         </span>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 pb-12">
-        <NewBoardButton />
+        <NewBoardButton orgId={effectiveOrgId} />
         {data.map((board) => (
           <BoardCard
             key={board._id}

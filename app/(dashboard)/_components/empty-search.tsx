@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
 
+import { useAuth } from "@clerk/nextjs"
 import { api } from "@/convex/_generated/api"
 import { useApiMutation } from "@/hooks/use-api-mutaion"
 import { toast } from "sonner"
@@ -17,11 +18,14 @@ interface EmptySearchProps {
 
 export const EmptySearch = ({ src, alt, desc1, desc2 }: EmptySearchProps) => {
   const router = useRouter()
+  const { orgId, userId } = useAuth()
+  const effectiveOrgId = orgId || userId || "personal"
   const { mutate, pending } = useApiMutation(api.board.create)
 
   const onClick = () => {
     mutate({
       title: "Untitled",
+      orgId: effectiveOrgId,
     })
       .then((id) => {
         toast.success("Board created")
