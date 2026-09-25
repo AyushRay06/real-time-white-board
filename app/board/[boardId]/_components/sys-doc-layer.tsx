@@ -190,6 +190,31 @@ export const SysDocLayer = memo(
 
     const HeaderIcon = config.icon
 
+    // Base dimensions for the specification card
+    const baseWidth = useMemo(() => {
+      switch (docType) {
+        case "requirements": return 520
+        case "api": return 540
+        case "estimation": return 480
+        case "bottlenecks": return 540
+        default: return 520
+      }
+    }, [docType])
+
+    const baseHeight = useMemo(() => {
+      switch (docType) {
+        case "requirements": return 380
+        case "api": return 360
+        case "estimation": return 360
+        case "bottlenecks": return 380
+        default: return 360
+      }
+    }, [docType])
+
+    // Scale factors to scale up or down smoothly on resize without clipping content
+    const scaleX = width / baseWidth
+    const scaleY = height / baseHeight
+
     // Card background classes
     const cardBg = isDark
       ? "bg-slate-900/95 border-slate-800 text-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
@@ -200,48 +225,29 @@ export const SysDocLayer = memo(
       ? "bg-transparent text-slate-200 placeholder:text-slate-500 focus:bg-slate-800/80 focus:ring-1 focus:ring-indigo-400 rounded px-1.5 py-0.5 outline-none transition"
       : "bg-transparent text-slate-800 placeholder:text-slate-400 focus:bg-slate-100 focus:ring-1 focus:ring-indigo-500 rounded px-1.5 py-0.5 outline-none transition"
 
-    const BASE_DIMENSIONS: Record<DocType, { width: number; height: number }> = {
-      requirements: { width: 520, height: 380 },
-      api: { width: 540, height: 360 },
-      estimation: { width: 480, height: 360 },
-      bottlenecks: { width: 540, height: 380 },
-    }
-
-    const baseDim = BASE_DIMENSIONS[docType] || { width: 520, height: 380 }
-    const baseWidth = baseDim.width
-    const baseHeight = baseDim.height
-
-    const safeWidth = Math.max(120, width)
-    const safeHeight = Math.max(80, height)
-
-    // Scaling factor: dynamically scales up and down to match bounding box without clipping sections
-    const scale = Math.max(0.15, Math.min(safeWidth / baseWidth, safeHeight / baseHeight))
-    const contentWidth = safeWidth / scale
-    const contentHeight = safeHeight / scale
-
     return (
       <foreignObject
         x={x}
         y={y}
-        width={safeWidth}
-        height={safeHeight}
+        width={width}
+        height={height}
         onPointerDown={(e) => onPointerDown(e, id)}
         style={{
           outline: selectionColor ? `2px solid ${selectionColor}` : "none",
           outlineOffset: "3px",
-          borderRadius: `${Math.round(16 * Math.min(1.5, Math.max(0.5, scale)))}px`,
+          borderRadius: "16px",
           overflow: "visible",
         }}
         className="cursor-move select-none"
       >
         <div
           style={{
-            width: `${contentWidth}px`,
-            height: `${contentHeight}px`,
-            transform: `scale(${scale})`,
+            width: `${baseWidth}px`,
+            height: `${baseHeight}px`,
+            transform: `scale(${scaleX}, ${scaleY})`,
             transformOrigin: "0 0",
           }}
-          className={`flex flex-col rounded-2xl border backdrop-blur-xl transition-all duration-75 overflow-hidden font-sans ${cardBg}`}
+          className={`flex flex-col rounded-2xl border backdrop-blur-xl overflow-hidden font-sans ${cardBg}`}
         >
           {/* ── CARD HEADER ── */}
           <div

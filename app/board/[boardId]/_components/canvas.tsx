@@ -979,11 +979,42 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   )
 
   const resizeSelectedLayer = useMutation(
-    ({ storage, self }, point: Point, lockAspectRatio: boolean = false) => {
+    ({ storage, self }, point: Point) => {
       if (canvasState.mode !== CanvasMode.Resizing) return
-      const bounds = resizeBounds(canvasState.initialBounds, canvasState.corner, point, lockAspectRatio)
+      let bounds = resizeBounds(canvasState.initialBounds, canvasState.corner, point)
       const layer = storage.get("layers").get(self.presence.selection[0])
-      if (layer) layer.update(bounds)
+      if (!layer) return
+
+      // For Doc layers: when dragging diagonal corners, preserve aspect ratio for proportional scaling
+      const isCorner =
+        ((canvasState.corner & (Side.Left | Side.Right)) !== 0) &&
+        ((canvasState.corner & (Side.Top | Side.Bottom)) !== 0)
+      
+      const layerType = (layer as any).get("type")
+      if (layerType === LayerType.Doc && isCorner) {
+        const initial = canvasState.initialBounds
+        const scale = Math.max(0.25, Math.max(bounds.width / initial.width, bounds.height / initial.height))
+        const newWidth = Math.round(initial.width * scale)
+        const newHeight = Math.round(initial.height * scale)
+
+        let newX = bounds.x
+        let newY = bounds.y
+        if ((canvasState.corner & Side.Left) !== 0) {
+          newX = initial.x + initial.width - newWidth
+        }
+        if ((canvasState.corner & Side.Top) !== 0) {
+          newY = initial.y + initial.height - newHeight
+        }
+
+        bounds = {
+          x: newX,
+          y: newY,
+          width: newWidth,
+          height: newHeight,
+        }
+      }
+
+      layer.update(bounds)
     }, [canvasState]
   )
 
@@ -1102,7 +1133,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       if (canvasState.mode === CanvasMode.Pressing)          startMultiSelection(current, canvasState.origin)
       else if (canvasState.mode === CanvasMode.SelectionNet) updateSelectionNet(current, canvasState.origin)
       else if (canvasState.mode === CanvasMode.Translating)  translateSelectedLayer(current)
-      else if (canvasState.mode === CanvasMode.Resizing)     resizeSelectedLayer(current, e.shiftKey)
+      else if (canvasState.mode === CanvasMode.Resizing)     resizeSelectedLayer(current)
       else if (canvasState.mode === CanvasMode.Pencil)       continueDrawing(current, e)
       else if (canvasState.mode === CanvasMode.Connecting && canvasState.from) setConnectPreview(current)
       setMyPresence({ cursor: current })
