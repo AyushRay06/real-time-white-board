@@ -5,12 +5,19 @@ import { api } from "@/convex/_generated/api"
 import { Id } from "@/convex/_generated/dataModel"
 import { cn } from "@/lib/utils"
 import { useQuery } from "convex/react"
+import Image from "next/image"
 import Link from "next/link"
+import { Poppins } from "next/font/google"
 import { Hint } from "@/components/hint"
 import { useRenameModal } from "@/store/use-rename-modal"
 import { Actions } from "@/components/actions"
 import { MoreHorizontal, Pencil, ChevronRight } from "lucide-react"
 import { useCanvasTheme } from "./canvas-theme-context"
+
+const font = Poppins({
+  subsets: ["latin"],
+  weight: ["600"],
+})
 
 interface InfoProps {
   boardId: string
@@ -39,27 +46,19 @@ export const Info = ({ boardId }: InfoProps) => {
       <Hint label="All boards" side="bottom" sideOffset={10}>
         <Link
           href="/"
-          className="group flex items-center gap-2 px-1.5 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
+          className="group flex items-center gap-2 px-1 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors"
         >
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-xs shadow-indigo-500/25 group-hover:scale-105 transition-transform flex-shrink-0">
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect x="3" y="3" width="18" height="18" rx="3" />
-              <path d="M3 9h18" />
-              <path d="M9 21V9" />
-            </svg>
-          </div>
+          <Image
+            src="/logo.svg"
+            alt="Board"
+            height={28}
+            width={28}
+            className="group-hover:scale-105 transition-transform flex-shrink-0"
+          />
           <span
             className={cn(
               "font-bold text-sm tracking-tight",
+              font.className,
               theme === "dark" ? "text-white" : "text-slate-900"
             )}
           >
