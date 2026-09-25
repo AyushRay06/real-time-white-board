@@ -1,6 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=JetBrains+Mono:wght@400;600;700&family=Kalam:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.font-sans-canvas {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.font-handwriting-canvas {
+  font-family: 'Kalam', 'Caveat', cursive, sans-serif;
+}
+.font-serif-canvas {
+  font-family: 'Playfair Display', Georgia, Cambria, 'Times New Roman', serif;
+}
+.font-mono-canvas {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+}
 
 html,
 body,

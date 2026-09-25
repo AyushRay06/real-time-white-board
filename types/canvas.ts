@@ -94,6 +94,14 @@ export enum LayerType {
 
 export type StrokePattern = "solid" | "dashed" | "dotted"
 export type ArrowDirection = "forward" | "bidirectional" | "none"
+export type FontFamily = "sans" | "handwriting" | "serif" | "mono"
+export type FontWeight = "normal" | "bold"
+export type FontStyle = "normal" | "italic"
+export type TextDecoration = "none" | "underline"
+export type TextAlign = "left" | "center" | "right"
+export type FillStyle = "solid" | "semi" | "transparent"
+export type StrokeWidth = 1.5 | 3 | 5
+export type Roundness = "sharp" | "rounded"
 
 export type RectangleLayer = {
   type: LayerType.Rectangle
@@ -104,6 +112,13 @@ export type RectangleLayer = {
   fill: Color
   value?: string
   strokePattern?: StrokePattern
+  strokeWidth?: number
+  fillStyle?: FillStyle
+  roundness?: Roundness
+  fontFamily?: FontFamily
+  fontSize?: number
+  fontWeight?: FontWeight
+  textAlign?: TextAlign
 }
 
 export type EllipseLayer = {
@@ -115,6 +130,12 @@ export type EllipseLayer = {
   fill: Color
   value?: string
   strokePattern?: StrokePattern
+  strokeWidth?: number
+  fillStyle?: FillStyle
+  fontFamily?: FontFamily
+  fontSize?: number
+  fontWeight?: FontWeight
+  textAlign?: TextAlign
 }
 
 export type PathLayer = {
@@ -136,6 +157,12 @@ export type TextLayer = {
   height: number
   fill: Color
   value?: string
+  fontFamily?: FontFamily
+  fontSize?: number
+  fontWeight?: FontWeight
+  fontStyle?: FontStyle
+  textDecoration?: TextDecoration
+  textAlign?: TextAlign
 }
 
 export type NoteLayer = {
@@ -146,6 +173,10 @@ export type NoteLayer = {
   height: number
   fill: Color
   value?: string
+  fontFamily?: FontFamily
+  fontSize?: number
+  fontWeight?: FontWeight
+  textAlign?: TextAlign
 }
 
 export type ComponentStatus = "healthy" | "warning" | "error" | "info" | "none"

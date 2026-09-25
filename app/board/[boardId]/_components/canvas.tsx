@@ -312,17 +312,64 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       const liveLayerIds = storage.get("layerIds")
       const layerId = nanoid()
       const isSection = layerType === LayerType.Section
-      const width = isSection ? 440 : 100
-      const height = isSection ? 300 : 100
-      const layer = new LiveObject({
+      const isText = layerType === LayerType.Text
+      const isRect = layerType === LayerType.Rectangle
+      const isEllipse = layerType === LayerType.Ellipse
+      const isNote = layerType === LayerType.Note
+
+      const width = isSection ? 440 : isText ? 240 : isRect ? 180 : isEllipse ? 150 : 150
+      const height = isSection ? 300 : isText ? 44 : isRect ? 120 : isEllipse ? 150 : 150
+
+      const defaultFill = isSection
+        ? { r: 99, g: 102, b: 241 }
+        : isText
+        ? (theme === "dark" ? { r: 248, g: 250, b: 252 } : { r: 15, g: 23, b: 42 })
+        : isNote
+        ? { r: 254, g: 240, b: 138 }
+        : lastUsedColour
+
+      const layerData: any = {
         type: layerType,
-        x: position.x - (isSection ? width / 2 : 0),
-        y: position.y - (isSection ? height / 2 : 0),
+        x: position.x - (isSection || isText || isRect || isEllipse ? width / 2 : 0),
+        y: position.y - (isSection || isText || isRect || isEllipse ? height / 2 : 0),
         height,
         width,
-        fill: isSection ? { r: 99, g: 102, b: 241 } : lastUsedColour,
-        value: isSection ? "Architecture Zone" : undefined,
-      })
+        fill: defaultFill,
+        value: isSection ? "Architecture Zone" : isText ? "Text" : undefined,
+      }
+
+      if (isText) {
+        layerData.fontFamily = "sans"
+        layerData.fontSize = 24
+        layerData.fontWeight = "normal"
+        layerData.fontStyle = "normal"
+        layerData.textDecoration = "none"
+        layerData.textAlign = "left"
+      } else if (isRect) {
+        layerData.fillStyle = "solid"
+        layerData.strokeWidth = 2
+        layerData.strokePattern = "solid"
+        layerData.roundness = "rounded"
+        layerData.fontFamily = "sans"
+        layerData.fontSize = 18
+        layerData.fontWeight = "normal"
+        layerData.textAlign = "center"
+      } else if (isEllipse) {
+        layerData.fillStyle = "solid"
+        layerData.strokeWidth = 2
+        layerData.strokePattern = "solid"
+        layerData.fontFamily = "sans"
+        layerData.fontSize = 18
+        layerData.fontWeight = "normal"
+        layerData.textAlign = "center"
+      } else if (isNote) {
+        layerData.fontFamily = "handwriting"
+        layerData.fontSize = 20
+        layerData.fontWeight = "normal"
+        layerData.textAlign = "center"
+      }
+
+      const layer = new LiveObject(layerData)
       if (isSection && liveLayerIds.length > 0) {
         liveLayerIds.insert(layerId, 0)
       } else {
@@ -332,7 +379,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       setMyPresence({ selection: [layerId] }, { addToHistory: true })
       setCanvasState({ mode: CanvasMode.None })
     },
-    [lastUsedColour]
+    [lastUsedColour, theme]
   )
 
   // ─── INSERT SYSTEM DESIGN COMPONENT ─────────────────────────────────────

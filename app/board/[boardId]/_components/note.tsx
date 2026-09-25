@@ -1,25 +1,10 @@
-import { Kalam } from "next/font/google"
+"use client"
+
+import React, { useRef } from "react"
 import ContentEditable, { ContentEditableEvent } from "react-contenteditable"
-
-import { Point, NoteLayer } from "@/types/canvas"
-import { cn, colorToCss, getContrastingTextColor } from "@/lib/utils"
+import { NoteLayer } from "@/types/canvas"
+import { cn, colorToCss, getContrastingTextColor, getFontFamilyClass, getFontFamilyCss } from "@/lib/utils"
 import { useMutation } from "@liveblocks/react/suspense"
-import { Weight } from "lucide-react"
-
-const font = Kalam({
-  subsets: ["latin"],
-  weight: ["400"],
-})
-
-//function for fontsize
-const calculateFontsize = (width: number, height: number) => {
-  const maxFontSize = 96
-  const scalefactor = 0.15
-  const fontSizeBasedOnHeight = height * scalefactor
-  const fontSizeBasedOnWidth = width * scalefactor
-
-  return Math.min(fontSizeBasedOnHeight, fontSizeBasedOnWidth, maxFontSize)
-}
 
 interface NoteProps {
   id: string
@@ -29,20 +14,34 @@ interface NoteProps {
 }
 
 export const Note = ({ layer, onPointDown, id, selectionColor }: NoteProps) => {
-  const { x, y, height, width, fill, value } = layer
+  const {
+    x,
+    y,
+    height,
+    width,
+    fill,
+    value,
+    fontFamily = "handwriting",
+    fontSize = 20,
+    fontWeight = "normal",
+    textAlign = "center",
+  } = layer
+
+  const editableRef = useRef<HTMLElement>(null)
 
   const updateValue = useMutation(
-    ({ storage, setMyPresence }, newValue: string) => {
+    ({ storage }, newValue: string) => {
       const liveLayers = storage.get("layers")
-
       liveLayers.get(id)?.set("value", newValue)
     },
-    []
+    [id]
   )
 
   const handleContentChange = (e: ContentEditableEvent) => {
     updateValue(e.target.value)
   }
+
+  const textColor = fill ? getContrastingTextColor(fill) : "#000"
 
   return (
     <foreignObject
@@ -52,24 +51,33 @@ export const Note = ({ layer, onPointDown, id, selectionColor }: NoteProps) => {
       height={height}
       onPointerDown={(e) => onPointDown(e, id)}
       style={{
-        outline: selectionColor ? `1px solid ${selectionColor}` : "none",
-        backgroundColor: fill ? colorToCss(fill) : "#000",
+        outline: selectionColor ? `2px solid ${selectionColor}` : "none",
+        outlineOffset: "2px",
+        backgroundColor: fill ? colorToCss(fill) : "#fef08a",
+        borderRadius: "8px",
       }}
-      className="shadow-md drop-shadow-xl"
+      className="shadow-lg drop-shadow-md select-none transition-shadow"
     >
-      <ContentEditable
-        html={value || "Text"}
-        onChange={handleContentChange}
-        className={cn(
-          "h-full w-full flex items-center justify-center text-center  outline-none",
-          font.className
-        )}
-        style={{
-          fontSize: calculateFontsize(width, height),
-          color: fill ? getContrastingTextColor(fill) : "#000",
-        }}
-      />
-      t
+      <div className="w-full h-full p-3 flex items-center justify-center">
+        <ContentEditable
+          innerRef={editableRef as any}
+          html={value !== undefined ? value : "Note"}
+          onChange={handleContentChange}
+          className={cn(
+            "w-full outline-none leading-snug tracking-wide",
+            getFontFamilyClass(fontFamily)
+          )}
+          style={{
+            fontFamily: getFontFamilyCss(fontFamily),
+            fontSize: `${fontSize}px`,
+            fontWeight: fontWeight === "bold" ? 700 : 400,
+            textAlign: textAlign,
+            color: textColor,
+            wordBreak: "break-word",
+            overflowWrap: "break-word",
+          }}
+        />
+      </div>
     </foreignObject>
   )
 }

@@ -1,7 +1,21 @@
 "use client"
 
 import { memo, useState, useEffect } from "react"
-import { Camera, Color, LayerType, ComponentStatus, SysComponent } from "@/types/canvas"
+import {
+  Camera,
+  Color,
+  LayerType,
+  ComponentStatus,
+  SysComponent,
+  FontFamily,
+  FontWeight,
+  FontStyle,
+  TextDecoration,
+  TextAlign,
+  FillStyle,
+  StrokeWidth,
+  Roundness,
+} from "@/types/canvas"
 import { useSelectionBounds } from "@/hooks/use-selection-bound"
 import { useMutation, useSelf, useStorage } from "@liveblocks/react/suspense"
 import { useDeleteLayers } from "@/hooks/use-delete-layers"
@@ -25,6 +39,16 @@ import {
   RotateCcw,
   AlignCenterHorizontal,
   AlignCenterVertical,
+  Type,
+  Square,
+  Circle,
+  StickyNote,
+  Bold,
+  Italic,
+  Underline,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -44,6 +68,8 @@ interface SelectionToolsProps {
 }
 
 const PALETTE: { name: string; color: Color; hex: string }[] = [
+  { name: "Dark", hex: "#0f172a", color: { r: 15, g: 23, b: 42 } },
+  { name: "Light", hex: "#f8fafc", color: { r: 248, g: 250, b: 252 } },
   { name: "Indigo", hex: "#6366f1", color: { r: 99, g: 102, b: 241 } },
   { name: "Sky", hex: "#0ea5e9", color: { r: 14, g: 165, b: 233 } },
   { name: "Emerald", hex: "#10b981", color: { r: 16, g: 185, b: 129 } },
@@ -68,7 +94,7 @@ export const SelectionTools = memo(
 
     // Local label state for snappy inline editing
     const [labelInput, setLabelInput] = useState("")
-    const soleLayerValue = soleLayer && "value" in soleLayer ? soleLayer.value : null
+    const soleLayerValue = soleLayer && "value" in soleLayer ? (soleLayer.value as string) : null
 
     useEffect(() => {
       setLabelInput(soleLayerValue || "")
@@ -80,7 +106,7 @@ export const SelectionTools = memo(
       storage.get("layers").get(soleLayerId)?.set("value", value)
     }, [soleLayerId])
 
-    // Change layer color (updates customColor for components, fill for arrows/shapes)
+    // Change layer color (updates customColor for components, fill for arrows/shapes/text)
     const setFill = useMutation(
       ({ storage }, fill: Color) => {
         const liveLayers = storage.get("layers")
@@ -105,6 +131,80 @@ export const SelectionTools = memo(
         ;(layer as any).set("customColor", undefined)
       }
     }, [soleLayerId])
+
+    // Typography mutations
+    const setFontFamily = useMutation(({ storage }, fontFamily: FontFamily) => {
+      const liveLayers = storage.get("layers")
+      selection.forEach((id) => {
+        const l = liveLayers.get(id)
+        if (l) (l as any).set("fontFamily", fontFamily)
+      })
+    }, [selection])
+
+    const setFontSize = useMutation(({ storage }, fontSize: number) => {
+      const liveLayers = storage.get("layers")
+      selection.forEach((id) => {
+        const l = liveLayers.get(id)
+        if (l) (l as any).set("fontSize", fontSize)
+      })
+    }, [selection])
+
+    const setFontWeight = useMutation(({ storage }, fontWeight: FontWeight) => {
+      const liveLayers = storage.get("layers")
+      selection.forEach((id) => {
+        const l = liveLayers.get(id)
+        if (l) (l as any).set("fontWeight", fontWeight)
+      })
+    }, [selection])
+
+    const setFontStyle = useMutation(({ storage }, fontStyle: FontStyle) => {
+      const liveLayers = storage.get("layers")
+      selection.forEach((id) => {
+        const l = liveLayers.get(id)
+        if (l) (l as any).set("fontStyle", fontStyle)
+      })
+    }, [selection])
+
+    const setTextDecoration = useMutation(({ storage }, textDecoration: TextDecoration) => {
+      const liveLayers = storage.get("layers")
+      selection.forEach((id) => {
+        const l = liveLayers.get(id)
+        if (l) (l as any).set("textDecoration", textDecoration)
+      })
+    }, [selection])
+
+    const setTextAlign = useMutation(({ storage }, textAlign: TextAlign) => {
+      const liveLayers = storage.get("layers")
+      selection.forEach((id) => {
+        const l = liveLayers.get(id)
+        if (l) (l as any).set("textAlign", textAlign)
+      })
+    }, [selection])
+
+    // Shape mutations
+    const setFillStyle = useMutation(({ storage }, fillStyle: FillStyle) => {
+      const liveLayers = storage.get("layers")
+      selection.forEach((id) => {
+        const l = liveLayers.get(id)
+        if (l) (l as any).set("fillStyle", fillStyle)
+      })
+    }, [selection])
+
+    const setStrokeWidth = useMutation(({ storage }, strokeWidth: number) => {
+      const liveLayers = storage.get("layers")
+      selection.forEach((id) => {
+        const l = liveLayers.get(id)
+        if (l) (l as any).set("strokeWidth", strokeWidth)
+      })
+    }, [selection])
+
+    const setRoundness = useMutation(({ storage }, roundness: Roundness) => {
+      const liveLayers = storage.get("layers")
+      selection.forEach((id) => {
+        const l = liveLayers.get(id)
+        if (l) (l as any).set("roundness", roundness)
+      })
+    }, [selection])
 
     // Arrow specific mutations
     const setArrowStyle = useMutation(({ storage }, style: "curvy" | "sharp") => {
@@ -185,7 +285,6 @@ export const SelectionTools = memo(
       }
     }, [selection])
 
-    // Alignment mutations
     const alignHorizontal = useMutation(({ storage }) => {
       if (!selectionBounds || selection.length < 2) return
       const liveLayers = storage.get("layers")
@@ -225,9 +324,7 @@ export const SelectionTools = memo(
     const screenW = selectionBounds.width * zoom
     const screenH = selectionBounds.height * zoom
 
-    // Smart-Flip Positioning: NEVER overlap the selected component
-    // If component is near top of screen (screenY < 125), flip BELOW the component!
-    // Otherwise place comfortably ABOVE the component with a clean margin.
+    // Smart-Flip Positioning: NEVER overlap selected components
     const shouldFlipBelow = screenY < 125
     const tooltipY = shouldFlipBelow
       ? screenY + screenH + 12
@@ -241,13 +338,31 @@ export const SelectionTools = memo(
     const isComponent = layerType === LayerType.Component
     const isArrow = layerType === LayerType.Arrow
     const isSection = layerType === LayerType.Section
+    const isText = layerType === LayerType.Text
+    const isRect = layerType === LayerType.Rectangle
+    const isEllipse = layerType === LayerType.Ellipse
+    const isShape = isRect || isEllipse
+    const isNote = layerType === LayerType.Note
 
     const currentArrowStyle = isArrow && soleLayer && "arrowStyle" in soleLayer ? (soleLayer.arrowStyle || "curvy") : "curvy"
     const currentStrokePattern = soleLayer && "strokePattern" in soleLayer ? (soleLayer.strokePattern || "solid") : "solid"
+    const currentStrokeWidth = soleLayer && "strokeWidth" in soleLayer ? (soleLayer.strokeWidth || 2) : 2
+    const currentFillStyle: FillStyle = soleLayer && "fillStyle" in soleLayer ? (soleLayer.fillStyle || "solid") : "solid"
+    const currentRoundness: Roundness = soleLayer && "roundness" in soleLayer ? (soleLayer.roundness || "rounded") : "rounded"
+    const currentFontFamily: FontFamily = soleLayer && "fontFamily" in soleLayer ? (soleLayer.fontFamily || (isNote ? "handwriting" : "sans")) : (isNote ? "handwriting" : "sans")
+    const currentFontSize = soleLayer && "fontSize" in soleLayer ? (soleLayer.fontSize || (isText ? 24 : isNote ? 20 : 18)) : (isText ? 24 : isNote ? 20 : 18)
+    const currentFontWeight: FontWeight = soleLayer && "fontWeight" in soleLayer ? (soleLayer.fontWeight || "normal") : "normal"
+    const currentFontStyle: FontStyle = soleLayer && "fontStyle" in soleLayer ? (soleLayer.fontStyle || "normal") : "normal"
+    const currentTextDecoration: TextDecoration = soleLayer && "textDecoration" in soleLayer ? (soleLayer.textDecoration || "none") : "none"
+    const currentTextAlign: TextAlign = soleLayer && "textAlign" in soleLayer ? (soleLayer.textAlign || (isText ? "left" : "center")) : (isText ? "left" : "center")
     const currentDirection = isArrow && soleLayer && "direction" in soleLayer ? (soleLayer.direction || "forward") : "forward"
     const currentStatus: ComponentStatus = isComponent && soleLayer && "status" in soleLayer && soleLayer.status ? (soleLayer.status as ComponentStatus) : "none"
     const compType = isComponent && soleLayer && "componentType" in soleLayer ? (soleLayer.componentType as SysComponent) : null
     const CompIcon = compType ? ICON_MAP[compType] || Box : Box
+
+    const toggleBold = () => setFontWeight(currentFontWeight === "bold" ? "normal" : "bold")
+    const toggleItalic = () => setFontStyle(currentFontStyle === "italic" ? "normal" : "italic")
+    const toggleUnderline = () => setTextDecoration(currentTextDecoration === "underline" ? "none" : "underline")
 
     const containerClasses = isLight
       ? "bg-white/95 text-slate-800 border-slate-200/90 shadow-xl shadow-slate-900/10"
@@ -263,9 +378,13 @@ export const SelectionTools = memo(
       ? "bg-slate-100 hover:bg-slate-200/70 focus:bg-white border-slate-200 focus:border-cyan-500 text-slate-900 placeholder:text-slate-400"
       : "bg-neutral-800/80 hover:bg-neutral-800 focus:bg-neutral-950 border-neutral-700 focus:border-cyan-400 text-white placeholder:text-neutral-500"
 
-    const inputClassSection = isLight
-      ? "bg-slate-100 hover:bg-slate-200/70 focus:bg-white border-slate-200 focus:border-emerald-500 text-slate-900 placeholder:text-slate-400"
-      : "bg-neutral-800/80 hover:bg-neutral-800 focus:bg-neutral-950 border-neutral-700 focus:border-emerald-400 text-white placeholder:text-neutral-500"
+    const inputClassText = isLight
+      ? "bg-slate-100 hover:bg-slate-200/70 focus:bg-white border-slate-200 focus:border-violet-500 text-slate-900 placeholder:text-slate-400"
+      : "bg-neutral-800/80 hover:bg-neutral-800 focus:bg-neutral-950 border-neutral-700 focus:border-violet-400 text-white placeholder:text-neutral-500"
+
+    const inputClassShape = isLight
+      ? "bg-slate-100 hover:bg-slate-200/70 focus:bg-white border-slate-200 focus:border-blue-500 text-slate-900 placeholder:text-slate-400"
+      : "bg-neutral-800/80 hover:bg-neutral-800 focus:bg-neutral-950 border-neutral-700 focus:border-blue-400 text-white placeholder:text-neutral-500"
 
     const buttonPillClass = isLight
       ? "bg-slate-100 hover:bg-slate-200/70 border-slate-200 text-slate-800"
@@ -291,11 +410,11 @@ export const SelectionTools = memo(
       <div
         style={{
           position: "fixed",
-          left: `${Math.max(180, Math.min(typeof window !== "undefined" ? window.innerWidth - 180 : 800, tooltipX))}px`,
+          left: `${Math.max(220, Math.min(typeof window !== "undefined" ? window.innerWidth - 220 : 800, tooltipX))}px`,
           top: `${Math.max(65, tooltipY)}px`,
           transform: "translate(-50%, 0)",
         }}
-        className={`z-50 flex items-center gap-2 backdrop-blur-xl border rounded-2xl px-3 py-1.5 select-none transition-all duration-150 text-xs animate-in fade-in zoom-in-95 pointer-events-auto ${containerClasses}`}
+        className={`z-50 flex items-center gap-1.5 backdrop-blur-xl border rounded-2xl px-3 py-1.5 select-none transition-all duration-150 text-xs animate-in fade-in zoom-in-95 pointer-events-auto ${containerClasses}`}
       >
         {/* ── SECTION 1: INLINE EDITABLE NAME & TYPE ── */}
         {isComponent && compType && (
@@ -342,15 +461,15 @@ export const SelectionTools = memo(
           </div>
         )}
 
-        {isSection && (
+        {isText && (
           <div className={`flex items-center gap-1.5 border-r pr-2 ${dividerClass}`}>
-            <div className={`p-1 rounded-md ${isLight ? "bg-emerald-50 text-emerald-600" : "bg-emerald-500/20 text-emerald-400"}`}>
-              <Layers className="w-3.5 h-3.5" />
+            <div className={`p-1 rounded-md ${isLight ? "bg-violet-50 text-violet-600" : "bg-violet-500/20 text-violet-400"}`}>
+              <Type className="w-3.5 h-3.5" />
             </div>
             <input
               type="text"
               value={labelInput}
-              placeholder="Zone Name"
+              placeholder="Text..."
               onChange={(e) => setLabelInput(e.target.value)}
               onBlur={(e) => saveLabel(e.target.value)}
               onKeyDown={(e) => {
@@ -359,7 +478,73 @@ export const SelectionTools = memo(
                   e.currentTarget.blur()
                 }
               }}
-              className={`outline-none rounded-lg px-2 py-0.5 text-xs font-semibold w-28 sm:w-36 transition border ${inputClassSection}`}
+              className={`outline-none rounded-lg px-2 py-0.5 text-xs font-medium w-28 sm:w-36 transition border ${inputClassText}`}
+            />
+          </div>
+        )}
+
+        {isRect && (
+          <div className={`flex items-center gap-1.5 border-r pr-2 ${dividerClass}`}>
+            <div className={`p-1 rounded-md ${isLight ? "bg-blue-50 text-blue-600" : "bg-blue-500/20 text-blue-400"}`}>
+              <Square className="w-3.5 h-3.5" />
+            </div>
+            <input
+              type="text"
+              value={labelInput}
+              placeholder="Rectangle label..."
+              onChange={(e) => setLabelInput(e.target.value)}
+              onBlur={(e) => saveLabel(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  saveLabel(e.currentTarget.value)
+                  e.currentTarget.blur()
+                }
+              }}
+              className={`outline-none rounded-lg px-2 py-0.5 text-xs font-medium w-28 sm:w-36 transition border ${inputClassShape}`}
+            />
+          </div>
+        )}
+
+        {isEllipse && (
+          <div className={`flex items-center gap-1.5 border-r pr-2 ${dividerClass}`}>
+            <div className={`p-1 rounded-md ${isLight ? "bg-amber-50 text-amber-600" : "bg-amber-500/20 text-amber-400"}`}>
+              <Circle className="w-3.5 h-3.5" />
+            </div>
+            <input
+              type="text"
+              value={labelInput}
+              placeholder="Circle label..."
+              onChange={(e) => setLabelInput(e.target.value)}
+              onBlur={(e) => saveLabel(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  saveLabel(e.currentTarget.value)
+                  e.currentTarget.blur()
+                }
+              }}
+              className={`outline-none rounded-lg px-2 py-0.5 text-xs font-medium w-28 sm:w-36 transition border ${inputClassShape}`}
+            />
+          </div>
+        )}
+
+        {isNote && (
+          <div className={`flex items-center gap-1.5 border-r pr-2 ${dividerClass}`}>
+            <div className={`p-1 rounded-md ${isLight ? "bg-yellow-50 text-yellow-600" : "bg-yellow-500/20 text-yellow-400"}`}>
+              <StickyNote className="w-3.5 h-3.5" />
+            </div>
+            <input
+              type="text"
+              value={labelInput}
+              placeholder="Note..."
+              onChange={(e) => setLabelInput(e.target.value)}
+              onBlur={(e) => saveLabel(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  saveLabel(e.currentTarget.value)
+                  e.currentTarget.blur()
+                }
+              }}
+              className={`outline-none rounded-lg px-2 py-0.5 text-xs font-medium w-28 sm:w-36 transition border ${inputClassShape}`}
             />
           </div>
         )}
@@ -373,23 +558,304 @@ export const SelectionTools = memo(
 
         {/* ── SECTION 2: CONTEXT-RELEVANT CONTROLS (ZERO MISMATCH) ── */}
 
+        {/* ─── TYPOGRAPHY CONTROLS (TEXT & NOTE) ─── */}
+        {(isText || isNote) && (
+          <div className={`flex items-center gap-1.5 border-r pr-2 ${dividerClass}`}>
+            {/* Font Family Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-medium transition ${buttonPillClass}`}
+                >
+                  <span className="capitalize">{currentFontFamily}</span>
+                  <ChevronDown className={`w-3 h-3 ${isLight ? "text-slate-400" : "text-neutral-400"}`} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="start"
+                side={shouldFlipBelow ? "bottom" : "top"}
+                className={`rounded-xl p-1.5 z-50 min-w-[140px] border ${dropdownMenuContentClass}`}
+              >
+                <DropdownMenuItem
+                  onClick={() => setFontFamily("sans")}
+                  className={`flex items-center justify-between text-xs py-1.5 font-sans-canvas ${dropdownMenuItemClass}`}
+                >
+                  <span>Sans (Modern)</span>
+                  {currentFontFamily === "sans" && <Check className="w-3.5 h-3.5 text-indigo-500" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setFontFamily("handwriting")}
+                  className={`flex items-center justify-between text-xs py-1.5 font-handwriting-canvas ${dropdownMenuItemClass}`}
+                >
+                  <span>Handwriting</span>
+                  {currentFontFamily === "handwriting" && <Check className="w-3.5 h-3.5 text-indigo-500" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setFontFamily("serif")}
+                  className={`flex items-center justify-between text-xs py-1.5 font-serif-canvas ${dropdownMenuItemClass}`}
+                >
+                  <span>Serif (Classic)</span>
+                  {currentFontFamily === "serif" && <Check className="w-3.5 h-3.5 text-indigo-500" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setFontFamily("mono")}
+                  className={`flex items-center justify-between text-xs py-1.5 font-mono-canvas ${dropdownMenuItemClass}`}
+                >
+                  <span>Monospace</span>
+                  {currentFontFamily === "mono" && <Check className="w-3.5 h-3.5 text-indigo-500" />}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Font Size Presets */}
+            <div className={`flex items-center p-0.5 rounded-lg border ${buttonPillClass}`}>
+              {[
+                { label: "S", size: isText ? 16 : 16 },
+                { label: "M", size: isText ? 24 : 20 },
+                { label: "L", size: isText ? 36 : 28 },
+                { label: "XL", size: isText ? 48 : 36 },
+              ].map((item) => (
+                <Hint key={item.label} label={`Font size ${item.size}px`}>
+                  <button
+                    onClick={() => setFontSize(item.size)}
+                    className={`px-1.5 py-0.5 rounded text-[11px] font-semibold transition ${
+                      currentFontSize === item.size
+                        ? "bg-indigo-500 text-white shadow-sm"
+                        : buttonPillInactive
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                </Hint>
+              ))}
+            </div>
+
+            {/* Bold / Italic / Underline (For Text) */}
+            {isText && (
+              <div className={`flex items-center p-0.5 rounded-lg border ${buttonPillClass}`}>
+                <Hint label="Bold (Cmd+B)">
+                  <button
+                    onClick={toggleBold}
+                    className={`p-1 rounded font-bold transition ${
+                      currentFontWeight === "bold" ? "bg-indigo-500 text-white" : buttonPillInactive
+                    }`}
+                  >
+                    <Bold className="w-3.5 h-3.5" />
+                  </button>
+                </Hint>
+                <Hint label="Italic (Cmd+I)">
+                  <button
+                    onClick={toggleItalic}
+                    className={`p-1 rounded italic transition ${
+                      currentFontStyle === "italic" ? "bg-indigo-500 text-white" : buttonPillInactive
+                    }`}
+                  >
+                    <Italic className="w-3.5 h-3.5" />
+                  </button>
+                </Hint>
+                <Hint label="Underline">
+                  <button
+                    onClick={toggleUnderline}
+                    className={`p-1 rounded underline transition ${
+                      currentTextDecoration === "underline" ? "bg-indigo-500 text-white" : buttonPillInactive
+                    }`}
+                  >
+                    <Underline className="w-3.5 h-3.5" />
+                  </button>
+                </Hint>
+              </div>
+            )}
+
+            {/* Text Alignment (For Text) */}
+            {isText && (
+              <div className={`flex items-center p-0.5 rounded-lg border ${buttonPillClass}`}>
+                <Hint label="Align Left">
+                  <button
+                    onClick={() => setTextAlign("left")}
+                    className={`p-1 rounded transition ${
+                      currentTextAlign === "left" ? "bg-indigo-500 text-white" : buttonPillInactive
+                    }`}
+                  >
+                    <AlignLeft className="w-3.5 h-3.5" />
+                  </button>
+                </Hint>
+                <Hint label="Align Center">
+                  <button
+                    onClick={() => setTextAlign("center")}
+                    className={`p-1 rounded transition ${
+                      currentTextAlign === "center" ? "bg-indigo-500 text-white" : buttonPillInactive
+                    }`}
+                  >
+                    <AlignCenter className="w-3.5 h-3.5" />
+                  </button>
+                </Hint>
+                <Hint label="Align Right">
+                  <button
+                    onClick={() => setTextAlign("right")}
+                    className={`p-1 rounded transition ${
+                      currentTextAlign === "right" ? "bg-indigo-500 text-white" : buttonPillInactive
+                    }`}
+                  >
+                    <AlignRight className="w-3.5 h-3.5" />
+                  </button>
+                </Hint>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ─── SHAPE RESTYLING CONTROLS (RECTANGLE & ELLIPSE) ─── */}
+        {isShape && (
+          <div className={`flex items-center gap-1.5 border-r pr-2 ${dividerClass}`}>
+            {/* Fill Style */}
+            <div className={`flex items-center p-0.5 rounded-lg border ${buttonPillClass}`}>
+              <Hint label="Solid Fill">
+                <button
+                  onClick={() => setFillStyle("solid")}
+                  className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition ${
+                    currentFillStyle === "solid" ? "bg-blue-500 text-white shadow-sm" : buttonPillInactive
+                  }`}
+                >
+                  Solid
+                </button>
+              </Hint>
+              <Hint label="Semi-Transparent / Tint">
+                <button
+                  onClick={() => setFillStyle("semi")}
+                  className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition ${
+                    currentFillStyle === "semi" ? "bg-blue-500 text-white shadow-sm" : buttonPillInactive
+                  }`}
+                >
+                  Tint
+                </button>
+              </Hint>
+              <Hint label="Outline Only">
+                <button
+                  onClick={() => setFillStyle("transparent")}
+                  className={`px-1.5 py-0.5 rounded text-[11px] font-medium transition ${
+                    currentFillStyle === "transparent" ? "bg-blue-500 text-white shadow-sm" : buttonPillInactive
+                  }`}
+                >
+                  Outline
+                </button>
+              </Hint>
+            </div>
+
+            {/* Stroke Thickness */}
+            <div className={`flex items-center p-0.5 rounded-lg border ${buttonPillClass}`}>
+              <Hint label="Thin (1.5px)">
+                <button
+                  onClick={() => setStrokeWidth(1.5)}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition ${
+                    currentStrokeWidth === 1.5 ? "bg-blue-500 text-white shadow-sm" : buttonPillInactive
+                  }`}
+                >
+                  Thin
+                </button>
+              </Hint>
+              <Hint label="Medium (3px)">
+                <button
+                  onClick={() => setStrokeWidth(3)}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition ${
+                    currentStrokeWidth === 3 ? "bg-blue-500 text-white shadow-sm" : buttonPillInactive
+                  }`}
+                >
+                  Med
+                </button>
+              </Hint>
+              <Hint label="Thick (5px)">
+                <button
+                  onClick={() => setStrokeWidth(5)}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition ${
+                    currentStrokeWidth === 5 ? "bg-blue-500 text-white shadow-sm" : buttonPillInactive
+                  }`}
+                >
+                  Thick
+                </button>
+              </Hint>
+            </div>
+
+            {/* Stroke Pattern */}
+            <div className={`flex items-center p-0.5 rounded-lg border ${buttonPillClass}`}>
+              <Hint label="Solid Line">
+                <button
+                  onClick={() => setStrokePattern("solid")}
+                  className={`px-1.5 py-0.5 rounded text-[11px] font-mono transition ${
+                    currentStrokePattern === "solid" ? "bg-blue-500 text-white shadow-sm" : buttonPillInactive
+                  }`}
+                >
+                  —
+                </button>
+              </Hint>
+              <Hint label="Dashed Line">
+                <button
+                  onClick={() => setStrokePattern("dashed")}
+                  className={`px-1.5 py-0.5 rounded text-[11px] font-mono transition ${
+                    currentStrokePattern === "dashed" ? "bg-blue-500 text-white shadow-sm" : buttonPillInactive
+                  }`}
+                >
+                  - -
+                </button>
+              </Hint>
+              <Hint label="Dotted Line">
+                <button
+                  onClick={() => setStrokePattern("dotted")}
+                  className={`px-1.5 py-0.5 rounded text-[11px] font-mono transition ${
+                    currentStrokePattern === "dotted" ? "bg-blue-500 text-white shadow-sm" : buttonPillInactive
+                  }`}
+                >
+                  ···
+                </button>
+              </Hint>
+            </div>
+
+            {/* Corner Roundness (Only for Rectangle) */}
+            {isRect && (
+              <div className={`flex items-center p-0.5 rounded-lg border ${buttonPillClass}`}>
+                <Hint label="Sharp Corners (0px)">
+                  <button
+                    onClick={() => setRoundness("sharp")}
+                    className={`p-1 rounded transition ${
+                      currentRoundness === "sharp" ? "bg-blue-500 text-white shadow-sm" : buttonPillInactive
+                    }`}
+                  >
+                    <Square className="w-3.5 h-3.5" />
+                  </button>
+                </Hint>
+                <Hint label="Rounded Corners (12px)">
+                  <button
+                    onClick={() => setRoundness("rounded")}
+                    className={`p-1 rounded transition ${
+                      currentRoundness === "rounded" ? "bg-blue-500 text-white shadow-sm" : buttonPillInactive
+                    }`}
+                  >
+                    <div className="w-3.5 h-3.5 border-2 border-current rounded-[4px]" />
+                  </button>
+                </Hint>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* COMPONENT: Health Status Dropdown */}
         {isComponent && (
           <div className={`flex items-center gap-1 border-r pr-2 ${dividerClass}`}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-medium transition ${buttonPillClass}`}>
-                  <span
+                <button
+                  className={`flex items-center gap-1.5 px-2 py-1 rounded-lg border text-xs font-medium transition ${buttonPillClass}`}
+                >
+                  <div
                     className={`w-2 h-2 rounded-full ${
                       currentStatus === "healthy"
-                        ? "bg-emerald-500"
+                        ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]"
                         : currentStatus === "warning"
-                        ? "bg-amber-500"
+                        ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.7)]"
                         : currentStatus === "error"
-                        ? "bg-rose-500"
+                        ? "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.7)]"
                         : currentStatus === "info"
-                        ? "bg-sky-500"
-                        : isLight ? "bg-slate-400" : "bg-neutral-500"
+                        ? "bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.7)]"
+                        : "bg-slate-400"
                     }`}
                   />
                   <span className="capitalize">{currentStatus === "none" ? "Status" : currentStatus}</span>
@@ -397,56 +863,56 @@ export const SelectionTools = memo(
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                align="center"
-                side="bottom"
-                className={`w-36 rounded-xl p-1 z-50 text-xs ${dropdownMenuContentClass}`}
+                align="start"
+                side={shouldFlipBelow ? "bottom" : "top"}
+                className={`rounded-xl p-1 z-50 min-w-[130px] border ${dropdownMenuContentClass}`}
               >
                 <DropdownMenuItem
                   onClick={() => setComponentStatus("none")}
-                  className={`flex items-center justify-between px-2 py-1.5 rounded-lg ${dropdownMenuItemClass}`}
+                  className={`flex items-center justify-between text-xs py-1.5 ${dropdownMenuItemClass}`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-slate-400" />
-                    <span>None</span>
+                    <div className="w-2 h-2 rounded-full bg-slate-400" />
+                    <span>No Status</span>
                   </div>
                   {currentStatus === "none" && <Check className="w-3.5 h-3.5 text-indigo-500" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setComponentStatus("healthy")}
-                  className={`flex items-center justify-between px-2 py-1.5 rounded-lg ${dropdownMenuItemClass}`}
+                  className={`flex items-center justify-between text-xs py-1.5 ${dropdownMenuItemClass}`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
                     <span>Healthy</span>
                   </div>
                   {currentStatus === "healthy" && <Check className="w-3.5 h-3.5 text-emerald-500" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setComponentStatus("warning")}
-                  className={`flex items-center justify-between px-2 py-1.5 rounded-lg ${dropdownMenuItemClass}`}
+                  className={`flex items-center justify-between text-xs py-1.5 ${dropdownMenuItemClass}`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                    <div className="w-2 h-2 rounded-full bg-amber-500" />
                     <span>Warning</span>
                   </div>
                   {currentStatus === "warning" && <Check className="w-3.5 h-3.5 text-amber-500" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setComponentStatus("error")}
-                  className={`flex items-center justify-between px-2 py-1.5 rounded-lg ${dropdownMenuItemClass}`}
+                  className={`flex items-center justify-between text-xs py-1.5 ${dropdownMenuItemClass}`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-rose-500" />
-                    <span>Outage (Error)</span>
+                    <div className="w-2 h-2 rounded-full bg-rose-500" />
+                    <span>Error / Outage</span>
                   </div>
                   {currentStatus === "error" && <Check className="w-3.5 h-3.5 text-rose-500" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setComponentStatus("info")}
-                  className={`flex items-center justify-between px-2 py-1.5 rounded-lg ${dropdownMenuItemClass}`}
+                  className={`flex items-center justify-between text-xs py-1.5 ${dropdownMenuItemClass}`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-sky-500" />
+                    <div className="w-2 h-2 rounded-full bg-sky-500" />
                     <span>Info</span>
                   </div>
                   {currentStatus === "info" && <Check className="w-3.5 h-3.5 text-sky-500" />}
@@ -505,6 +971,16 @@ export const SelectionTools = memo(
                   - -
                 </button>
               </Hint>
+              <Hint label="Dotted Line">
+                <button
+                  onClick={() => setStrokePattern("dotted")}
+                  className={`px-1.5 py-0.5 rounded text-[11px] font-mono ${
+                    currentStrokePattern === "dotted" ? "bg-cyan-500 text-white" : buttonPillInactive
+                  }`}
+                >
+                  ···
+                </button>
+              </Hint>
             </div>
 
             {/* Direction */}
@@ -533,35 +1009,7 @@ export const SelectionTools = memo(
           </div>
         )}
 
-        {/* SECTION: Border Pattern (ONLY for Section) */}
-        {isSection && (
-          <div className={`flex items-center gap-1 border-r pr-2 ${dividerClass}`}>
-            <div className={`flex items-center p-0.5 rounded-lg border ${buttonPillClass}`}>
-              <Hint label="Solid Border">
-                <button
-                  onClick={() => setStrokePattern("solid")}
-                  className={`px-1.5 py-0.5 rounded text-[11px] font-mono ${
-                    currentStrokePattern === "solid" ? "bg-emerald-500 text-white" : buttonPillInactive
-                  }`}
-                >
-                  —
-                </button>
-              </Hint>
-              <Hint label="Dashed Border">
-                <button
-                  onClick={() => setStrokePattern("dashed")}
-                  className={`px-1.5 py-0.5 rounded text-[11px] font-mono ${
-                    currentStrokePattern === "dashed" ? "bg-emerald-500 text-white" : buttonPillInactive
-                  }`}
-                >
-                  - -
-                </button>
-              </Hint>
-            </div>
-          </div>
-        )}
-
-        {/* ── SECTION 3: COMPACT COLOR DROPDOWN (Saves 70% space!) ── */}
+        {/* ── SECTION 3: COMPACT COLOR DROPDOWN ── */}
         <div className={`flex items-center border-r pr-2 ${dividerClass}`}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -573,7 +1021,7 @@ export const SelectionTools = memo(
                   style={{
                     backgroundColor:
                       isComponent && !soleLayer?.customColor
-                        ? "#94a3b8" // neutral default indicator
+                        ? "#94a3b8"
                         : soleLayer?.fill
                         ? `rgb(${soleLayer.fill.r}, ${soleLayer.fill.g}, ${soleLayer.fill.b})`
                         : "#6366f1",
@@ -586,18 +1034,18 @@ export const SelectionTools = memo(
             <DropdownMenuContent
               align="center"
               side={shouldFlipBelow ? "bottom" : "top"}
-              className={`rounded-xl p-2 z-50 min-w-[160px] border ${dropdownMenuContentClass}`}
+              className={`rounded-xl p-2 z-50 min-w-[170px] border ${dropdownMenuContentClass}`}
             >
               <div className={`text-[10px] font-semibold uppercase px-1 mb-1.5 ${isLight ? "text-slate-400" : "text-neutral-400"}`}>
                 Palette
               </div>
-              <div className="grid grid-cols-4 gap-1.5 p-1">
+              <div className="grid grid-cols-5 gap-1.5 p-1">
                 {PALETTE.map((swatch) => (
                   <Hint key={swatch.name} label={swatch.name}>
                     <button
                       onClick={() => setFill(swatch.color)}
                       style={{ backgroundColor: swatch.hex }}
-                      className={`w-6 h-6 rounded-full border hover:scale-115 transition-transform focus:outline-none shadow-sm ${
+                      className={`w-5 h-5 rounded-full border hover:scale-115 transition-transform focus:outline-none shadow-sm ${
                         isLight ? "border-slate-300" : "border-white/20"
                       }`}
                     />

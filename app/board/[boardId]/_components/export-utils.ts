@@ -1,5 +1,5 @@
 import { Layer, LayerType, Color, Camera, SysComponent, ComponentLayer, ArrowLayer, SectionLayer } from "@/types/canvas"
-import { colorToCss } from "@/lib/utils"
+import { colorToCss, getFontFamilyCss, getContrastingTextColor } from "@/lib/utils"
 import { COMPONENT_LABELS, getComponentTheme } from "./sys-component-layer"
 import { toast } from "sonner"
 
@@ -284,17 +284,21 @@ function buildPureSvgClone({
         g.appendChild(badgeTextEl)
       }
     } else {
-      // It's a text/note/section foreignObject
-      const rawText = fo.textContent?.trim() || ""
+      // It's a text/note/shape embedded foreignObject
+      const editable = (fo.querySelector("[contenteditable]") || fo.firstElementChild) as HTMLElement | null
+      const rawText = editable?.textContent?.trim() || fo.textContent?.trim() || ""
       if (rawText) {
         const textEl = document.createElementNS("http://www.w3.org/2000/svg", "text")
-        textEl.setAttribute("x", `${foX + foW / 2}`)
+        const align = editable?.style.textAlign || "center"
+        const anchor = align === "left" ? "start" : align === "right" ? "end" : "middle"
+        const tx = align === "left" ? foX + 8 : align === "right" ? foX + foW - 8 : foX + foW / 2
+        textEl.setAttribute("x", `${tx}`)
         textEl.setAttribute("y", `${foY + foH / 2 + 5}`)
-        textEl.setAttribute("text-anchor", "middle")
-        textEl.setAttribute("font-family", "Inter, system-ui, -apple-system, sans-serif")
-        textEl.setAttribute("font-size", "14")
-        textEl.setAttribute("font-weight", "600")
-        textEl.setAttribute("fill", isDark ? "#f1f5f9" : "#1e293b")
+        textEl.setAttribute("text-anchor", anchor)
+        textEl.setAttribute("font-family", editable?.style.fontFamily || "Inter, system-ui, -apple-system, sans-serif")
+        textEl.setAttribute("font-size", editable?.style.fontSize || "16px")
+        textEl.setAttribute("font-weight", editable?.style.fontWeight || "600")
+        textEl.setAttribute("fill", editable?.style.color || (isDark ? "#f1f5f9" : "#1e293b"))
         textEl.textContent = rawText
         g.appendChild(textEl)
       }
@@ -432,50 +436,154 @@ function renderDiagramDirectToCanvas({
       }
 
       case LayerType.Rectangle: {
-        ctx.fillStyle = layer.fill ? colorToCss(layer.fill) : "#3b82f6"
+        const rect = layer as any
+        const fillStyle = rect.fillStyle || "solid"
+        const strokeWidth = rect.strokeWidth || 2
+        const strokePattern = rect.strokePattern || "solid"
+        const roundness = rect.roundness || "rounded"
+        const radius = roundness === "sharp" ? 0 : 12
+
+        ctx.lineWidth = strokeWidth
+        if (strokePattern === "dashed") ctx.setLineDash([8, 6])
+        else if (strokePattern === "dotted") ctx.setLineDash([3, 4])
+        else ctx.setLineDash([])
+
+        const baseColor = rect.fill ? colorToCss(rect.fill) : "#3b82f6"
+        if (fillStyle === "transparent") {
+          ctx.fillStyle = "transparent"
+        } else if (fillStyle === "semi") {
+          const r = rect.fill?.r ?? 59
+          const g = rect.fill?.g ?? 130
+          const b = rect.fill?.b ?? 246
+          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${isDark ? 0.22 : 0.15})`
+        } else {
+          ctx.fillStyle = baseColor
+        }
+
         ctx.beginPath()
-        ctx.roundRect(layer.x, layer.y, layer.width, layer.height, 8)
-        ctx.fill()
+        ctx.roundRect(rect.x, rect.y, rect.width, rect.height, radius)
+        if (fillStyle !== "transparent") ctx.fill()
+
+        if (fillStyle !== "solid" || strokePattern !== "solid") {
+          ctx.strokeStyle = baseColor
+          ctx.stroke()
+        }
+
+        // Embedded text inside rectangle
+        if (rect.value) {
+          let textColor = isDark ? "#f8fafc" : "#0f172a"
+          if (fillStyle === "solid" && rect.fill) {
+            textColor = getContrastingTextColor(rect.fill)
+          }
+          ctx.fillStyle = textColor
+          const fontSize = rect.fontSize || 18
+          const fontWeight = rect.fontWeight === "bold" ? "bold " : ""
+          ctx.font = `${fontWeight}${fontSize}px ${getFontFamilyCss(rect.fontFamily)}`
+          ctx.textAlign = rect.textAlign || "center"
+          ctx.textBaseline = "middle"
+          const tx = rect.textAlign === "left" ? rect.x + 12 : rect.textAlign === "right" ? rect.x + rect.width - 12 : rect.x + rect.width / 2
+          ctx.fillText(rect.value, tx, rect.y + rect.height / 2, rect.width - 24)
+        }
         break
       }
 
       case LayerType.Ellipse: {
-        ctx.fillStyle = layer.fill ? colorToCss(layer.fill) : "#3b82f6"
+        const ell = layer as any
+        const fillStyle = ell.fillStyle || "solid"
+        const strokeWidth = ell.strokeWidth || 2
+        const strokePattern = ell.strokePattern || "solid"
+
+        ctx.lineWidth = strokeWidth
+        if (strokePattern === "dashed") ctx.setLineDash([8, 6])
+        else if (strokePattern === "dotted") ctx.setLineDash([3, 4])
+        else ctx.setLineDash([])
+
+        const baseColor = ell.fill ? colorToCss(ell.fill) : "#3b82f6"
+        if (fillStyle === "transparent") {
+          ctx.fillStyle = "transparent"
+        } else if (fillStyle === "semi") {
+          const r = ell.fill?.r ?? 59
+          const g = ell.fill?.g ?? 130
+          const b = ell.fill?.b ?? 246
+          ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${isDark ? 0.22 : 0.15})`
+        } else {
+          ctx.fillStyle = baseColor
+        }
+
         ctx.beginPath()
         ctx.ellipse(
-          layer.x + layer.width / 2,
-          layer.y + layer.height / 2,
-          layer.width / 2,
-          layer.height / 2,
+          ell.x + ell.width / 2,
+          ell.y + ell.height / 2,
+          ell.width / 2,
+          ell.height / 2,
           0,
           0,
           Math.PI * 2
         )
-        ctx.fill()
+        if (fillStyle !== "transparent") ctx.fill()
+
+        if (fillStyle !== "solid" || strokePattern !== "solid") {
+          ctx.strokeStyle = baseColor
+          ctx.stroke()
+        }
+
+        // Embedded text inside ellipse
+        if (ell.value) {
+          let textColor = isDark ? "#f8fafc" : "#0f172a"
+          if (fillStyle === "solid" && ell.fill) {
+            textColor = getContrastingTextColor(ell.fill)
+          }
+          ctx.fillStyle = textColor
+          const fontSize = ell.fontSize || 18
+          const fontWeight = ell.fontWeight === "bold" ? "bold " : ""
+          ctx.font = `${fontWeight}${fontSize}px ${getFontFamilyCss(ell.fontFamily)}`
+          ctx.textAlign = ell.textAlign || "center"
+          ctx.textBaseline = "middle"
+          ctx.fillText(ell.value, ell.x + ell.width / 2, ell.y + ell.height / 2, ell.width * 0.7)
+        }
         break
       }
 
       case LayerType.Note: {
-        ctx.fillStyle = layer.fill ? colorToCss(layer.fill) : "#fef08a"
+        const note = layer as any
+        ctx.fillStyle = note.fill ? colorToCss(note.fill) : "#fef08a"
         ctx.beginPath()
-        ctx.roundRect(layer.x, layer.y, layer.width, layer.height, 6)
+        ctx.roundRect(note.x, note.y, note.width, note.height, 8)
         ctx.fill()
-        if (layer.value) {
-          ctx.fillStyle = "#1c1917"
-          ctx.font = "14px Kalam, cursive, sans-serif"
-          ctx.textAlign = "center"
+        if (note.value) {
+          ctx.fillStyle = note.fill ? getContrastingTextColor(note.fill) : "#1c1917"
+          const fontSize = note.fontSize || 20
+          const fontWeight = note.fontWeight === "bold" ? "bold " : ""
+          ctx.font = `${fontWeight}${fontSize}px ${getFontFamilyCss(note.fontFamily || "handwriting")}`
+          ctx.textAlign = note.textAlign || "center"
           ctx.textBaseline = "middle"
-          ctx.fillText(layer.value, layer.x + layer.width / 2, layer.y + layer.height / 2, layer.width - 16)
+          const tx = note.textAlign === "left" ? note.x + 12 : note.textAlign === "right" ? note.x + note.width - 12 : note.x + note.width / 2
+          ctx.fillText(note.value, tx, note.y + note.height / 2, note.width - 24)
         }
         break
       }
 
       case LayerType.Text: {
-        ctx.fillStyle = layer.fill ? colorToCss(layer.fill) : (isDark ? "#f8fafc" : "#0f172a")
-        ctx.font = "16px Kalam, cursive, sans-serif"
-        ctx.textAlign = "center"
+        const textLayer = layer as any
+        let textColor = isDark ? "#f8fafc" : "#0f172a"
+        if (textLayer.fill) {
+          const isDefaultBlack = textLayer.fill.r <= 25 && textLayer.fill.g <= 25 && textLayer.fill.b <= 25
+          if (isDark && isDefaultBlack) {
+            textColor = "#f8fafc"
+          } else {
+            textColor = colorToCss(textLayer.fill)
+          }
+        }
+        ctx.fillStyle = textColor
+        const fontSize = textLayer.fontSize || 24
+        const fontWeight = textLayer.fontWeight === "bold" ? "bold " : ""
+        const fontStyle = textLayer.fontStyle === "italic" ? "italic " : ""
+        ctx.font = `${fontStyle}${fontWeight}${fontSize}px ${getFontFamilyCss(textLayer.fontFamily)}`
+        const textAlign = textLayer.textAlign || "left"
+        ctx.textAlign = textAlign
         ctx.textBaseline = "middle"
-        ctx.fillText(layer.value || "Text", layer.x + layer.width / 2, layer.y + layer.height / 2, layer.width)
+        const tx = textAlign === "center" ? textLayer.x + textLayer.width / 2 : textAlign === "right" ? textLayer.x + textLayer.width - 8 : textLayer.x + 8
+        ctx.fillText(textLayer.value || "Text", tx, textLayer.y + textLayer.height / 2, textLayer.width)
         break
       }
 

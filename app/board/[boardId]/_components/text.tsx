@@ -1,25 +1,11 @@
-import { Kalam } from "next/font/google"
+"use client"
+
+import React, { useRef } from "react"
 import ContentEditable, { ContentEditableEvent } from "react-contenteditable"
-
-import { Point, TextLayer } from "@/types/canvas"
-import { cn, colorToCss } from "@/lib/utils"
+import { TextLayer } from "@/types/canvas"
+import { cn, colorToCss, getFontFamilyClass, getFontFamilyCss } from "@/lib/utils"
 import { useMutation } from "@liveblocks/react/suspense"
-import { Weight } from "lucide-react"
-
-const font = Kalam({
-  subsets: ["latin"],
-  weight: ["400"],
-})
-
-//function for fontsize
-const calculateFontsize = (width: number, height: number) => {
-  const maxFontSize = 96
-  const scalefactor = 0.15
-  const fontSizeBasedOnHeight = height * scalefactor
-  const fontSizeBasedOnWidth = width * scalefactor
-
-  return Math.min(fontSizeBasedOnHeight, fontSizeBasedOnWidth, maxFontSize)
-}
+import { useCanvasTheme } from "./canvas-theme-context"
 
 interface TextProps {
   id: string
@@ -29,19 +15,54 @@ interface TextProps {
 }
 
 export const Text = ({ layer, onPointDown, id, selectionColor }: TextProps) => {
-  const { x, y, height, width, fill, value } = layer
+  const {
+    x,
+    y,
+    height,
+    width,
+    fill,
+    value,
+    fontFamily = "sans",
+    fontSize = 24,
+    fontWeight = "normal",
+    fontStyle = "normal",
+    textDecoration = "none",
+    textAlign = "left",
+  } = layer
+
+  const { theme } = useCanvasTheme()
+  const isDark = theme === "dark"
+  const editableRef = useRef<HTMLElement>(null)
 
   const updateValue = useMutation(
-    ({ storage, setMyPresence }, newValue: string) => {
+    ({ storage }, newValue: string) => {
       const liveLayers = storage.get("layers")
-
       liveLayers.get(id)?.set("value", newValue)
     },
-    []
+    [id]
   )
 
   const handleContentChange = (e: ContentEditableEvent) => {
     updateValue(e.target.value)
+  }
+
+  // Determine optimal text color: adapt dark/light mode unless a custom vibrant color is set
+  let textColor = "#0f172a"
+  if (fill) {
+    const isDefaultBlack = fill.r <= 25 && fill.g <= 25 && fill.b <= 25
+    if (isDark && isDefaultBlack) {
+      textColor = "#f8fafc"
+    } else {
+      textColor = colorToCss(fill)
+    }
+  } else {
+    textColor = isDark ? "#f8fafc" : "#0f172a"
+  }
+
+  const justifyMap = {
+    left: "justify-start",
+    center: "justify-center",
+    right: "justify-end",
   }
 
   return (
@@ -52,21 +73,40 @@ export const Text = ({ layer, onPointDown, id, selectionColor }: TextProps) => {
       height={height}
       onPointerDown={(e) => onPointDown(e, id)}
       style={{
-        outline: selectionColor ? `1px solid ${selectionColor}` : "none",
+        outline: selectionColor ? `2px solid ${selectionColor}` : "none",
+        outlineOffset: "2px",
+        borderRadius: "4px",
+        overflow: "visible",
       }}
     >
-      <ContentEditable
-        html={value || "Text"}
-        onChange={handleContentChange}
+      <div
         className={cn(
-          "h-full w-full flex items-center justify-center text-center drop-shadow-md outline-none",
-          font.className
+          "w-full h-full flex items-center p-1.5 cursor-text",
+          justifyMap[textAlign] || "justify-start"
         )}
-        style={{
-          fontSize: calculateFontsize(width, height),
-          color: fill ? colorToCss(fill) : "#000",
-        }}
-      />
+      >
+        <ContentEditable
+          innerRef={editableRef as any}
+          html={value !== undefined ? value : "Text"}
+          onChange={handleContentChange}
+          className={cn(
+            "w-full outline-none leading-snug tracking-normal selection:bg-indigo-500/30",
+            getFontFamilyClass(fontFamily)
+          )}
+          style={{
+            fontFamily: getFontFamilyCss(fontFamily),
+            fontSize: `${fontSize}px`,
+            fontWeight: fontWeight === "bold" ? 700 : 400,
+            fontStyle: fontStyle === "italic" ? "italic" : "normal",
+            textDecoration: textDecoration === "underline" ? "underline" : "none",
+            textAlign: textAlign,
+            color: textColor,
+            wordBreak: "break-word",
+            overflowWrap: "break-word",
+            whiteSpace: "pre-wrap",
+          }}
+        />
+      </div>
     </foreignObject>
   )
 }

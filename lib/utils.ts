@@ -1,6 +1,7 @@
 import {
   Camera,
   Color,
+  FontFamily,
   Layer,
   LayerType,
   PathLayer,
@@ -34,6 +35,38 @@ export function pointerEventToCanvasPoint(
 
 export function colorToCss(color: Color) {
   return `#${color.r.toString(16).padStart(2, "0")}${color.g.toString(16).padStart(2, "0")}${color.b.toString(16).padStart(2, "0")}`
+}
+
+export function colorToRgba(color: Color, alpha: number = 1) {
+  return `rgba(${color.r}, ${color.g}, ${color.b}, ${alpha})`
+}
+
+export function getFontFamilyClass(fontFamily?: FontFamily) {
+  switch (fontFamily) {
+    case "handwriting":
+      return "font-handwriting-canvas"
+    case "serif":
+      return "font-serif-canvas"
+    case "mono":
+      return "font-mono-canvas"
+    case "sans":
+    default:
+      return "font-sans-canvas"
+  }
+}
+
+export function getFontFamilyCss(fontFamily?: FontFamily): string {
+  switch (fontFamily) {
+    case "handwriting":
+      return "'Kalam', 'Caveat', cursive, sans-serif"
+    case "serif":
+      return "'Playfair Display', Georgia, Cambria, 'Times New Roman', serif"
+    case "mono":
+      return "'JetBrains Mono', 'Fira Code', 'Courier New', monospace"
+    case "sans":
+    default:
+      return "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+  }
 }
 
 export function resizeBounds(bounds: XYWH, corner: Side, point: Point): XYWH {
