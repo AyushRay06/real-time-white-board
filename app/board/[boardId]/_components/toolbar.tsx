@@ -74,7 +74,7 @@ export const Toolbar = ({
       <div className={groupClass}>
         <ToolButton
           label="Select"
-          shortcut="F1"
+          shortcut="V"
           icon={MousePointer2}
           onClick={() => setCanvasState({ mode: CanvasMode.None })}
           isActive={
@@ -87,7 +87,7 @@ export const Toolbar = ({
         />
         <ToolButton
           label="Pan Canvas"
-          shortcut="F2"
+          shortcut="H"
           icon={Hand}
           onClick={() =>
             setCanvasState(
@@ -108,7 +108,7 @@ export const Toolbar = ({
       <div className={groupClass}>
         <ToolButton
           label="Text"
-          shortcut="F3"
+          shortcut="T"
           icon={Type}
           onClick={() => handleInsert(LayerType.Text)}
           isActive={
@@ -118,7 +118,7 @@ export const Toolbar = ({
         />
         <ToolButton
           label="Sticky Note"
-          shortcut="F4"
+          shortcut="N"
           icon={StickyNote}
           onClick={() => handleInsert(LayerType.Note)}
           isActive={
@@ -128,7 +128,7 @@ export const Toolbar = ({
         />
         <ToolButton
           label="Rectangle"
-          shortcut="F5"
+          shortcut="R"
           icon={Square}
           onClick={() => handleInsert(LayerType.Rectangle)}
           isActive={
@@ -138,7 +138,7 @@ export const Toolbar = ({
         />
         <ToolButton
           label="Circle"
-          shortcut="F6"
+          shortcut="O"
           icon={Circle}
           onClick={() => handleInsert(LayerType.Ellipse)}
           isActive={
@@ -148,7 +148,7 @@ export const Toolbar = ({
         />
         <ToolButton
           label="Pen / Sketch"
-          shortcut="F7"
+          shortcut="P"
           icon={Pencil}
           onClick={() => setCanvasState({ mode: CanvasMode.Pencil })}
           isActive={canvasState.mode === CanvasMode.Pencil}
@@ -159,7 +159,7 @@ export const Toolbar = ({
       <div className={groupClass}>
         <ToolButton
           label={`Connect Arrow (${arrowStyle === "sharp" ? "Sharp 90°" : "Curvy"})`}
-          shortcut="F8"
+          shortcut="C"
           icon={arrowStyle === "sharp" ? CornerDownRight : Spline}
           onClick={() => {
             if (canvasState.mode === CanvasMode.Connecting && onToggleArrowStyle) {
@@ -172,7 +172,7 @@ export const Toolbar = ({
         />
         <ToolButton
           label="Architecture Zone Box"
-          shortcut="F9"
+          shortcut="S"
           icon={Layers}
           onClick={() => handleInsert(LayerType.Section)}
           isActive={
@@ -199,7 +199,7 @@ export const Toolbar = ({
       <div className={groupClass}>
         <ToolButton
           label="Eraser"
-          shortcut="F10"
+          shortcut="E"
           icon={Eraser}
           onClick={() => setCanvasState({ mode: CanvasMode.Eraser })}
           isActive={canvasState.mode === CanvasMode.Eraser}

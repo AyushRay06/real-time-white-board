@@ -1712,13 +1712,11 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
             setCanvasState({ mode: CanvasMode.None })
           }
           break
-        case "F1":
         case "v":
         case "V":
           e.preventDefault()
           setCanvasState({ mode: CanvasMode.None })
           break
-        case "F2":
         case "h":
         case "H":
           e.preventDefault()
@@ -1732,61 +1730,45 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
             })
           }
           break
-        case "F3":
         case "t":
         case "T":
           e.preventDefault()
           handleInsertLayerDirectly(LayerType.Text)
           break
-        case "F4":
         case "n":
         case "N":
           e.preventDefault()
           handleInsertLayerDirectly(LayerType.Note)
           break
-        case "F5":
         case "r":
         case "R":
           e.preventDefault()
           handleInsertLayerDirectly(LayerType.Rectangle)
           break
-        case "F6":
         case "o":
         case "O":
           e.preventDefault()
           handleInsertLayerDirectly(LayerType.Ellipse)
           break
-        case "F7":
         case "p":
         case "P":
           e.preventDefault()
           setCanvasState({ mode: CanvasMode.Pencil })
           break
-        case "F8":
         case "c":
         case "C":
           e.preventDefault()
           setCanvasState({ mode: CanvasMode.Connecting, from: null })
           break
-        case "F9":
         case "s":
         case "S":
           e.preventDefault()
           handleInsertLayerDirectly(LayerType.Section)
           break
-        case "F10":
         case "e":
         case "E":
           e.preventDefault()
           setCanvasState({ mode: CanvasMode.Eraser })
-          break
-        case "F11":
-          e.preventDefault()
-          handleAutoLayout()
-          break
-        case "F12":
-          e.preventDefault()
-          fitToScreen()
           break
         case "Delete":
         case "Backspace":
@@ -1979,35 +1961,33 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         onSpaceChange={setActiveSpace}
       />
 
-      {/* Status hints (placed below top simulator bar) */}
+      {/* Subtle status hints */}
       {canvasState.mode === CanvasMode.Connecting && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-xl z-50 pointer-events-none select-none flex items-center gap-2 animate-bounce">
-          <span>{canvasState.from ? "✓ Source selected — click destination component · Esc to cancel" : "Click source component to start arrow connection"}</span>
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none select-none z-30">
+          <span className="text-xs font-normal text-neutral-500 dark:text-neutral-400 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xs px-2.5 py-1 rounded-md border border-neutral-200/60 dark:border-neutral-800/60 shadow-xs">
+            {canvasState.from ? "Click destination to connect · Esc to cancel" : "Click source to connect · Esc to cancel"}
+          </span>
         </div>
       )}
-      {canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Component && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-xl z-50 pointer-events-none select-none">
-          Click anywhere on canvas to place this system component
-        </div>
-      )}
-      {canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Doc && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-xl z-50 pointer-events-none select-none">
-          Click anywhere on canvas to place this system design table
-        </div>
-      )}
-      {canvasState.mode === CanvasMode.Inserting && canvasState.layerType === LayerType.Section && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-xl z-50 pointer-events-none select-none">
-          Click anywhere on canvas to create an Architecture Section / Zone Box
+      {canvasState.mode === CanvasMode.Inserting && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none select-none z-30">
+          <span className="text-xs font-normal text-neutral-500 dark:text-neutral-400 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xs px-2.5 py-1 rounded-md border border-neutral-200/60 dark:border-neutral-800/60 shadow-xs">
+            Click canvas to place
+          </span>
         </div>
       )}
       {canvasState.mode === CanvasMode.Eraser && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-rose-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-xl z-50 pointer-events-none select-none flex items-center gap-2 animate-pulse">
-          <span>🧹 Eraser Active — Click or drag through any component, arrow, drawing, or text to erase · Esc to finish</span>
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none select-none z-30">
+          <span className="text-xs font-normal text-neutral-500 dark:text-neutral-400 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xs px-2.5 py-1 rounded-md border border-neutral-200/60 dark:border-neutral-800/60 shadow-xs">
+            Eraser active · Click or drag to erase · Esc to finish
+          </span>
         </div>
       )}
       {isPanActive && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 bg-neutral-800/90 text-white text-xs font-medium px-4 py-1.5 rounded-full shadow-lg z-50 pointer-events-none select-none flex items-center gap-1.5 backdrop-blur-sm">
-          <span>Click & drag to pan canvas in any direction</span>
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 pointer-events-none select-none z-30">
+          <span className="text-xs font-normal text-neutral-500 dark:text-neutral-400 bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xs px-2.5 py-1 rounded-md border border-neutral-200/60 dark:border-neutral-800/60 shadow-xs">
+            Pan active · Drag to move canvas
+          </span>
         </div>
       )}
 
