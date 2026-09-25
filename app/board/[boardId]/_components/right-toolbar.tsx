@@ -6,6 +6,10 @@ import {
   TableProperties,
   CheckSquare2,
   LayoutTemplate,
+  Sparkles,
+  BookOpen,
+  History,
+  Command,
 } from "lucide-react"
 import { ToolButton } from "./tool-button"
 import { useCanvasTheme } from "./canvas-theme-context"
@@ -16,12 +20,20 @@ interface RightToolbarProps {
   activeSpace: ArchitectureSpace
   isOpen: boolean
   onToggleSpace: (space: ArchitectureSpace) => void
+  onAutoLayout?: () => void
+  onOpenNotes?: () => void
+  onOpenCheckpoints?: () => void
+  onOpenCommandPalette?: () => void
 }
 
 export const RightToolbar = memo(function RightToolbar({
   activeSpace,
   isOpen,
   onToggleSpace,
+  onAutoLayout,
+  onOpenNotes,
+  onOpenCheckpoints,
+  onOpenCommandPalette,
 }: RightToolbarProps) {
   const { theme } = useCanvasTheme()
 
@@ -61,6 +73,41 @@ export const RightToolbar = memo(function RightToolbar({
           onClick={() => onToggleSpace("templates")}
           isActive={isOpen && activeSpace === "templates"}
         />
+      </div>
+
+      <div className={groupClass}>
+        {onAutoLayout && (
+          <ToolButton
+            label="Auto-Layout Architecture"
+            icon={Sparkles}
+            side="left"
+            onClick={onAutoLayout}
+          />
+        )}
+        {onOpenCommandPalette && (
+          <ToolButton
+            label="Command Palette (Cmd+K)"
+            icon={Command}
+            side="left"
+            onClick={onOpenCommandPalette}
+          />
+        )}
+        {onOpenNotes && (
+          <ToolButton
+            label="Architecture Notes & ADR (N)"
+            icon={BookOpen}
+            side="left"
+            onClick={onOpenNotes}
+          />
+        )}
+        {onOpenCheckpoints && (
+          <ToolButton
+            label="Version Snapshots & Checkpoints"
+            icon={History}
+            side="left"
+            onClick={onOpenCheckpoints}
+          />
+        )}
       </div>
     </div>
   )

@@ -15,6 +15,17 @@ interface ShortcutsModalProps {
 
 const SHORTCUT_GROUPS = [
   {
+    category: "Spotlight & Architecture Productivity",
+    items: [
+      { key: "Ctrl / Cmd + K", desc: "Spotlight Command Palette (fuzzy search & insert)" },
+      { key: "Ctrl / Cmd + L", desc: "Lock / unlock selected layer (prevent accidental edit)" },
+      { key: "N", desc: "Architecture Decision Records (ADR) & Notes drawer" },
+      { key: "1 / 2 / 3 / 4", desc: "Architecture Spaces (Components / Tables / Specs / Templates)" },
+      { key: "Auto-Layout", desc: "1-click topological tier organizer on right toolbar" },
+      { key: "Checkpoints", desc: "Save / restore named architecture version snapshots" },
+    ],
+  },
+  {
     category: "Tools & Insertion",
     items: [
       { key: "V", desc: "Select tool" },
@@ -23,16 +34,16 @@ const SHORTCUT_GROUPS = [
       { key: "P", desc: "Pen / Pencil draw" },
       { key: "E", desc: "Eraser (click or drag to erase)" },
       { key: "T", desc: "Text note" },
-      { key: "N", desc: "Sticky note" },
       { key: "R", desc: "Rectangle shape" },
       { key: "O", desc: "Ellipse / Circle" },
       { key: "S", desc: "Architecture section / zone box" },
-      { key: "L", desc: "System component library" },
     ],
   },
   {
-    category: "Editing & Layout Selection",
+    category: "Editing & Alignment",
     items: [
+      { key: "Align Tools", desc: "Left, Center, Right, Top, Middle, Bottom alignment" },
+      { key: "Distribute", desc: "Evenly space 3+ items horizontally or vertically" },
       { key: "Ctrl + Shift + A", desc: "Select entire connected architecture" },
       { key: "Ctrl + A", desc: "Select all layers on canvas" },
       { key: "Shift + Click", desc: "Add / remove layer from selection" },

@@ -41,6 +41,11 @@ import { ArchitectureTourBar } from "./architecture-tour-bar"
 import { useCanvasTheme } from "./canvas-theme-context"
 import { exportDiagram } from "./export-utils"
 import { BASE_TABLE_WIDTHS, computeDocBaseHeight } from "./sys-doc-layer"
+import { CommandPalette } from "./command-palette"
+import { NotesDrawer } from "./notes-drawer"
+import { CheckpointsModal } from "./checkpoints-modal"
+import { computeAutoLayout } from "./auto-layout"
+import { playDropSound, playConnectSound, playDeleteSound, playSnapSound } from "./audio-feedback"
 
 // ─── Preview line while connecting ──────────────────────────────────────────
 function ConnectingPreviewLine({ fromLayerId, to }: { fromLayerId: string; to: Point }) {
@@ -113,6 +118,10 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   const [renamingLayerId, setRenamingLayerId] = useState<string | null>(null)
   const [arrowStyle, setArrowStyle] = useState<"curvy" | "sharp">("curvy")
   const [isMinimapOpen, setIsMinimapOpen] = useState(true)
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
+  const [isNotesOpen, setIsNotesOpen] = useState(false)
+  const [isCheckpointsOpen, setIsCheckpointsOpen] = useState(false)
+  const [snappingGuides, setSnappingGuides] = useState<{ x?: number; y?: number } | null>(null)
 
   const { startTour, stopTour, isTourActive } = useSimulation()
 
@@ -405,6 +414,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       liveLayers.set(layerId, layer as any)
       setMyPresence({ selection: [layerId] }, { addToHistory: true })
       setCanvasState({ mode: CanvasMode.None })
+      playDropSound()
     },
     [lastUsedColour, theme]
   )
@@ -428,6 +438,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       liveLayers.set(layerId, layer as any)
       setMyPresence({ selection: [layerId] }, { addToHistory: true })
       setCanvasState({ mode: CanvasMode.None })
+      playDropSound()
       return layerId
     }, []
   )
@@ -549,6 +560,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       liveLayers.set(layerId, layer as any)
       setMyPresence({ selection: [layerId] }, { addToHistory: true })
       setCanvasState({ mode: CanvasMode.None })
+      playDropSound()
       return layerId
     },
     []
@@ -587,6 +599,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       liveLayerIds.push(arrowId)
       liveLayers.set(arrowId, arrow as any)
       setMyPresence({ selection: [] }, { addToHistory: true })
+      playConnectSound()
     }, [arrowStyle]
   )
 
@@ -951,17 +964,81 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         }
       }
 
+      let finalOffsetX = offset.x
+      let finalOffsetY = offset.y
+
+      if (self.presence.selection.length === 1) {
+        const targetId = self.presence.selection[0]
+        const targetLayer = liveLayers.get(targetId)
+        if (targetLayer && !targetLayer.get("isLocked")) {
+          const curX = targetLayer.get("x") as number
+          const curY = targetLayer.get("y") as number
+          const curW = (targetLayer.get("width") as number) || 100
+          const curH = (targetLayer.get("height") as number) || 100
+          const testX = curX + offset.x
+          const testY = curY + offset.y
+          const testCX = testX + curW / 2
+          const testCY = testY + curH / 2
+
+          let guideX: number | undefined
+          let guideY: number | undefined
+          const THRESHOLD = 6
+
+          liveLayerIds.forEach((otherId) => {
+            if (otherId === targetId) return
+            const other = liveLayers.get(otherId)
+            if (!other || other.get("type") === LayerType.Arrow) return
+            const ox = (other.get("x") as number) || 0
+            const oy = (other.get("y") as number) || 0
+            const ow = (other.get("width") as number) || 100
+            const oh = (other.get("height") as number) || 100
+            const ocx = ox + ow / 2
+            const ocy = oy + oh / 2
+
+            // X snapping: left, center, right
+            if (Math.abs(testX - ox) < THRESHOLD) {
+              finalOffsetX = ox - curX
+              guideX = ox
+            } else if (Math.abs(testCX - ocx) < THRESHOLD) {
+              finalOffsetX = ocx - curW / 2 - curX
+              guideX = ocx
+            } else if (Math.abs(testX + curW - (ox + ow)) < THRESHOLD) {
+              finalOffsetX = ox + ow - curW - curX
+              guideX = ox + ow
+            }
+
+            // Y snapping: top, center, bottom
+            if (Math.abs(testY - oy) < THRESHOLD) {
+              finalOffsetY = oy - curY
+              guideY = oy
+            } else if (Math.abs(testCY - ocy) < THRESHOLD) {
+              finalOffsetY = ocy - curH / 2 - curY
+              guideY = ocy
+            } else if (Math.abs(testY + curH - (oy + oh)) < THRESHOLD) {
+              finalOffsetY = oy + oh - curH - curY
+              guideY = oy + oh
+            }
+          })
+
+          if (guideX !== undefined || guideY !== undefined) {
+            setSnappingGuides({ x: guideX, y: guideY })
+          } else {
+            setSnappingGuides(null)
+          }
+        }
+      }
+
       layersToMove.forEach((id) => {
         const layer = liveLayers.get(id)
-        if (layer) {
+        if (layer && !layer.get("isLocked")) {
           if (layer.get("type") === LayerType.Arrow) {
             const cur = (layer as any).get("controlOffset") || { x: 0, y: 0 }
             ;(layer as any).set("controlOffset", {
-              x: cur.x + offset.x,
-              y: cur.y + offset.y,
+              x: cur.x + finalOffsetX,
+              y: cur.y + finalOffsetY,
             })
           } else {
-            layer.update({ x: layer.get("x") + offset.x, y: layer.get("y") + offset.y })
+            layer.update({ x: layer.get("x") + finalOffsetX, y: layer.get("y") + finalOffsetY })
           }
         }
       })
@@ -1130,6 +1207,106 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
 
     setCamera({ x: targetX, y: targetY, zoom: targetZoom })
   }, [layerIds, layers])
+
+  // ─── AUTO-LAYOUT ENGINE ──────────────────────────────────────────────────
+  const handleAutoLayout = useMutation(({ storage }) => {
+    history.pause()
+    const liveLayers = storage.get("layers")
+    const liveLayerIds = storage.get("layerIds")
+    const layerMap = new Map<string, any>()
+    liveLayerIds.forEach((id) => {
+      const l = liveLayers.get(id)
+      if (l) layerMap.set(id, l.toObject())
+    })
+    const newPositions = computeAutoLayout(layerMap as any, liveLayerIds.toArray())
+    newPositions.forEach((pos, id) => {
+      const l = liveLayers.get(id)
+      if (l && !l.get("isLocked")) {
+        l.set("x", pos.x)
+        l.set("y", pos.y)
+      }
+    })
+    history.resume()
+    playSnapSound()
+    setTimeout(() => {
+      fitToScreen()
+    }, 60)
+  }, [history, fitToScreen])
+
+  // ─── LOCK / UNLOCK SELECTED SHORTCUT ──────────────────────────────────────
+  const toggleLockSelected = useMutation(({ storage, self }) => {
+    const liveLayers = storage.get("layers")
+    const sel = self.presence.selection
+    if (sel.length === 0) return
+    const anyLocked = sel.some((id) => liveLayers.get(id)?.get("isLocked") === true)
+    sel.forEach((id) => {
+      const l = liveLayers.get(id)
+      if (l) {
+        ;(l as any).set("isLocked", !anyLocked)
+      }
+    })
+    playSnapSound()
+  }, [])
+
+  // ─── VERSION CHECKPOINTS ─────────────────────────────────────────────────
+  const handleSaveCurrentState = useCallback((name: string) => {
+    const rawLayers: Record<string, any> = {}
+    layerIds.forEach((id) => {
+      const l = layers.get(id)
+      if (l) rawLayers[id] = l
+    })
+    const storageKey = `whiteboard_checkpoints_${boardId}`
+    const raw = typeof window !== "undefined" ? localStorage.getItem(storageKey) : null
+    const existing = raw ? JSON.parse(raw) : []
+    const newCheckpoint = {
+      id: nanoid(),
+      name,
+      timestamp: Date.now(),
+      layerCount: layerIds.length,
+      dataJson: JSON.stringify({ layerIds: [...layerIds], layers: rawLayers }),
+    }
+    const updated = [newCheckpoint, ...existing].slice(0, 30)
+    if (typeof window !== "undefined") {
+      localStorage.setItem(storageKey, JSON.stringify(updated))
+    }
+    playSnapSound()
+  }, [boardId, layerIds, layers])
+
+  const handleRestoreState = useMutation(({ storage, setMyPresence }, dataJson: string) => {
+    try {
+      const parsed = JSON.parse(dataJson)
+      if (!parsed || !Array.isArray(parsed.layerIds) || !parsed.layers) return
+
+      history.pause()
+      const liveLayers = storage.get("layers")
+      const liveLayerIds = storage.get("layerIds")
+
+      const oldIds = liveLayerIds.toArray()
+      oldIds.forEach((id) => {
+        liveLayers.delete(id)
+      })
+      while (liveLayerIds.length > 0) {
+        liveLayerIds.delete(0)
+      }
+
+      parsed.layerIds.forEach((id: string) => {
+        const item = parsed.layers[id]
+        if (item) {
+          liveLayers.set(id, new LiveObject(item))
+          liveLayerIds.push(id)
+        }
+      })
+
+      setMyPresence({ selection: [] })
+      history.resume()
+      playSnapSound()
+      setTimeout(() => {
+        fitToScreen()
+      }, 80)
+    } catch (e) {
+      console.error("Failed to restore checkpoint:", e)
+    }
+  }, [history, fitToScreen])
 
   // ─── POINTER EVENTS ──────────────────────────────────────────────────────
   const onPointerMove = useMutation(
@@ -1417,6 +1594,14 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
             e.preventDefault()
             zoomOut()
             break
+          case "k":
+            e.preventDefault()
+            setIsCommandPaletteOpen((prev) => !prev)
+            break
+          case "l":
+            e.preventDefault()
+            toggleLockSelected()
+            break
         }
         return
       }
@@ -1461,6 +1646,10 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
           break
         case "?":
           setIsShortcutsOpen(true)
+          break
+        case "n":
+        case "N":
+          setIsNotesOpen((prev) => !prev)
           break
         case "v":
         case "V":
@@ -1654,6 +1843,10 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         activeSpace={activeSpace}
         isOpen={isLibraryOpen}
         onToggleSpace={handleToggleSpace}
+        onAutoLayout={handleAutoLayout}
+        onOpenNotes={() => setIsNotesOpen((v) => !v)}
+        onOpenCheckpoints={() => setIsCheckpointsOpen(true)}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
       />
 
       <ComponentLibrary
@@ -1786,6 +1979,51 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         onClose={() => setIsShortcutsOpen(false)}
       />
 
+      {/* Spotlight Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={() => setIsCommandPaletteOpen(false)}
+        onInsertComponent={(comp) => {
+          const center = {
+            x: -camera.x / camera.zoom + window.innerWidth / (2 * camera.zoom),
+            y: -camera.y / camera.zoom + window.innerHeight / (2 * camera.zoom),
+          }
+          insertComponent(comp, center)
+          playDropSound()
+        }}
+        onInsertDoc={(doc) => {
+          const center = {
+            x: -camera.x / camera.zoom + window.innerWidth / (2 * camera.zoom),
+            y: -camera.y / camera.zoom + window.innerHeight / (2 * camera.zoom),
+          }
+          insertDoc(doc, center)
+          playDropSound()
+        }}
+        onInsertTemplate={insertTemplate}
+        onAutoLayout={handleAutoLayout}
+        onExport={handleExport}
+        onFitToScreen={fitToScreen}
+        onToggleGrid={toggleGrid}
+        onToggleNotes={() => setIsNotesOpen((v) => !v)}
+      />
+
+      {/* Architecture Decision Records & Markdown Scratchpad Drawer */}
+      <NotesDrawer
+        boardId={boardId}
+        isOpen={isNotesOpen}
+        onClose={() => setIsNotesOpen(false)}
+      />
+
+      {/* Version Snapshots & Checkpoints Modal */}
+      <CheckpointsModal
+        boardId={boardId}
+        isOpen={isCheckpointsOpen}
+        onClose={() => setIsCheckpointsOpen(false)}
+        onSaveCurrentState={handleSaveCurrentState}
+        onRestoreState={handleRestoreState}
+        currentLayerCount={layerIds.length}
+      />
+
       <svg
         ref={svgRef}
         className="h-[100vh] w-[100vw]"
@@ -1831,6 +2069,32 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
               height={100000}
               fill={gridType === "dots" ? "url(#canvas-grid-dots)" : "url(#canvas-grid-cross)"}
               style={{ pointerEvents: "none" }}
+            />
+          )}
+
+          {/* Smart Magnetic Snapping Alignment Guides */}
+          {snappingGuides?.x !== undefined && (
+            <line
+              x1={snappingGuides.x}
+              y1={-50000}
+              x2={snappingGuides.x}
+              y2={50000}
+              stroke="#6366f1"
+              strokeWidth={1.5}
+              strokeDasharray="4 4"
+              className="pointer-events-none"
+            />
+          )}
+          {snappingGuides?.y !== undefined && (
+            <line
+              x1={-50000}
+              y1={snappingGuides.y}
+              x2={50000}
+              y2={snappingGuides.y}
+              stroke="#6366f1"
+              strokeWidth={1.5}
+              strokeDasharray="4 4"
+              className="pointer-events-none"
             />
           )}
 

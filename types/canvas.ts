@@ -173,6 +173,7 @@ export type DocLayer = {
   itemsJson: string
   activeTab?: string
   value?: string
+  isLocked?: boolean
 }
 
 
@@ -203,6 +204,7 @@ export type RectangleLayer = {
   fontSize?: number
   fontWeight?: FontWeight
   textAlign?: TextAlign
+  isLocked?: boolean
 }
 
 export type EllipseLayer = {
@@ -220,6 +222,7 @@ export type EllipseLayer = {
   fontSize?: number
   fontWeight?: FontWeight
   textAlign?: TextAlign
+  isLocked?: boolean
 }
 
 export type PathLayer = {
@@ -231,6 +234,7 @@ export type PathLayer = {
   fill: Color
   points: number[][]
   value?: string
+  isLocked?: boolean
 }
 
 export type TextLayer = {
@@ -247,6 +251,7 @@ export type TextLayer = {
   fontStyle?: FontStyle
   textDecoration?: TextDecoration
   textAlign?: TextAlign
+  isLocked?: boolean
 }
 
 export type NoteLayer = {
@@ -261,9 +266,10 @@ export type NoteLayer = {
   fontSize?: number
   fontWeight?: FontWeight
   textAlign?: TextAlign
+  isLocked?: boolean
 }
 
-export type ComponentStatus = "healthy" | "warning" | "error" | "info" | "none"
+export type ComponentStatus = "healthy" | "warning" | "error" | "info" | "none" | "active" | "planned" | "degraded" | "deprecated"
 
 export type ComponentLayer = {
   type: LayerType.Component
@@ -277,6 +283,7 @@ export type ComponentLayer = {
   status?: ComponentStatus
   statusText?: string
   customColor?: Color
+  isLocked?: boolean
 }
 
 export type ArrowStyle = "curvy" | "sharp" | "orthogonal"
@@ -295,12 +302,15 @@ export type ArrowLayer = {
   height: number
   fill: Color
   value?: string
+  label?: string
+  protocol?: string
   sequenceStep?: number
   arrowStyle?: ArrowStyle
   strokePattern?: StrokePattern
   direction?: ArrowDirection
   isAnimated?: boolean
   controlOffset?: Point
+  isLocked?: boolean
 }
 
 export type SimulationMode = "idle" | "playing" | "spike" | "chaos"
@@ -315,6 +325,7 @@ export type SectionLayer = {
   fill: Color
   value?: string
   strokePattern?: StrokePattern
+  isLocked?: boolean
 }
 
 export type Point = {

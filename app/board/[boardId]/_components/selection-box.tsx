@@ -18,9 +18,13 @@ export const SelectionBox = memo(
       me.presence.selection.length === 1 ? me.presence.selection[0] : null
     )
     const selectionCount = useSelf((me) => me.presence.selection.length)
+    const isLocked = useStorage((root) =>
+      soleLayerId ? Boolean((root.layers.get(soleLayerId) as any)?.isLocked) : false
+    )
     const isShowingHandles = useStorage(
       (root) =>
         soleLayerId &&
+        !(root.layers.get(soleLayerId) as any)?.isLocked &&
         root.layers.get(soleLayerId)?.type !== LayerType.Path &&
         root.layers.get(soleLayerId)?.type !== LayerType.Arrow
     )

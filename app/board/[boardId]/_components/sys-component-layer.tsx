@@ -454,6 +454,29 @@ export const SysComponentLayer = memo(function SysComponentLayer({
             boxShadow: isConnectingFrom ? `0 0 0 3px ${isDark ? "#60A5FA" : "#93C5FD"}` : undefined,
           }}
         >
+          {/* Locked indicator badge in top-left */}
+          {layer.isLocked && (
+            <div
+              style={{
+                position: "absolute",
+                top: 5,
+                left: 5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 16,
+                height: 16,
+                borderRadius: 4,
+                background: isDark ? "rgba(245, 158, 11, 0.25)" : "rgba(245, 158, 11, 0.15)",
+                border: "1px solid rgba(245, 158, 11, 0.4)",
+                color: isDark ? "#FBBF24" : "#D97706",
+              }}
+              title="Layer is locked"
+            >
+              <Lock size={10} strokeWidth={2.5} />
+            </div>
+          )}
+
           {/* Status health badge in top-right */}
           {layer.status && layer.status !== "none" && (
             <div
@@ -469,49 +492,49 @@ export const SysComponentLayer = memo(function SysComponentLayer({
                 fontSize: 8,
                 fontWeight: 700,
                 backgroundColor: isDark
-                  ? layer.status === "healthy"
+                  ? layer.status === "healthy" || layer.status === "active"
                     ? "rgba(34, 197, 94, 0.22)"
-                    : layer.status === "warning"
+                    : layer.status === "warning" || layer.status === "degraded"
                     ? "rgba(234, 179, 8, 0.22)"
-                    : layer.status === "error"
+                    : layer.status === "error" || layer.status === "deprecated"
                     ? "rgba(239, 68, 68, 0.25)"
                     : "rgba(59, 130, 246, 0.22)"
-                  : layer.status === "healthy"
+                  : layer.status === "healthy" || layer.status === "active"
                   ? "#DCFCE7"
-                  : layer.status === "warning"
+                  : layer.status === "warning" || layer.status === "degraded"
                   ? "#FEF9C3"
-                  : layer.status === "error"
+                  : layer.status === "error" || layer.status === "deprecated"
                   ? "#FEE2E2"
                   : "#DBEAFE",
                 color: isDark
-                  ? layer.status === "healthy"
+                  ? layer.status === "healthy" || layer.status === "active"
                     ? "#4ADE80"
-                    : layer.status === "warning"
+                    : layer.status === "warning" || layer.status === "degraded"
                     ? "#FACC15"
-                    : layer.status === "error"
+                    : layer.status === "error" || layer.status === "deprecated"
                     ? "#F87171"
                     : "#60A5FA"
-                  : layer.status === "healthy"
+                  : layer.status === "healthy" || layer.status === "active"
                   ? "#15803D"
-                  : layer.status === "warning"
+                  : layer.status === "warning" || layer.status === "degraded"
                   ? "#A16207"
-                  : layer.status === "error"
+                  : layer.status === "error" || layer.status === "deprecated"
                   ? "#B91C1C"
                   : "#1D4ED8",
                 border: `1px solid ${
                   isDark
-                    ? layer.status === "healthy"
+                    ? layer.status === "healthy" || layer.status === "active"
                       ? "rgba(74, 222, 128, 0.4)"
-                      : layer.status === "warning"
+                      : layer.status === "warning" || layer.status === "degraded"
                       ? "rgba(250, 204, 21, 0.4)"
-                      : layer.status === "error"
+                      : layer.status === "error" || layer.status === "deprecated"
                       ? "rgba(248, 113, 113, 0.4)"
                       : "rgba(96, 165, 250, 0.4)"
-                    : layer.status === "healthy"
+                    : layer.status === "healthy" || layer.status === "active"
                     ? "#86EFAC"
-                    : layer.status === "warning"
+                    : layer.status === "warning" || layer.status === "degraded"
                     ? "#FDE047"
-                    : layer.status === "error"
+                    : layer.status === "error" || layer.status === "deprecated"
                     ? "#FCA5A5"
                     : "#93C5FD"
                 }`,
@@ -523,11 +546,11 @@ export const SysComponentLayer = memo(function SysComponentLayer({
                   height: 5,
                   borderRadius: "50%",
                   backgroundColor:
-                    layer.status === "healthy"
+                    layer.status === "healthy" || layer.status === "active"
                       ? "#22C55E"
-                      : layer.status === "warning"
+                      : layer.status === "warning" || layer.status === "degraded"
                       ? "#EAB308"
-                      : layer.status === "error"
+                      : layer.status === "error" || layer.status === "deprecated"
                       ? "#EF4444"
                       : "#3B82F6",
                 }}

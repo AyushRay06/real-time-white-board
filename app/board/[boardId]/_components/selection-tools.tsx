@@ -40,6 +40,15 @@ import {
   RotateCcw,
   AlignCenterHorizontal,
   AlignCenterVertical,
+  AlignStartHorizontal,
+  AlignEndHorizontal,
+  AlignStartVertical,
+  AlignEndVertical,
+  AlignHorizontalDistributeCenter,
+  AlignVerticalDistributeCenter,
+  Lock,
+  Unlock,
+  Tag,
   Type,
   Square,
   Circle,
@@ -271,11 +280,15 @@ export const SelectionTools = memo(
           ;(layer as any).set("status", newStatus)
           let statusText = ""
           switch (newStatus) {
-            case "healthy": statusText = "HEALTHY"; break
-            case "warning": statusText = "WARN";    break
-            case "error":   statusText = "OUTAGE";  break
-            case "info":    statusText = "INFO";    break
-            default:        statusText = "";        break
+            case "healthy":    statusText = "HEALTHY";    break
+            case "warning":    statusText = "WARN";       break
+            case "error":      statusText = "OUTAGE";     break
+            case "info":       statusText = "INFO";       break
+            case "active":     statusText = "ACTIVE";     break
+            case "planned":    statusText = "PLANNED";    break
+            case "degraded":   statusText = "DEGRADED";   break
+            case "deprecated": statusText = "DEPRECATED"; break
+            default:           statusText = "";           break
           }
           ;(layer as any).set("statusText", statusText)
         }
@@ -308,31 +321,157 @@ export const SelectionTools = memo(
       }
     }, [selection])
 
-    const alignHorizontal = useMutation(({ storage }) => {
+    // Multi-Layer Alignment Mutations
+    const alignLeft = useMutation(({ storage }) => {
+      if (!selectionBounds || selection.length < 2) return
+      const liveLayers = storage.get("layers")
+      selection.forEach((id) => {
+        const layer = liveLayers.get(id)
+        if (layer && !layer.get("isLocked")) {
+          layer.set("x", selectionBounds.x)
+        }
+      })
+    }, [selection, selectionBounds])
+
+    const alignCenterH = useMutation(({ storage }) => {
+      if (!selectionBounds || selection.length < 2) return
+      const liveLayers = storage.get("layers")
+      const centerX = selectionBounds.x + selectionBounds.width / 2
+      selection.forEach((id) => {
+        const layer = liveLayers.get(id)
+        if (layer && !layer.get("isLocked")) {
+          const w = (layer.get("width") as number) || 0
+          layer.set("x", centerX - w / 2)
+        }
+      })
+    }, [selection, selectionBounds])
+
+    const alignRight = useMutation(({ storage }) => {
+      if (!selectionBounds || selection.length < 2) return
+      const liveLayers = storage.get("layers")
+      selection.forEach((id) => {
+        const layer = liveLayers.get(id)
+        if (layer && !layer.get("isLocked")) {
+          const w = (layer.get("width") as number) || 0
+          layer.set("x", selectionBounds.x + selectionBounds.width - w)
+        }
+      })
+    }, [selection, selectionBounds])
+
+    const alignTop = useMutation(({ storage }) => {
+      if (!selectionBounds || selection.length < 2) return
+      const liveLayers = storage.get("layers")
+      selection.forEach((id) => {
+        const layer = liveLayers.get(id)
+        if (layer && !layer.get("isLocked")) {
+          layer.set("y", selectionBounds.y)
+        }
+      })
+    }, [selection, selectionBounds])
+
+    const alignCenterV = useMutation(({ storage }) => {
       if (!selectionBounds || selection.length < 2) return
       const liveLayers = storage.get("layers")
       const centerY = selectionBounds.y + selectionBounds.height / 2
       selection.forEach((id) => {
         const layer = liveLayers.get(id)
-        if (layer) {
+        if (layer && !layer.get("isLocked")) {
           const h = (layer.get("height") as number) || 0
           layer.set("y", centerY - h / 2)
         }
       })
     }, [selection, selectionBounds])
 
-    const alignVertical = useMutation(({ storage }) => {
+    const alignBottom = useMutation(({ storage }) => {
       if (!selectionBounds || selection.length < 2) return
       const liveLayers = storage.get("layers")
-      const centerX = selectionBounds.x + selectionBounds.width / 2
       selection.forEach((id) => {
         const layer = liveLayers.get(id)
-        if (layer) {
-          const w = (layer.get("width") as number) || 0
-          layer.set("x", centerX - w / 2)
+        if (layer && !layer.get("isLocked")) {
+          const h = (layer.get("height") as number) || 0
+          layer.set("y", selectionBounds.y + selectionBounds.height - h)
         }
       })
     }, [selection, selectionBounds])
+
+    // Distribution Mutations (requires at least 3 layers)
+    const distributeHorizontal = useMutation(({ storage }) => {
+      if (!selectionBounds || selection.length < 3) return
+      const liveLayers = storage.get("layers")
+      const items = selection
+        .map((id) => {
+          const l = liveLayers.get(id)
+          return l ? { id, layer: l, x: (l.get("x") as number) || 0, w: (l.get("width") as number) || 0 } : null
+        })
+        .filter(Boolean) as { id: string; layer: any; x: number; w: number }[]
+      if (items.length < 3) return
+      items.sort((a, b) => a.x - b.x)
+      const first = items[0]
+      const last = items[items.length - 1]
+      const totalSpan = last.x + last.w - first.x
+      const totalItemWidths = items.reduce((acc, it) => acc + it.w, 0)
+      const remainingGap = Math.max(0, totalSpan - totalItemWidths)
+      const gap = remainingGap / (items.length - 1)
+      let curX = first.x
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        if (!item.layer.get("isLocked")) {
+          item.layer.set("x", curX)
+        }
+        curX += item.w + gap
+      }
+    }, [selection, selectionBounds])
+
+    const distributeVertical = useMutation(({ storage }) => {
+      if (!selectionBounds || selection.length < 3) return
+      const liveLayers = storage.get("layers")
+      const items = selection
+        .map((id) => {
+          const l = liveLayers.get(id)
+          return l ? { id, layer: l, y: (l.get("y") as number) || 0, h: (l.get("height") as number) || 0 } : null
+        })
+        .filter(Boolean) as { id: string; layer: any; y: number; h: number }[]
+      if (items.length < 3) return
+      items.sort((a, b) => a.y - b.y)
+      const first = items[0]
+      const last = items[items.length - 1]
+      const totalSpan = last.y + last.h - first.y
+      const totalItemHeights = items.reduce((acc, it) => acc + it.h, 0)
+      const remainingGap = Math.max(0, totalSpan - totalItemHeights)
+      const gap = remainingGap / (items.length - 1)
+      let curY = first.y
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        if (!item.layer.get("isLocked")) {
+          item.layer.set("y", curY)
+        }
+        curY += item.h + gap
+      }
+    }, [selection, selectionBounds])
+
+    // Layer Locking Mutation
+    const toggleLock = useMutation(({ storage }) => {
+      const liveLayers = storage.get("layers")
+      const anyLocked = selection.some((id) => liveLayers.get(id)?.get("isLocked") === true)
+      selection.forEach((id) => {
+        const l = liveLayers.get(id)
+        if (l) {
+          ;(l as any).set("isLocked", !anyLocked)
+        }
+      })
+    }, [selection])
+
+    // Arrow Protocol Mutation
+    const setArrowProtocol = useMutation(
+      ({ storage }, protocol: string | undefined) => {
+        if (!soleLayerId) return
+        const layer = storage.get("layers").get(soleLayerId)
+        if (layer && layer.get("type") === LayerType.Arrow) {
+          ;(layer as any).set("protocol", protocol)
+        }
+      },
+      [soleLayerId]
+    )
 
     const deleteLayers = useDeleteLayers()
 
@@ -382,6 +521,10 @@ export const SelectionTools = memo(
     const currentTextAlign: TextAlign = soleLayer && "textAlign" in soleLayer ? (soleLayer.textAlign || (isText ? "left" : "center")) : (isText ? "left" : "center")
     const currentDirection = isArrow && soleLayer && "direction" in soleLayer ? (soleLayer.direction || "forward") : "forward"
     const currentSequenceStep: number | undefined = isArrow && soleLayer && "sequenceStep" in soleLayer ? (soleLayer.sequenceStep as number | undefined) : undefined
+    const currentProtocol: string | undefined = isArrow && soleLayer && "protocol" in soleLayer ? ((soleLayer as any).protocol as string | undefined) : undefined
+    const isAnyLocked = useStorage((root) =>
+      selection.some((id) => (root.layers.get(id) as any)?.isLocked === true)
+    )
     const currentStatus: ComponentStatus = isComponent && soleLayer && "status" in soleLayer && soleLayer.status ? (soleLayer.status as ComponentStatus) : "none"
     const compType = isComponent && soleLayer && "componentType" in soleLayer ? (soleLayer.componentType as SysComponent) : null
     const CompIcon = compType ? ICON_MAP[compType] || Box : Box
@@ -946,13 +1089,13 @@ export const SelectionTools = memo(
                 >
                   <div
                     className={`w-2 h-2 rounded-full ${
-                      currentStatus === "healthy"
+                      currentStatus === "healthy" || currentStatus === "active"
                         ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]"
-                        : currentStatus === "warning"
+                        : currentStatus === "warning" || currentStatus === "degraded"
                         ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.7)]"
-                        : currentStatus === "error"
+                        : currentStatus === "error" || currentStatus === "deprecated"
                         ? "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.7)]"
-                        : currentStatus === "info"
+                        : currentStatus === "info" || currentStatus === "planned"
                         ? "bg-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.7)]"
                         : "bg-slate-400"
                     }`}
@@ -964,7 +1107,7 @@ export const SelectionTools = memo(
               <DropdownMenuContent
                 align="start"
                 side={shouldFlipBelow ? "bottom" : "top"}
-                className={`rounded-xl p-1 z-50 min-w-[130px] border ${dropdownMenuContentClass}`}
+                className={`rounded-xl p-1 z-50 min-w-[140px] border ${dropdownMenuContentClass}`}
               >
                 <DropdownMenuItem
                   onClick={() => setComponentStatus("none")}
@@ -977,44 +1120,44 @@ export const SelectionTools = memo(
                   {currentStatus === "none" && <Check className="w-3.5 h-3.5 text-indigo-500" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => setComponentStatus("healthy")}
+                  onClick={() => setComponentStatus("active")}
                   className={`flex items-center justify-between text-xs py-1.5 ${dropdownMenuItemClass}`}
                 >
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                    <span>Healthy</span>
+                    <span>Active (Live)</span>
                   </div>
-                  {currentStatus === "healthy" && <Check className="w-3.5 h-3.5 text-emerald-500" />}
+                  {(currentStatus === "active" || currentStatus === "healthy") && <Check className="w-3.5 h-3.5 text-emerald-500" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  onClick={() => setComponentStatus("warning")}
-                  className={`flex items-center justify-between text-xs py-1.5 ${dropdownMenuItemClass}`}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-amber-500" />
-                    <span>Warning</span>
-                  </div>
-                  {currentStatus === "warning" && <Check className="w-3.5 h-3.5 text-amber-500" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setComponentStatus("error")}
-                  className={`flex items-center justify-between text-xs py-1.5 ${dropdownMenuItemClass}`}
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-rose-500" />
-                    <span>Error / Outage</span>
-                  </div>
-                  {currentStatus === "error" && <Check className="w-3.5 h-3.5 text-rose-500" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setComponentStatus("info")}
+                  onClick={() => setComponentStatus("planned")}
                   className={`flex items-center justify-between text-xs py-1.5 ${dropdownMenuItemClass}`}
                 >
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-sky-500" />
-                    <span>Info</span>
+                    <span>Planned (Roadmap)</span>
                   </div>
-                  {currentStatus === "info" && <Check className="w-3.5 h-3.5 text-sky-500" />}
+                  {(currentStatus === "planned" || currentStatus === "info") && <Check className="w-3.5 h-3.5 text-sky-500" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setComponentStatus("degraded")}
+                  className={`flex items-center justify-between text-xs py-1.5 ${dropdownMenuItemClass}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-amber-500" />
+                    <span>Degraded (Warning)</span>
+                  </div>
+                  {(currentStatus === "degraded" || currentStatus === "warning") && <Check className="w-3.5 h-3.5 text-amber-500" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setComponentStatus("deprecated")}
+                  className={`flex items-center justify-between text-xs py-1.5 ${dropdownMenuItemClass}`}
+                >
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-rose-500" />
+                    <span>Deprecated</span>
+                  </div>
+                  {(currentStatus === "deprecated" || currentStatus === "error") && <Check className="w-3.5 h-3.5 text-rose-500" />}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -1146,8 +1289,33 @@ export const SelectionTools = memo(
                 </div>
               )}
             </div>
-          </div>
-        )}
+
+            {/* Arrow Protocol / Transport Layer Selector */}
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-mono font-medium transition ${currentProtocol ? "bg-cyan-500/20 text-cyan-400 border border-cyan-500/40" : buttonPillInactive}`}>
+                    <Tag className="w-3 h-3 text-cyan-500" />
+                    <span>{currentProtocol || "Protocol"}</span>
+                    <ChevronDown className="w-2.5 h-2.5 text-neutral-400" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" side={shouldFlipBelow ? "bottom" : "top"} className={`rounded-xl p-1 z-50 min-w-[130px] border ${dropdownMenuContentClass}`}>
+                  {["None", "HTTPS", "gRPC", "WebSocket", "Kafka", "SQL", "GraphQL", "TCP", "UDP"].map((proto) => (
+                    <DropdownMenuItem
+                      key={proto}
+                      onClick={() => setArrowProtocol(proto === "None" ? undefined : proto)}
+                      className={`flex items-center justify-between text-xs py-1.5 font-mono ${dropdownMenuItemClass}`}
+                    >
+                      <span>{proto}</span>
+                      {((proto === "None" && !currentProtocol) || currentProtocol === proto) && (
+                        <Check className="w-3.5 h-3.5 text-cyan-500" />
+                      )}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          )}
 
         {/* ── SECTION 3: COMPACT COLOR DROPDOWN ── */}
         <div className={`flex items-center border-r pr-2 ${dividerClass}`}>
@@ -1225,25 +1393,90 @@ export const SelectionTools = memo(
           )}
 
           {isMultiple && (
-            <>
+            <div className="flex items-center gap-0.5 border-r pr-1 border-neutral-200 dark:border-neutral-700/80">
+              <Hint label="Align Left">
+                <button
+                  onClick={alignLeft}
+                  className={`p-1 rounded-lg transition ${actionButtonClass}`}
+                >
+                  <AlignStartHorizontal className="w-3.5 h-3.5" />
+                </button>
+              </Hint>
               <Hint label="Align Center Horizontally">
                 <button
-                  onClick={alignHorizontal}
+                  onClick={alignCenterH}
                   className={`p-1 rounded-lg transition ${actionButtonClass}`}
                 >
                   <AlignCenterHorizontal className="w-3.5 h-3.5" />
                 </button>
               </Hint>
+              <Hint label="Align Right">
+                <button
+                  onClick={alignRight}
+                  className={`p-1 rounded-lg transition ${actionButtonClass}`}
+                >
+                  <AlignEndHorizontal className="w-3.5 h-3.5" />
+                </button>
+              </Hint>
+              <Hint label="Align Top">
+                <button
+                  onClick={alignTop}
+                  className={`p-1 rounded-lg transition ${actionButtonClass}`}
+                >
+                  <AlignStartVertical className="w-3.5 h-3.5" />
+                </button>
+              </Hint>
               <Hint label="Align Center Vertically">
                 <button
-                  onClick={alignVertical}
+                  onClick={alignCenterV}
                   className={`p-1 rounded-lg transition ${actionButtonClass}`}
                 >
                   <AlignCenterVertical className="w-3.5 h-3.5" />
                 </button>
               </Hint>
-            </>
+              <Hint label="Align Bottom">
+                <button
+                  onClick={alignBottom}
+                  className={`p-1 rounded-lg transition ${actionButtonClass}`}
+                >
+                  <AlignEndVertical className="w-3.5 h-3.5" />
+                </button>
+              </Hint>
+              {selection.length >= 3 && (
+                <>
+                  <Hint label="Distribute Horizontally">
+                    <button
+                      onClick={distributeHorizontal}
+                      className={`p-1 rounded-lg transition ${actionButtonClass}`}
+                    >
+                      <AlignHorizontalDistributeCenter className="w-3.5 h-3.5 text-indigo-400" />
+                    </button>
+                  </Hint>
+                  <Hint label="Distribute Vertically">
+                    <button
+                      onClick={distributeVertical}
+                      className={`p-1 rounded-lg transition ${actionButtonClass}`}
+                    >
+                      <AlignVerticalDistributeCenter className="w-3.5 h-3.5 text-indigo-400" />
+                    </button>
+                  </Hint>
+                </>
+              )}
+            </div>
           )}
+
+          <Hint label={isAnyLocked ? "Unlock (Ctrl+L)" : "Lock Layer (Ctrl+L)"}>
+            <button
+              onClick={toggleLock}
+              className={`p-1 rounded-lg transition ${
+                isAnyLocked
+                  ? "bg-amber-500/20 text-amber-500 border border-amber-500/30"
+                  : actionButtonClass
+              }`}
+            >
+              {isAnyLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+            </button>
+          </Hint>
 
           {onDuplicate && (
             <Hint label="Duplicate (Cmd+D)">

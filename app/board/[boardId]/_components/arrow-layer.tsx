@@ -308,18 +308,21 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
     window.addEventListener("pointerup", onPointerUp)
   }, [fromLayer, toLayer, layer.fromAnchor, layer.toAnchor, updateFromAnchor, updateToAnchor])
 
-  // Label pill & Sequence Step dimensions
-  const labelText    = layer.value || ""
+  // Label pill, Protocol chip & Sequence Step dimensions
+  const protocolText = layer.protocol || ""
+  const userText     = layer.value || layer.label || ""
+  const hasProtocol  = Boolean(protocolText)
+  const labelText    = hasProtocol ? (userText ? `${protocolText} • ${userText}` : protocolText) : userText
   const sequenceStep = layer.sequenceStep
   const hasStep      = typeof sequenceStep === "number" && sequenceStep > 0
   const hasLabel     = labelText.length > 0 || hasStep
   const pillPadX     = hasStep ? 14 : 10
   const pillH        = 24
-  const charWidth    = 7
+  const charWidth    = 7.2
   const isStepOnly   = hasStep && labelText.length === 0
   const pillW        = isStepOnly
     ? 26
-    : Math.max(hasStep ? 76 : 60, labelText.length * charWidth + pillPadX * 2 + (hasStep ? 18 : 0))
+    : Math.max(hasStep ? 76 : 56, labelText.length * charWidth + pillPadX * 2 + (hasStep ? 18 : 0))
 
   const isSimulating = Boolean(simContext && simContext.isSimulating) || layer.isAnimated
   const simSpeed = simContext?.simSpeed || 1
