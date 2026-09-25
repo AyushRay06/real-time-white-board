@@ -17,6 +17,8 @@ import localFont from "next/font/local"
 import { CanvasSimulator } from "@/components/landing/canvas-simulator"
 import { GlobalScrollStroke } from "@/components/ui/svg-follow-scroll"
 import { FeatureCanvases } from "@/components/landing/feature-canvases"
+import { ArchitectureInteractive } from "@/components/landing/architecture-interactive"
+import { ArchitectureShowcase } from "@/components/landing/architecture-showcase"
 import { WorkflowCanvases } from "@/components/landing/workflow-canvases"
 import { TestimonialsSection } from "@/components/landing/testimonials-section"
 import { CanvasFooter } from "@/components/landing/canvas-footer"
@@ -49,6 +51,12 @@ export function LandingPage() {
 
         {/* Navigation Links */}
         <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
+          <a href="#demo" className="hover:text-indigo-600 transition-colors">
+            Demo
+          </a>
+          <a href="#architecture" className="hover:text-indigo-600 transition-colors">
+            Architecture
+          </a>
           <a href="#features" className="hover:text-indigo-600 transition-colors">
             Features
           </a>
@@ -139,6 +147,42 @@ export function LandingPage() {
         {/* INTERACTIVE CANVAS SIMULATOR */}
         <section id="demo" className="w-full px-4 sm:px-6 pb-24 scroll-mt-24">
           <CanvasSimulator />
+        </section>
+
+        {/* ARCHITECTURE & SYSTEM DESIGN SUITE */}
+        <section id="architecture" className="w-full py-24 bg-gradient-to-b from-slate-50/70 via-white to-slate-50/50 scroll-mt-20 relative border-y border-slate-200/60">
+          <div className="container mx-auto px-4 md:px-6 max-w-6xl relative z-10">
+            <div className="text-center max-w-3xl mx-auto mb-16">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-semibold mb-4 shadow-2xs">
+                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                Specialized System Design Suite
+              </div>
+              <h2 className="font-zodiak text-3xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-4">
+                Engineered for Cloud Architecture & System Design
+              </h2>
+              <p className="text-slate-600 text-base sm:text-lg leading-relaxed">
+                Move far beyond primitive shapes. Build production-grade architectural diagrams with interactive VPC boundaries, live database ERD schemas, REST API contracts, and real-time back-of-the-envelope capacity estimators.
+              </p>
+            </div>
+
+            {/* Interactive Architecture Simulator */}
+            <div className="mb-24">
+              <ArchitectureInteractive />
+            </div>
+
+            {/* Comprehensive Architecture Showcase */}
+            <div className="pt-6">
+              <div className="text-center max-w-2xl mx-auto mb-12">
+                <h3 className="font-zodiak text-2xl sm:text-4xl font-bold text-slate-900 tracking-tight mb-3">
+                  10+ Engineering Superpowers
+                </h3>
+                <p className="text-slate-500 text-sm sm:text-base">
+                  Every tool designed to make whiteboard interviews, technical RFCs, and cloud architecture reviews fast and effortless.
+                </p>
+              </div>
+              <ArchitectureShowcase />
+            </div>
+          </div>
         </section>
 
         {/* FEATURES SECTION */}
@@ -254,10 +298,22 @@ export function LandingPage() {
                 className="border border-slate-200/90 rounded-2xl px-6 bg-white shadow-xs overflow-hidden transition-colors data-[state=open]:border-indigo-200 data-[state=open]:bg-indigo-50/20"
               >
                 <AccordionTrigger className="font-comico text-base sm:text-lg font-bold text-slate-900 hover:text-indigo-600 hover:no-underline transition-colors py-5 text-left">
-                  Can I use Planning Portal on different screen sizes?
+                  What makes Planning Portal unique for System Design interviews and RFCs?
                 </AccordionTrigger>
                 <AccordionContent className="text-slate-600 text-sm sm:text-base leading-relaxed pb-5">
-                  Yes, the infinite canvas and interface are fully responsive. You can navigate, pan, and view boards smoothly across desktops, laptops, and tablets.
+                  Unlike traditional whiteboards, Planning Portal features first-class system design primitives: smart Architecture Zones (VPCs, Subnets, K8s clusters) with automatic child containment, Database ERD Schema cards with PK/FK indicators, REST API contracts, sequence step numbering, and live back-of-the-envelope capacity estimators.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem
+                value="item-7"
+                className="border border-slate-200/90 rounded-2xl px-6 bg-white shadow-xs overflow-hidden transition-colors data-[state=open]:border-indigo-200 data-[state=open]:bg-indigo-50/20"
+              >
+                <AccordionTrigger className="font-comico text-base sm:text-lg font-bold text-slate-900 hover:text-indigo-600 hover:no-underline transition-colors py-5 text-left">
+                  Can I export my architecture diagrams and boards?
+                </AccordionTrigger>
+                <AccordionContent className="text-slate-600 text-sm sm:text-base leading-relaxed pb-5">
+                  Yes! You can export your canvas to ultra high-resolution lossless SVG vectors or crisp PNG images anytime. Your diagrams will look pin-sharp in engineering RFCs, Confluence pages, GitHub READMEs, and technical presentations.
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
