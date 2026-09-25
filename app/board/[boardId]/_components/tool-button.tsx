@@ -38,16 +38,23 @@ export const ToolButton = ({
         variant={isActive ? "boardActive" : "board"}
         size="icon"
         className={cn(
-          "h-8 w-8 p-1 rounded-xl transition-all flex flex-col items-center justify-center gap-0.5",
+          "h-8 w-8 p-1.5 rounded-xl transition-all relative flex items-center justify-center group",
           theme === "dark" && !isActive && "text-slate-300 hover:text-white hover:bg-slate-800/80",
           theme === "dark" && isActive && "bg-indigo-500/25 text-indigo-400 hover:bg-indigo-500/30 ring-1 ring-indigo-500/40",
           theme !== "dark" && isActive && "bg-indigo-50 text-indigo-600 ring-1 ring-indigo-300",
           className
         )}
       >
-        <Icon className={cn("flex-shrink-0", shortcut ? "w-3.5 h-3.5" : "w-4 h-4")} />
+        <Icon className="w-4 h-4 flex-shrink-0" />
         {shortcut && (
-          <span className="text-[7.5px] font-mono leading-none tracking-tight opacity-70 font-semibold select-none">
+          <span
+            className={cn(
+              "absolute bottom-0.5 right-0.5 text-[7px] font-mono leading-none tracking-tighter select-none font-bold pointer-events-none px-0.5 rounded transition-opacity",
+              isActive
+                ? "text-indigo-600 dark:text-indigo-400 font-extrabold opacity-95"
+                : "text-slate-400 dark:text-slate-500 opacity-60 group-hover:opacity-100"
+            )}
+          >
             {shortcut}
           </span>
         )}

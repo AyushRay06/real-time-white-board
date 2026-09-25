@@ -33,11 +33,13 @@ export const Participants = () => {
           : "bg-white/85 border-slate-200/80 text-slate-900 shadow-slate-900/5"
       )}
     >
-      {/* Live Sync Status Indicator */}
-      <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-semibold tracking-wide uppercase select-none">
-        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-        <span>Live</span>
-      </div>
+      {/* Live Sync Status Indicator - only shown when more than 1 user is active */}
+      {users.length > 0 && (
+        <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-[10px] font-semibold tracking-wide uppercase select-none">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span>Live</span>
+        </div>
+      )}
 
       {/* Collaborator Avatars (Overlapping Figma-style) */}
       <div className="flex items-center -space-x-1.5">

@@ -206,15 +206,13 @@ export const Toolbar = ({
         />
         <div className={cn("w-4 h-px my-0.5", dividerClass)} />
         <ToolButton
-          label="Undo"
-          shortcut="Ctrl+Z"
+          label="Undo (Ctrl+Z)"
           icon={Undo2}
           onClick={undo}
           isDisabled={!canUndo}
         />
         <ToolButton
-          label="Redo"
-          shortcut="Ctrl+Y"
+          label="Redo (Ctrl+Y)"
           icon={Redo2}
           onClick={redo}
           isDisabled={!canRedo}
