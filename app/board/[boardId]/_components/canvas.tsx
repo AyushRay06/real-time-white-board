@@ -455,6 +455,22 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
           { id: nanoid(), type: "non-functional", text: "Scalability: 100M DAU and 50,000 peak read QPS", priority: "P0" },
           { id: nanoid(), type: "non-functional", text: "Eventual Consistency: Acceptable for follower feeds", priority: "P1" },
         ]
+      } else if (docType === "functional-requirements") {
+        title = "Functional Requirements"
+        defaultItems = [
+          { id: nanoid(), type: "functional", text: "User can create and publish posts with rich media", priority: "P0" },
+          { id: nanoid(), type: "functional", text: "Followers receive real-time timeline feed updates", priority: "P0" },
+          { id: nanoid(), type: "functional", text: "Search tweets and user accounts by keyword", priority: "P1" },
+          { id: nanoid(), type: "functional", text: "Push notifications dispatched on mentions & likes", priority: "P2" },
+        ]
+      } else if (docType === "non-functional-requirements") {
+        title = "Non-Functional Requirements"
+        defaultItems = [
+          { id: nanoid(), type: "non-functional", text: "High Availability: 99.99% multi-region uptime SLA", priority: "P0" },
+          { id: nanoid(), type: "non-functional", text: "Low Latency: Timeline read latency < 100ms (p99)", priority: "P0" },
+          { id: nanoid(), type: "non-functional", text: "Scalability: 100M DAU and 50,000 peak read QPS", priority: "P0" },
+          { id: nanoid(), type: "non-functional", text: "Eventual Consistency: Acceptable for follower feeds", priority: "P1" },
+        ]
       } else if (docType === "api") {
         title = "API Endpoints Specification"
         defaultItems = [

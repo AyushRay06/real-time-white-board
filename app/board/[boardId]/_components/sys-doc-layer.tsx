@@ -73,6 +73,8 @@ export const BASE_TABLE_WIDTHS: Record<DocType, number> = {
   schema: 460,
   estimation: 480,
   requirements: 520,
+  "functional-requirements": 500,
+  "non-functional-requirements": 500,
   bottlenecks: 540,
   api: 540,
   flow: 540,
@@ -282,6 +284,22 @@ export const SysDocLayer = memo(
             defaultAccent: "#10b981",
             defaultRgba: isDark ? "rgba(16, 185, 129, 0.18)" : "rgba(16, 185, 129, 0.10)",
           }
+        case "functional-requirements":
+          return {
+            title: title || "Functional Requirements",
+            icon: CheckSquare2,
+            typeLabel: "Functional",
+            defaultAccent: "#10b981",
+            defaultRgba: isDark ? "rgba(16, 185, 129, 0.18)" : "rgba(16, 185, 129, 0.10)",
+          }
+        case "non-functional-requirements":
+          return {
+            title: title || "Non-Functional Requirements",
+            icon: CheckSquare2,
+            typeLabel: "Non-Functional",
+            defaultAccent: "#3b82f6",
+            defaultRgba: isDark ? "rgba(59, 130, 246, 0.18)" : "rgba(59, 130, 246, 0.10)",
+          }
         case "api":
           return {
             title: title || "API Endpoints",
@@ -444,9 +462,13 @@ export const SysDocLayer = memo(
             onPointerDown={(e) => e.stopPropagation()}
           >
             {/* 1. REQUIREMENTS FLAT LIST */}
-            {docType === "requirements" &&
+            {(docType === "requirements" || docType === "functional-requirements" || docType === "non-functional-requirements") &&
               items
-                .filter((item: RequirementItem) => activeTab === "all" || item.type === activeTab)
+                .filter((item: RequirementItem) => {
+                  if (docType === "functional-requirements") return true
+                  if (docType === "non-functional-requirements") return true
+                  return activeTab === "all" || item.type === activeTab
+                })
                 .map((item: RequirementItem) => (
                   <div
                     key={item.id}
@@ -470,24 +492,30 @@ export const SysDocLayer = memo(
                       {item.priority || "P0"}
                     </button>
 
-                    <button
-                      onClick={() =>
-                        updateItemField(
-                          item.id,
-                          "type",
-                          item.type === "functional" ? "non-functional" : "functional"
-                        )
-                      }
-                      className="text-[9px] font-mono text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 shrink-0 uppercase"
-                    >
-                      {item.type === "functional" ? "func" : "non-func"}
-                    </button>
+                    {docType === "requirements" && (
+                      <button
+                        onClick={() =>
+                          updateItemField(
+                            item.id,
+                            "type",
+                            item.type === "functional" ? "non-functional" : "functional"
+                          )
+                        }
+                        className="text-[9px] font-mono text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 shrink-0 uppercase"
+                      >
+                        {item.type === "functional" ? "func" : "non-func"}
+                      </button>
+                    )}
 
                     <input
                       type="text"
                       value={item.text}
                       onChange={(e) => updateItemField(item.id, "text", e.target.value)}
-                      placeholder="Requirement scope..."
+                      placeholder={
+                        docType === "non-functional-requirements"
+                          ? "Latency SLA or throughput threshold..."
+                          : "Requirement scope..."
+                      }
                       className={`flex-1 text-xs text-slate-800 dark:text-slate-200 ${inputSeamless}`}
                     />
 
@@ -860,6 +888,26 @@ export const SysDocLayer = memo(
                   <span>Non-Functional</span>
                 </button>
               </div>
+            )}
+
+            {docType === "functional-requirements" && (
+              <button
+                onClick={() => addRequirement("functional")}
+                className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-emerald-500 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Functional Requirement</span>
+              </button>
+            )}
+
+            {docType === "non-functional-requirements" && (
+              <button
+                onClick={() => addRequirement("non-functional")}
+                className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-blue-500 transition-colors"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Non-Functional Requirement</span>
+              </button>
             )}
 
             {docType === "api" && (
