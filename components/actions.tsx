@@ -21,6 +21,7 @@ interface ActionsProps {
   sideOffset?: DropdownMenuContentProps["sideOffset"]
   id: string
   title: string
+  className?: string
 }
 
 export const Actions = ({
@@ -29,6 +30,7 @@ export const Actions = ({
   sideOffset,
   id,
   title,
+  className,
 }: ActionsProps) => {
   //for deletion of board
   const { onOpen } = useRenameModal()
@@ -48,39 +50,38 @@ export const Actions = ({
       .catch(() => toast.error("Failed to copy link"))
   }
   return (
-    <div className="absolute z-50 top-1 right-1">
+    <div className={className ?? "absolute z-50 top-1 right-1"}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
         <DropdownMenuContent
           side={side}
           sideOffset={sideOffset}
-          className="W-60"
+          className="w-56 p-1.5 shadow-xl border border-slate-200/80 dark:border-slate-800/80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl"
           onClick={(e) => e.stopPropagation()}
         >
-          <DropdownMenuItem onClick={onCopyLink} className="p-3 cursor-pointer">
-            <Link className="h-4 w-4 mr-2" />
+          <DropdownMenuItem onClick={onCopyLink} className="p-2.5 rounded-lg cursor-pointer text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 focus:bg-slate-100 dark:focus:bg-slate-800">
+            <Link className="h-3.5 w-3.5 mr-2 text-indigo-500" />
             Copy Board Link
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => onOpen(id, title)}
-            className="p-3 cursor-pointer"
+            className="p-2.5 rounded-lg cursor-pointer text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 focus:bg-slate-100 dark:focus:bg-slate-800"
           >
-            <Pencil className="h-4 w-4 mr-2" />
-            Rename
+            <Pencil className="h-3.5 w-3.5 mr-2 text-amber-500" />
+            Rename Canvas
           </DropdownMenuItem>
           <ConfirmAlert
             header="Delete Board?"
-            description="If you delete all the data related to the Board will get deleted!"
+            description="If you delete all the data related to this Board will be permanently removed!"
             onConfirm={onDelete}
             disabled={pending}
           >
             <Button
               variant="ghost"
-              //onClick={onDelete}
-              className="p-3 cursor-pointer text-sm w-full justify-start font-normal"
+              className="p-2.5 h-auto rounded-lg cursor-pointer text-xs w-full justify-start font-medium text-red-600 dark:text-red-400 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40"
             >
-              <Trash className="h-4 w-4 mr-2" />
-              Delete
+              <Trash className="h-3.5 w-3.5 mr-2" />
+              Delete Board
             </Button>
           </ConfirmAlert>
         </DropdownMenuContent>
