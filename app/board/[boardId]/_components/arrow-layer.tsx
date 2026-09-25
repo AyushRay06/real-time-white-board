@@ -189,32 +189,7 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
     e.stopPropagation()
   }, [commitEdit])
 
-  // If either connected layer is gone, don't render
-  if (!fromLayer || !toLayer) return null
-
-  const fromPt = getAnchorPoint(fromLayer.x, fromLayer.y, fromLayer.width, fromLayer.height, layer.fromAnchor)
-  const toPt   = getAnchorPoint(toLayer.x,   toLayer.y,   toLayer.width,   toLayer.height,   layer.toAnchor)
-
-  const isSharp = layer.arrowStyle === "sharp" || layer.arrowStyle === "orthogonal"
-  const controlOffset = layer.controlOffset
-
-  let pathD: string
-  let mid: Point
-
-  if (isSharp) {
-    const sharp = buildSharpPath(fromPt, toPt, layer.fromAnchor, layer.toAnchor, controlOffset)
-    pathD = sharp.d
-    mid = sharp.mid
-  } else {
-    const cubic = buildCubicPath(fromPt, toPt, layer.fromAnchor, layer.toAnchor, controlOffset)
-    pathD = cubic.d
-    mid = cubic.mid
-  }
-
-  const arrowPts = arrowheadPoints(toPt, layer.toAnchor)
-  const stroke   = selectionColor || (layer.fill ? colorToCss(layer.fill) : "#6366f1")
-
-  // Mutations to edit arrow flow and anchors
+  // Mutations to edit arrow flow and anchors (declared before any early returns)
   const updateControlOffset = useMutation(({ storage }, offset: Point) => {
     ;(storage.get("layers").get(id) as any)?.set("controlOffset", offset)
   }, [id])
@@ -307,6 +282,31 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
     window.addEventListener("pointermove", onPointerMove)
     window.addEventListener("pointerup", onPointerUp)
   }, [fromLayer, toLayer, layer.fromAnchor, layer.toAnchor, updateFromAnchor, updateToAnchor])
+
+  // If either connected layer is gone, don't render (now strictly after ALL hooks)
+  if (!fromLayer || !toLayer) return null
+
+  const fromPt = getAnchorPoint(fromLayer.x, fromLayer.y, fromLayer.width, fromLayer.height, layer.fromAnchor)
+  const toPt   = getAnchorPoint(toLayer.x,   toLayer.y,   toLayer.width,   toLayer.height,   layer.toAnchor)
+
+  const isSharp = layer.arrowStyle === "sharp" || layer.arrowStyle === "orthogonal"
+  const controlOffset = layer.controlOffset
+
+  let pathD: string
+  let mid: Point
+
+  if (isSharp) {
+    const sharp = buildSharpPath(fromPt, toPt, layer.fromAnchor, layer.toAnchor, controlOffset)
+    pathD = sharp.d
+    mid = sharp.mid
+  } else {
+    const cubic = buildCubicPath(fromPt, toPt, layer.fromAnchor, layer.toAnchor, controlOffset)
+    pathD = cubic.d
+    mid = cubic.mid
+  }
+
+  const arrowPts = arrowheadPoints(toPt, layer.toAnchor)
+  const stroke   = selectionColor || (layer.fill ? colorToCss(layer.fill) : "#6366f1")
 
   // Label pill, Protocol chip & Sequence Step dimensions
   const protocolText = layer.protocol || ""
