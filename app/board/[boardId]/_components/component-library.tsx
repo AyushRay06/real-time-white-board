@@ -14,6 +14,8 @@ import {
   Calculator,
   AlertTriangle,
   TableProperties,
+  Database,
+  ListOrdered,
 } from "lucide-react"
 import { useCanvasTheme } from "./canvas-theme-context"
 
@@ -147,24 +149,45 @@ const TEMPLATES: ArchitectureTemplate[] = [
 
 export interface SystemSpecItem {
   id: DocType
+  category: "Data Modeling" | "Execution Flow" | "Architecture & Specs" | "Reliability & Scale"
   name: string
   badge: string
   description: string
   icon: React.ElementType
-  color: "emerald" | "indigo" | "amber" | "rose"
+  color: "emerald" | "indigo" | "amber" | "rose" | "cyan" | "violet"
 }
 
 const SYSTEM_SPECS: SystemSpecItem[] = [
   {
+    id: "schema",
+    category: "Data Modeling",
+    name: "Database Schema & ERD Table",
+    badge: "Database / ERD",
+    description: "Entity table with Primary [PK], Foreign [FK], Unique [UQ] keys, SQL datatypes & nullability.",
+    icon: Database,
+    color: "cyan",
+  },
+  {
+    id: "flow",
+    category: "Execution Flow",
+    name: "Numbered Sequence & Data Flow",
+    badge: "Request Sequence",
+    description: "Ordered step-by-step request flow (Client → Gateway → Services → DB) with protocol chips.",
+    icon: ListOrdered,
+    color: "violet",
+  },
+  {
     id: "requirements",
+    category: "Architecture & Specs",
     name: "Functional & Non-Functional Requirements",
-    badge: "Requirements Table",
+    badge: "Requirements Matrix",
     description: "Ready-made matrix with P0/P1/P2 priorities, functional scope & non-functional SLAs.",
     icon: CheckSquare2,
     color: "emerald",
   },
   {
     id: "api",
+    category: "Architecture & Specs",
     name: "API Endpoints Specification",
     badge: "RESTful Endpoints",
     description: "HTTP routes table with GET/POST/PUT/DELETE badges, URL paths & response status codes.",
@@ -173,6 +196,7 @@ const SYSTEM_SPECS: SystemSpecItem[] = [
   },
   {
     id: "estimation",
+    category: "Reliability & Scale",
     name: "Capacity & Back-of-the-Envelope",
     badge: "Scale Estimation",
     description: "Capacity calculations for DAU, Read/Write QPS, daily data storage & cache RAM.",
@@ -181,6 +205,7 @@ const SYSTEM_SPECS: SystemSpecItem[] = [
   },
   {
     id: "bottlenecks",
+    category: "Reliability & Scale",
     name: "Bottlenecks & SPOF Analysis",
     badge: "Risk & Mitigation",
     description: "Deep dive failure mode assessment, single points of failure & architectural mitigations.",
@@ -418,6 +443,8 @@ export function ComponentLibrary({
               indigo: isDark ? "bg-indigo-500/20 text-indigo-400 border-indigo-500/30" : "bg-indigo-50 text-indigo-700 border-indigo-200",
               amber: isDark ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-amber-50 text-amber-700 border-amber-200",
               rose: isDark ? "bg-rose-500/20 text-rose-400 border-rose-500/30" : "bg-rose-50 text-rose-700 border-rose-200",
+              cyan: isDark ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" : "bg-cyan-50 text-cyan-700 border-cyan-200",
+              violet: isDark ? "bg-violet-500/20 text-violet-400 border-violet-500/30" : "bg-violet-50 text-violet-700 border-violet-200",
             }[spec.color]
 
             return (
@@ -438,6 +465,9 @@ export function ComponentLibrary({
                       {spec.name}
                     </span>
                   </div>
+                  <span className={`text-[9px] font-semibold px-1.5 py-0.5 rounded border ${isDark ? "bg-slate-800/80 text-slate-400 border-slate-700" : "bg-slate-100 text-slate-600 border-slate-200"}`}>
+                    {spec.category}
+                  </span>
                 </div>
 
                 <p className={`text-[11px] leading-snug mb-2 ${isDark ? "text-slate-400" : "text-neutral-500"}`}>

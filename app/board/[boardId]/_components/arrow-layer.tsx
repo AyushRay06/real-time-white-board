@@ -308,13 +308,18 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
     window.addEventListener("pointerup", onPointerUp)
   }, [fromLayer, toLayer, layer.fromAnchor, layer.toAnchor, updateFromAnchor, updateToAnchor])
 
-  // Label pill dimensions
+  // Label pill & Sequence Step dimensions
   const labelText    = layer.value || ""
-  const hasLabel     = labelText.length > 0
-  const pillPadX     = 10
-  const pillH        = 22
+  const sequenceStep = layer.sequenceStep
+  const hasStep      = typeof sequenceStep === "number" && sequenceStep > 0
+  const hasLabel     = labelText.length > 0 || hasStep
+  const pillPadX     = hasStep ? 14 : 10
+  const pillH        = 24
   const charWidth    = 7
-  const pillW        = Math.max(60, labelText.length * charWidth + pillPadX * 2)
+  const isStepOnly   = hasStep && labelText.length === 0
+  const pillW        = isStepOnly
+    ? 26
+    : Math.max(hasStep ? 76 : 60, labelText.length * charWidth + pillPadX * 2 + (hasStep ? 18 : 0))
 
   const isSimulating = Boolean(simContext && simContext.isSimulating) || layer.isAnimated
   const simSpeed = simContext?.simSpeed || 1
@@ -600,42 +605,95 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
         </g>
       )}
 
-      {/* ── Midpoint label pill (view mode) ── */}
+      {/* ── Midpoint label pill & Sequence Flow Badge (view mode) ── */}
       {hasLabel && !editing && (
         <g style={{ pointerEvents: "all" }}>
-          {/* Pill drop shadow */}
-          <rect
-            x={mid.x - pillW / 2 + 1}
-            y={mid.y - pillH / 2 + 2}
-            width={pillW}
-            height={pillH}
-            rx={pillH / 2}
-            fill="rgba(0,0,0,0.10)"
-          />
-          {/* Pill background */}
-          <rect
-            x={mid.x - pillW / 2}
-            y={mid.y - pillH / 2}
-            width={pillW}
-            height={pillH}
-            rx={pillH / 2}
-            fill="#ffffff"
-            stroke={selectionColor ? "#6366f1" : "#c7d2fe"}
-            strokeWidth={1.5}
-          />
-          {/* Pill text */}
-          <text
-            x={mid.x}
-            y={mid.y + 4}
-            textAnchor="middle"
-            fill="#3730a3"
-            fontSize={11}
-            fontWeight={600}
-            fontFamily="Inter, system-ui, sans-serif"
-            style={{ userSelect: "none" }}
-          >
-            {labelText}
-          </text>
+          {isStepOnly ? (
+            /* Standalone Circular Numbered Sequence Badge */
+            <g>
+              <circle cx={mid.x} cy={mid.y + 1.5} r={13} fill="rgba(0,0,0,0.15)" />
+              <circle
+                cx={mid.x}
+                cy={mid.y}
+                r={12}
+                fill="#4f46e5"
+                stroke={selectionColor ? "#a5b4fc" : "#ffffff"}
+                strokeWidth={2}
+              />
+              <text
+                x={mid.x}
+                y={mid.y + 4}
+                textAnchor="middle"
+                fill="#ffffff"
+                fontSize={11}
+                fontWeight={700}
+                fontFamily="JetBrains Mono, monospace"
+                style={{ userSelect: "none" }}
+              >
+                {sequenceStep}
+              </text>
+            </g>
+          ) : (
+            /* Label pill with optional embedded sequence badge */
+            <g>
+              {/* Pill drop shadow */}
+              <rect
+                x={mid.x - pillW / 2 + 1}
+                y={mid.y - pillH / 2 + 2}
+                width={pillW}
+                height={pillH}
+                rx={pillH / 2}
+                fill="rgba(0,0,0,0.12)"
+              />
+              {/* Pill background */}
+              <rect
+                x={mid.x - pillW / 2}
+                y={mid.y - pillH / 2}
+                width={pillW}
+                height={pillH}
+                rx={pillH / 2}
+                fill="#ffffff"
+                stroke={selectionColor ? "#6366f1" : "#c7d2fe"}
+                strokeWidth={1.5}
+              />
+              {/* Embedded step circle if step present */}
+              {hasStep && (
+                <g>
+                  <circle
+                    cx={mid.x - pillW / 2 + 12}
+                    cy={mid.y}
+                    r={8.5}
+                    fill="#4f46e5"
+                  />
+                  <text
+                    x={mid.x - pillW / 2 + 12}
+                    y={mid.y + 3.5}
+                    textAnchor="middle"
+                    fill="#ffffff"
+                    fontSize={9.5}
+                    fontWeight={700}
+                    fontFamily="JetBrains Mono, monospace"
+                    style={{ userSelect: "none" }}
+                  >
+                    {sequenceStep}
+                  </text>
+                </g>
+              )}
+              {/* Pill text */}
+              <text
+                x={hasStep ? mid.x + 8 : mid.x}
+                y={mid.y + 4}
+                textAnchor="middle"
+                fill="#1e1b4b"
+                fontSize={11}
+                fontWeight={600}
+                fontFamily="Inter, system-ui, sans-serif"
+                style={{ userSelect: "none" }}
+              >
+                {labelText}
+              </text>
+            </g>
+          )}
         </g>
       )}
 

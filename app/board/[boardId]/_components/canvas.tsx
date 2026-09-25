@@ -477,6 +477,30 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
           { id: nanoid(), component: "Celebrity / Hot-Key Fanout", severity: "Critical", risk: "Users with 50M+ followers cause unbounded write queue backpressure", mitigation: "Hybrid push/pull model: pull for celebrities, push for standard users" },
           { id: nanoid(), component: "Network Egress Saturation", severity: "Medium", risk: "Global video streaming saturates datacenter bandwidth", mitigation: "Geo-distributed CDN edge caching with TLS session resumption" },
         ]
+      } else if (docType === "schema") {
+        width = 460
+        height = 360
+        title = "users"
+        defaultItems = [
+          { id: nanoid(), name: "id", dataType: "uuid", keyType: "PK", isNullable: false },
+          { id: nanoid(), name: "username", dataType: "varchar", keyType: "UQ", isNullable: false },
+          { id: nanoid(), name: "email", dataType: "varchar", keyType: "UQ", isNullable: false },
+          { id: nanoid(), name: "password_hash", dataType: "varchar", keyType: "none", isNullable: false },
+          { id: nanoid(), name: "profile_data", dataType: "jsonb", keyType: "none", isNullable: true },
+          { id: nanoid(), name: "is_active", dataType: "boolean", keyType: "none", isNullable: false },
+          { id: nanoid(), name: "created_at", dataType: "timestamp", keyType: "none", isNullable: false },
+        ]
+      } else if (docType === "flow") {
+        width = 540
+        height = 360
+        title = "Authentication & Feed Request Flow"
+        defaultItems = [
+          { id: nanoid(), step: 1, from: "Client App", to: "CDN / Edge", protocol: "HTTPS", action: "GET /api/v1/feed with Bearer JWT token" },
+          { id: nanoid(), step: 2, from: "CDN / Edge", to: "API Gateway", protocol: "HTTPS", action: "WAF rate limit check & route to internal VPC" },
+          { id: nanoid(), step: 3, from: "API Gateway", to: "Auth Service", protocol: "gRPC", action: "Validate JWT signature & verify user session" },
+          { id: nanoid(), step: 4, from: "API Gateway", to: "Redis Cache", protocol: "Redis", action: "Check user timeline feed cache (LRU hit/miss)" },
+          { id: nanoid(), step: 5, from: "API Gateway", to: "Postgres Read", protocol: "SQL", action: "On cache miss: query top 20 posts with author joins" },
+        ]
       }
 
       const layer = new LiveObject({
@@ -981,40 +1005,9 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   const resizeSelectedLayer = useMutation(
     ({ storage, self }, point: Point) => {
       if (canvasState.mode !== CanvasMode.Resizing) return
-      let bounds = resizeBounds(canvasState.initialBounds, canvasState.corner, point)
+      const bounds = resizeBounds(canvasState.initialBounds, canvasState.corner, point)
       const layer = storage.get("layers").get(self.presence.selection[0])
-      if (!layer) return
-
-      // For Doc layers: when dragging diagonal corners, preserve aspect ratio for proportional scaling
-      const isCorner =
-        ((canvasState.corner & (Side.Left | Side.Right)) !== 0) &&
-        ((canvasState.corner & (Side.Top | Side.Bottom)) !== 0)
-      
-      const layerType = (layer as any).get("type")
-      if (layerType === LayerType.Doc && isCorner) {
-        const initial = canvasState.initialBounds
-        const scale = Math.max(0.25, Math.max(bounds.width / initial.width, bounds.height / initial.height))
-        const newWidth = Math.round(initial.width * scale)
-        const newHeight = Math.round(initial.height * scale)
-
-        let newX = bounds.x
-        let newY = bounds.y
-        if ((canvasState.corner & Side.Left) !== 0) {
-          newX = initial.x + initial.width - newWidth
-        }
-        if ((canvasState.corner & Side.Top) !== 0) {
-          newY = initial.y + initial.height - newHeight
-        }
-
-        bounds = {
-          x: newX,
-          y: newY,
-          width: newWidth,
-          height: newHeight,
-        }
-      }
-
-      layer.update(bounds)
+      if (layer) layer.update(bounds)
     }, [canvasState]
   )
 

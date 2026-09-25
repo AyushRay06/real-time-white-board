@@ -54,6 +54,8 @@ import {
   Globe,
   Calculator,
   AlertTriangle,
+  Database,
+  ListOrdered,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -249,6 +251,17 @@ export const SelectionTools = memo(
       [soleLayerId]
     )
 
+    const setSequenceStep = useMutation(
+      ({ storage }, step: number | undefined) => {
+        if (!soleLayerId) return
+        const layer = storage.get("layers").get(soleLayerId)
+        if (layer && layer.get("type") === LayerType.Arrow) {
+          ;(layer as any).set("sequenceStep", step)
+        }
+      },
+      [soleLayerId]
+    )
+
     // Component health status mutation
     const setComponentStatus = useMutation(
       ({ storage }, newStatus: ComponentStatus) => {
@@ -368,6 +381,7 @@ export const SelectionTools = memo(
     const currentTextDecoration: TextDecoration = soleLayer && "textDecoration" in soleLayer ? (soleLayer.textDecoration || "none") : "none"
     const currentTextAlign: TextAlign = soleLayer && "textAlign" in soleLayer ? (soleLayer.textAlign || (isText ? "left" : "center")) : (isText ? "left" : "center")
     const currentDirection = isArrow && soleLayer && "direction" in soleLayer ? (soleLayer.direction || "forward") : "forward"
+    const currentSequenceStep: number | undefined = isArrow && soleLayer && "sequenceStep" in soleLayer ? (soleLayer.sequenceStep as number | undefined) : undefined
     const currentStatus: ComponentStatus = isComponent && soleLayer && "status" in soleLayer && soleLayer.status ? (soleLayer.status as ComponentStatus) : "none"
     const compType = isComponent && soleLayer && "componentType" in soleLayer ? (soleLayer.componentType as SysComponent) : null
     const CompIcon = compType ? ICON_MAP[compType] || Box : Box
@@ -571,6 +585,10 @@ export const SelectionTools = memo(
                   ? isLight ? "bg-indigo-50 text-indigo-600" : "bg-indigo-500/20 text-indigo-400"
                   : docType === "estimation"
                   ? isLight ? "bg-amber-50 text-amber-600" : "bg-amber-500/20 text-amber-400"
+                  : docType === "schema"
+                  ? isLight ? "bg-cyan-50 text-cyan-600" : "bg-cyan-500/20 text-cyan-400"
+                  : docType === "flow"
+                  ? isLight ? "bg-violet-50 text-violet-600" : "bg-violet-500/20 text-violet-400"
                   : isLight ? "bg-rose-50 text-rose-600" : "bg-rose-500/20 text-rose-400"
               }`}
             >
@@ -580,6 +598,10 @@ export const SelectionTools = memo(
                 <Globe className="w-3.5 h-3.5" />
               ) : docType === "estimation" ? (
                 <Calculator className="w-3.5 h-3.5" />
+              ) : docType === "schema" ? (
+                <Database className="w-3.5 h-3.5" />
+              ) : docType === "flow" ? (
+                <ListOrdered className="w-3.5 h-3.5" />
               ) : (
                 <AlertTriangle className="w-3.5 h-3.5" />
               )}
@@ -1082,6 +1104,47 @@ export const SelectionTools = memo(
                   <ArrowRightLeft className="w-3.5 h-3.5" />
                 </button>
               </Hint>
+            </div>
+
+            {/* Sequence Flow Step Badge */}
+            <div className={`flex items-center p-0.5 rounded-lg border ${buttonPillClass}`}>
+              <Hint label={currentSequenceStep ? `Sequence Step ${currentSequenceStep} (Click to clear)` : "Add Sequence Step # to Arrow"}>
+                <button
+                  onClick={() => {
+                    if (currentSequenceStep) {
+                      setSequenceStep(undefined)
+                    } else {
+                      setSequenceStep(1)
+                    }
+                  }}
+                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-bold font-mono transition ${
+                    currentSequenceStep
+                      ? "bg-indigo-500 text-white shadow-sm"
+                      : buttonPillInactive
+                  }`}
+                >
+                  <ListOrdered className="w-3.5 h-3.5" />
+                  <span>{currentSequenceStep ? `Step ${currentSequenceStep}` : "Step #"}</span>
+                </button>
+              </Hint>
+
+              {currentSequenceStep && (
+                <div className="flex items-center ml-0.5 border-l border-neutral-300/40 dark:border-neutral-700/60 pl-0.5">
+                  <button
+                    onClick={() => setSequenceStep(Math.max(1, currentSequenceStep - 1))}
+                    disabled={currentSequenceStep <= 1}
+                    className={`px-1 py-0.5 text-[10px] font-bold rounded ${currentSequenceStep <= 1 ? "opacity-30 cursor-not-allowed" : buttonPillInactive}`}
+                  >
+                    -
+                  </button>
+                  <button
+                    onClick={() => setSequenceStep(currentSequenceStep + 1)}
+                    className={`px-1 py-0.5 text-[10px] font-bold rounded ${buttonPillInactive}`}
+                  >
+                    +
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}

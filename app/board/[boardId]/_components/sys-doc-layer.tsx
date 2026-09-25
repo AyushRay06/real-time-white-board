@@ -8,6 +8,11 @@ import {
   ApiEndpointItem,
   EstimationItem,
   BottleneckItem,
+  SchemaColumnItem,
+  SchemaDataType,
+  SchemaKeyType,
+  FlowStepItem,
+  FlowProtocol,
 } from "@/types/canvas"
 import { useMutation } from "@liveblocks/react/suspense"
 import { useCanvasTheme } from "./canvas-theme-context"
@@ -23,6 +28,11 @@ import {
   ArrowRight,
   Flame,
   ShieldAlert,
+  Database,
+  Key,
+  ListOrdered,
+  Sparkles,
+  Route,
 } from "lucide-react"
 import { nanoid } from "nanoid"
 
@@ -44,6 +54,21 @@ const HTTP_METHODS: ("GET" | "POST" | "PUT" | "DELETE" | "PATCH")[] = [
 
 const PRIORITIES: ("P0" | "P1" | "P2")[] = ["P0", "P1", "P2"]
 const SEVERITIES: ("Critical" | "High" | "Medium")[] = ["Critical", "High", "Medium"]
+
+const SCHEMA_DATA_TYPES: SchemaDataType[] = [
+  "uuid",
+  "varchar",
+  "text",
+  "bigint",
+  "integer",
+  "boolean",
+  "timestamp",
+  "jsonb",
+  "float",
+]
+
+const SCHEMA_KEYS: SchemaKeyType[] = ["none", "PK", "FK", "UQ"]
+const FLOW_PROTOCOLS: FlowProtocol[] = ["HTTPS", "gRPC", "WebSocket", "Kafka", "SQL", "Redis"]
 
 export const SysDocLayer = memo(
   ({ id, layer, onPointerDown, selectionColor }: SysDocLayerProps) => {
@@ -134,6 +159,41 @@ export const SysDocLayer = memo(
       updateItems([...currentList, newItem])
     }
 
+    const addSchemaColumn = () => {
+      const currentList: SchemaColumnItem[] = [...items]
+      const newItem: SchemaColumnItem = {
+        id: nanoid(),
+        name: `column_${currentList.length + 1}`,
+        dataType: "varchar",
+        keyType: "none",
+        isNullable: true,
+      }
+      updateItems([...currentList, newItem])
+    }
+
+    const addCommonAuditColumns = () => {
+      const currentList: SchemaColumnItem[] = [...items]
+      const newItems: SchemaColumnItem[] = [
+        { id: nanoid(), name: "created_at", dataType: "timestamp", keyType: "none", isNullable: false },
+        { id: nanoid(), name: "updated_at", dataType: "timestamp", keyType: "none", isNullable: false },
+      ]
+      updateItems([...currentList, ...newItems])
+    }
+
+    const addFlowStep = () => {
+      const currentList: FlowStepItem[] = [...items]
+      const stepNum = currentList.length + 1
+      const newItem: FlowStepItem = {
+        id: nanoid(),
+        step: stepNum,
+        from: `Service ${stepNum}`,
+        to: `Target ${stepNum}`,
+        protocol: "HTTPS",
+        action: "Process payload or execute query",
+      }
+      updateItems([...currentList, newItem])
+    }
+
     const removeItem = (itemId: string) => {
       const filtered = items.filter((item: any) => item.id !== itemId)
       updateItems(filtered)
@@ -176,6 +236,22 @@ export const SysDocLayer = memo(
             badgeColor: isDark ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-amber-50 text-amber-700 border-amber-200",
             headerBg: isDark ? "from-amber-950/40 via-slate-900/60 to-slate-900/90" : "from-amber-50/70 via-white to-white",
           }
+        case "schema":
+          return {
+            title: title || "users (Table Schema)",
+            icon: Database,
+            accent: "cyan",
+            badgeColor: isDark ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" : "bg-cyan-50 text-cyan-700 border-cyan-200",
+            headerBg: isDark ? "from-cyan-950/40 via-slate-900/60 to-slate-900/90" : "from-cyan-50/70 via-white to-white",
+          }
+        case "flow":
+          return {
+            title: title || "Request Lifecycle & Data Flow",
+            icon: ListOrdered,
+            accent: "violet",
+            badgeColor: isDark ? "bg-violet-500/20 text-violet-400 border-violet-500/30" : "bg-violet-50 text-violet-700 border-violet-200",
+            headerBg: isDark ? "from-violet-950/40 via-slate-900/60 to-slate-900/90" : "from-violet-50/70 via-white to-white",
+          }
         case "bottlenecks":
         default:
           return {
@@ -189,31 +265,6 @@ export const SysDocLayer = memo(
     }, [docType, title, isDark])
 
     const HeaderIcon = config.icon
-
-    // Base dimensions for the specification card
-    const baseWidth = useMemo(() => {
-      switch (docType) {
-        case "requirements": return 520
-        case "api": return 540
-        case "estimation": return 480
-        case "bottlenecks": return 540
-        default: return 520
-      }
-    }, [docType])
-
-    const baseHeight = useMemo(() => {
-      switch (docType) {
-        case "requirements": return 380
-        case "api": return 360
-        case "estimation": return 360
-        case "bottlenecks": return 380
-        default: return 360
-      }
-    }, [docType])
-
-    // Scale factors to scale up or down smoothly on resize without clipping content
-    const scaleX = width / baseWidth
-    const scaleY = height / baseHeight
 
     // Card background classes
     const cardBg = isDark
@@ -241,13 +292,7 @@ export const SysDocLayer = memo(
         className="cursor-move select-none"
       >
         <div
-          style={{
-            width: `${baseWidth}px`,
-            height: `${baseHeight}px`,
-            transform: `scale(${scaleX}, ${scaleY})`,
-            transformOrigin: "0 0",
-          }}
-          className={`flex flex-col rounded-2xl border backdrop-blur-xl overflow-hidden font-sans ${cardBg}`}
+          className={`w-full h-full flex flex-col rounded-2xl border backdrop-blur-xl transition-all duration-150 overflow-hidden font-sans ${cardBg}`}
         >
           {/* ── CARD HEADER ── */}
           <div
@@ -560,6 +605,197 @@ export const SysDocLayer = memo(
                 })}
               </div>
             )}
+
+            {/* 5. DATABASE SCHEMA & ERD TABLE */}
+            {docType === "schema" && (
+              <div className="space-y-1">
+                {/* Column header row */}
+                <div
+                  className={`grid grid-cols-[48px_1fr_90px_72px_24px] items-center px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded ${
+                    isDark ? "bg-slate-950/60 text-slate-400" : "bg-slate-100 text-slate-500"
+                  }`}
+                >
+                  <span>Key</span>
+                  <span>Field Name</span>
+                  <span>Type</span>
+                  <span>Null</span>
+                  <span />
+                </div>
+
+                {items.map((item: SchemaColumnItem) => {
+                  const keyColors: Record<string, string> = {
+                    PK: isDark ? "bg-amber-500/25 text-amber-300 border-amber-500/40" : "bg-amber-50 text-amber-800 border-amber-300",
+                    FK: isDark ? "bg-cyan-500/25 text-cyan-300 border-cyan-500/40" : "bg-cyan-50 text-cyan-800 border-cyan-300",
+                    UQ: isDark ? "bg-purple-500/25 text-purple-300 border-purple-500/40" : "bg-purple-50 text-purple-800 border-purple-300",
+                    none: isDark ? "bg-slate-800/40 text-slate-400 border-slate-700/60" : "bg-slate-50 text-slate-400 border-slate-200",
+                  }
+
+                  return (
+                    <div
+                      key={item.id}
+                      className={`grid grid-cols-[48px_1fr_90px_72px_24px] items-center gap-1.5 px-2 py-1 rounded-lg border transition group text-xs ${rowBorder}`}
+                    >
+                      {/* Key Chip Toggle */}
+                      <button
+                        onClick={() => {
+                          const idx = SCHEMA_KEYS.indexOf(item.keyType || "none")
+                          const next = SCHEMA_KEYS[(idx + 1) % SCHEMA_KEYS.length]
+                          updateItemField(item.id, "keyType", next)
+                        }}
+                        title="Click to cycle PK (Primary Key), FK (Foreign Key), UQ (Unique), none"
+                        className={`text-[9px] font-mono font-bold py-0.5 px-1 rounded border flex items-center justify-center transition shrink-0 ${
+                          keyColors[item.keyType || "none"]
+                        }`}
+                      >
+                        {item.keyType === "PK" ? "PK" : item.keyType === "FK" ? "FK" : item.keyType === "UQ" ? "UQ" : "—"}
+                      </button>
+
+                      {/* Field Name */}
+                      <input
+                        type="text"
+                        value={item.name}
+                        onChange={(e) => updateItemField(item.id, "name", e.target.value)}
+                        placeholder="field_name"
+                        className={`font-mono text-xs font-semibold ${inputClass}`}
+                      />
+
+                      {/* Data Type Selector */}
+                      <button
+                        onClick={() => {
+                          const idx = SCHEMA_DATA_TYPES.indexOf(item.dataType || "varchar")
+                          const next = SCHEMA_DATA_TYPES[(idx + 1) % SCHEMA_DATA_TYPES.length]
+                          updateItemField(item.id, "dataType", next)
+                        }}
+                        title="Click to cycle data type"
+                        className={`text-[10px] font-mono px-1.5 py-0.5 rounded border transition truncate text-left ${
+                          isDark
+                            ? "bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-500"
+                            : "bg-slate-100 text-slate-700 border-slate-200 hover:border-slate-300"
+                        }`}
+                      >
+                        {item.dataType || "varchar"}
+                      </button>
+
+                      {/* Nullable Toggle */}
+                      <button
+                        onClick={() => updateItemField(item.id, "isNullable", !item.isNullable)}
+                        className={`text-[9px] font-semibold py-0.5 px-1 rounded border transition text-center shrink-0 ${
+                          item.isNullable
+                            ? isDark
+                              ? "bg-sky-500/15 text-sky-400 border-sky-500/30"
+                              : "bg-sky-50 text-sky-700 border-sky-200"
+                            : isDark
+                            ? "bg-slate-800/40 text-slate-400 border-slate-700/50"
+                            : "bg-slate-100 text-slate-500 border-slate-200"
+                        }`}
+                      >
+                        {item.isNullable ? "NULL" : "NOT NULL"}
+                      </button>
+
+                      {/* Delete */}
+                      <button
+                        onClick={() => removeItem(item.id)}
+                        className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-rose-500 transition-opacity shrink-0"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+
+            {/* 6. REQUEST LIFECYCLE & DATA FLOW STEPS */}
+            {docType === "flow" && (
+              <div className="space-y-1">
+                {/* Header Row */}
+                <div
+                  className={`grid grid-cols-[28px_140px_70px_1fr_24px] items-center px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded ${
+                    isDark ? "bg-slate-950/60 text-slate-400" : "bg-slate-100 text-slate-500"
+                  }`}
+                >
+                  <span>#</span>
+                  <span>From ➔ To</span>
+                  <span>Protocol</span>
+                  <span>Action / Request</span>
+                  <span />
+                </div>
+
+                {items.map((item: FlowStepItem, idx: number) => {
+                  const protoColors: Record<string, string> = {
+                    HTTPS: isDark ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" : "bg-emerald-50 text-emerald-700 border-emerald-200",
+                    gRPC: isDark ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/40" : "bg-indigo-50 text-indigo-700 border-indigo-200",
+                    WebSocket: isDark ? "bg-purple-500/20 text-purple-300 border-purple-500/40" : "bg-purple-50 text-purple-700 border-purple-200",
+                    Kafka: isDark ? "bg-amber-500/20 text-amber-300 border-amber-500/40" : "bg-amber-50 text-amber-700 border-amber-200",
+                    SQL: isDark ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40" : "bg-cyan-50 text-cyan-700 border-cyan-200",
+                    Redis: isDark ? "bg-rose-500/20 text-rose-300 border-rose-500/40" : "bg-rose-50 text-rose-700 border-rose-200",
+                  }
+
+                  return (
+                    <div
+                      key={item.id}
+                      className={`grid grid-cols-[28px_140px_70px_1fr_24px] items-center gap-1.5 px-2 py-1 rounded-lg border transition group text-xs ${rowBorder}`}
+                    >
+                      {/* Step Number Badge */}
+                      <div className="w-5 h-5 rounded-full bg-violet-500 text-white font-bold text-[10px] flex items-center justify-center shrink-0 shadow-xs">
+                        {idx + 1}
+                      </div>
+
+                      {/* From ➔ To */}
+                      <div className="flex items-center gap-1 text-[11px] font-medium">
+                        <input
+                          type="text"
+                          value={item.from}
+                          onChange={(e) => updateItemField(item.id, "from", e.target.value)}
+                          placeholder="Source"
+                          className={`w-14 truncate ${inputClass}`}
+                        />
+                        <span className="text-slate-400">➔</span>
+                        <input
+                          type="text"
+                          value={item.to}
+                          onChange={(e) => updateItemField(item.id, "to", e.target.value)}
+                          placeholder="Target"
+                          className={`w-14 truncate ${inputClass}`}
+                        />
+                      </div>
+
+                      {/* Protocol Chip */}
+                      <button
+                        onClick={() => {
+                          const pIdx = FLOW_PROTOCOLS.indexOf(item.protocol || "HTTPS")
+                          const next = FLOW_PROTOCOLS[(pIdx + 1) % FLOW_PROTOCOLS.length]
+                          updateItemField(item.id, "protocol", next)
+                        }}
+                        title="Click to cycle protocol"
+                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded border transition text-center shrink-0 ${
+                          protoColors[item.protocol || "HTTPS"] || protoColors.HTTPS
+                        }`}
+                      >
+                        {item.protocol || "HTTPS"}
+                      </button>
+
+                      {/* Action / Request payload */}
+                      <input
+                        type="text"
+                        value={item.action}
+                        onChange={(e) => updateItemField(item.id, "action", e.target.value)}
+                        placeholder="Action or query payload..."
+                        className={`font-medium ${inputClass}`}
+                      />
+
+                      {/* Delete */}
+                      <button
+                        onClick={() => removeItem(item.id)}
+                        className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-rose-500 transition-opacity shrink-0"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
 
           {/* ── CARD FOOTER (ADD ROW ACTION) ── */}
@@ -635,6 +871,47 @@ export const SysDocLayer = memo(
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>+ Add Bottleneck & Mitigation</span>
+              </button>
+            )}
+
+            {docType === "schema" && (
+              <div className="flex items-center gap-1.5 w-full">
+                <button
+                  onClick={addSchemaColumn}
+                  className={`flex-1 flex items-center justify-center gap-1.5 py-1 rounded-lg border text-xs font-semibold transition ${
+                    isDark
+                      ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20"
+                      : "border-cyan-200 bg-cyan-50 text-cyan-700 hover:bg-cyan-100"
+                  }`}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>+ Add Column</span>
+                </button>
+                <button
+                  onClick={addCommonAuditColumns}
+                  className={`flex items-center justify-center gap-1 py-1 px-2.5 rounded-lg border text-xs font-medium transition ${
+                    isDark
+                      ? "border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700"
+                      : "border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
+                >
+                  <Sparkles className="w-3 h-3 text-cyan-500" />
+                  <span>+ Audit Fields</span>
+                </button>
+              </div>
+            )}
+
+            {docType === "flow" && (
+              <button
+                onClick={addFlowStep}
+                className={`w-full flex items-center justify-center gap-1.5 py-1 rounded-lg border text-xs font-semibold transition ${
+                  isDark
+                    ? "border-violet-500/30 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20"
+                    : "border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100"
+                }`}
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>+ Add Flow Step</span>
               </button>
             )}
           </div>

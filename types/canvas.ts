@@ -93,7 +93,7 @@ export enum LayerType {
   Doc,
 }
 
-export type DocType = "requirements" | "api" | "estimation" | "bottlenecks"
+export type DocType = "requirements" | "api" | "estimation" | "bottlenecks" | "schema" | "flow"
 
 export type RequirementItem = {
   id: string
@@ -124,6 +124,39 @@ export type BottleneckItem = {
   risk: string
   severity: "High" | "Medium" | "Critical"
   mitigation: string
+}
+
+export type SchemaDataType =
+  | "uuid"
+  | "varchar"
+  | "text"
+  | "bigint"
+  | "integer"
+  | "boolean"
+  | "timestamp"
+  | "jsonb"
+  | "float"
+
+export type SchemaKeyType = "PK" | "FK" | "UQ" | "none"
+
+export type SchemaColumnItem = {
+  id: string
+  name: string
+  dataType: SchemaDataType
+  keyType?: SchemaKeyType
+  isNullable?: boolean
+  references?: string
+}
+
+export type FlowProtocol = "HTTPS" | "gRPC" | "WebSocket" | "Kafka" | "SQL" | "Redis"
+
+export type FlowStepItem = {
+  id: string
+  step: number
+  from: string
+  to: string
+  action: string
+  protocol?: FlowProtocol
 }
 
 export type DocLayer = {
@@ -260,6 +293,7 @@ export type ArrowLayer = {
   height: number
   fill: Color
   value?: string
+  sequenceStep?: number
   arrowStyle?: ArrowStyle
   strokePattern?: StrokePattern
   direction?: ArrowDirection
