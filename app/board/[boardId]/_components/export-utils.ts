@@ -390,18 +390,12 @@ function renderDiagramDirectToCanvas({
         const doc = layer as DocLayer
         const docType = doc.docType || "requirements"
 
-        // Drop shadow
-        ctx.fillStyle = isDark ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.08)"
-        ctx.beginPath()
-        ctx.roundRect(doc.x + 2, doc.y + 4, doc.width, doc.height, 16)
-        ctx.fill()
-
-        // Card body
-        ctx.fillStyle = isDark ? "#0f172a" : "#ffffff"
-        ctx.strokeStyle = isDark ? "#334155" : "#e2e8f0"
+        // Card body (flat, no drop shadow)
+        ctx.fillStyle = isDark ? "rgba(15, 23, 42, 0.9)" : "rgba(255, 255, 255, 0.9)"
+        ctx.strokeStyle = doc.fill ? colorToCss(doc.fill) : (isDark ? "#334155" : "#e2e8f0")
         ctx.lineWidth = 1.5
         ctx.beginPath()
-        ctx.roundRect(doc.x, doc.y, doc.width, doc.height, 16)
+        ctx.roundRect(doc.x, doc.y, doc.width, doc.height, 14)
         ctx.fill()
         ctx.stroke()
 

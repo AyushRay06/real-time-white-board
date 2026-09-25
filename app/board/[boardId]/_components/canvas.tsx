@@ -39,6 +39,7 @@ import { ArchitectureSimulator } from "./architecture-simulator"
 import { ArchitectureTourBar } from "./architecture-tour-bar"
 import { useCanvasTheme } from "./canvas-theme-context"
 import { exportDiagram } from "./export-utils"
+import { BASE_TABLE_WIDTHS, computeDocBaseHeight } from "./sys-doc-layer"
 
 // ─── Preview line while connecting ──────────────────────────────────────────
 function ConnectingPreviewLine({ fromLayerId, to }: { fromLayerId: string; to: Point }) {
@@ -425,14 +426,10 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       const liveLayerIds = storage.get("layerIds")
       const layerId = nanoid()
 
-      let width = 500
-      let height = 360
       let title = "System Requirements"
       let defaultItems: any[] = []
 
       if (docType === "requirements") {
-        width = 520
-        height = 380
         title = "System Requirements"
         defaultItems = [
           { id: nanoid(), type: "functional", text: "User can create and publish posts with rich media", priority: "P0" },
@@ -445,8 +442,6 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
           { id: nanoid(), type: "non-functional", text: "Eventual Consistency: Acceptable for follower feeds", priority: "P1" },
         ]
       } else if (docType === "api") {
-        width = 540
-        height = 360
         title = "API Endpoints Specification"
         defaultItems = [
           { id: nanoid(), method: "POST", path: "/api/v1/posts", description: "Create a new post with text & media", responseCode: "201" },
@@ -456,8 +451,6 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
           { id: nanoid(), method: "DELETE", path: "/api/v1/posts/{id}", description: "Delete post & invalidate cache tags", responseCode: "204" },
         ]
       } else if (docType === "estimation") {
-        width = 480
-        height = 360
         title = "Capacity & Estimations (Back-of-Envelope)"
         defaultItems = [
           { id: nanoid(), metric: "Daily Active Users (DAU)", value: "100 Million", unit: "Users / Day", notes: "10:1 Read to Write ratio" },
@@ -468,8 +461,6 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
           { id: nanoid(), metric: "Memory Cache (RAM)", value: "1.2 TB RAM", unit: "RAM", notes: "80/20 rule: Cache 20% hot daily read data" },
         ]
       } else if (docType === "bottlenecks") {
-        width = 540
-        height = 380
         title = "Bottlenecks & SPOF Analysis"
         defaultItems = [
           { id: nanoid(), component: "Database Primary Write Hotspot", severity: "Critical", risk: "Single primary database instance will saturate on write IOPS", mitigation: "Horizontal range/hash sharding by user_id + write buffer" },
@@ -478,8 +469,6 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
           { id: nanoid(), component: "Network Egress Saturation", severity: "Medium", risk: "Global video streaming saturates datacenter bandwidth", mitigation: "Geo-distributed CDN edge caching with TLS session resumption" },
         ]
       } else if (docType === "schema") {
-        width = 460
-        height = 360
         title = "users"
         defaultItems = [
           { id: nanoid(), name: "id", dataType: "uuid", keyType: "PK", isNullable: false },
@@ -491,8 +480,6 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
           { id: nanoid(), name: "created_at", dataType: "timestamp", keyType: "none", isNullable: false },
         ]
       } else if (docType === "flow") {
-        width = 540
-        height = 360
         title = "Authentication & Feed Request Flow"
         defaultItems = [
           { id: nanoid(), step: 1, from: "Client App", to: "CDN / Edge", protocol: "HTTPS", action: "GET /api/v1/feed with Bearer JWT token" },
@@ -502,6 +489,9 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
           { id: nanoid(), step: 5, from: "API Gateway", to: "Postgres Read", protocol: "SQL", action: "On cache miss: query top 20 posts with author joins" },
         ]
       }
+
+      const width = BASE_TABLE_WIDTHS[docType] || 480
+      const height = computeDocBaseHeight(docType, defaultItems.length)
 
       const layer = new LiveObject({
         type: LayerType.Doc,

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { memo, useState, useMemo } from "react"
+import React, { memo, useState, useMemo, useEffect } from "react"
 import {
   DocLayer,
   DocType,
@@ -69,13 +69,27 @@ const SCHEMA_DATA_TYPES: SchemaDataType[] = [
 const SCHEMA_KEYS: SchemaKeyType[] = ["none", "PK", "FK", "UQ"]
 const FLOW_PROTOCOLS: FlowProtocol[] = ["HTTPS", "gRPC", "WebSocket", "Kafka", "SQL", "Redis"]
 
-const BASE_DIMENSIONS: Record<DocType, { width: number; height: number }> = {
-  schema: { width: 460, height: 360 },
-  estimation: { width: 480, height: 360 },
-  requirements: { width: 520, height: 380 },
-  bottlenecks: { width: 540, height: 380 },
-  api: { width: 540, height: 360 },
-  flow: { width: 540, height: 360 },
+export const BASE_TABLE_WIDTHS: Record<DocType, number> = {
+  schema: 460,
+  estimation: 480,
+  requirements: 520,
+  bottlenecks: 540,
+  api: 540,
+  flow: 540,
+}
+
+export const getDocRowHeight = (docType: DocType) => (docType === "bottlenecks" ? 46 : 32)
+export const getDocHeaderHeight = () => 40
+export const getDocTabsHeight = (docType: DocType) => (docType === "requirements" ? 30 : 0)
+export const getDocFooterHeight = () => 36
+
+export const computeDocBaseHeight = (docType: DocType, itemCount: number): number => {
+  return (
+    getDocHeaderHeight() +
+    getDocTabsHeight(docType) +
+    itemCount * getDocRowHeight(docType) +
+    getDocFooterHeight()
+  )
 }
 
 export const SysDocLayer = memo(
@@ -93,7 +107,7 @@ export const SysDocLayer = memo(
     const { theme } = useCanvasTheme()
     const isDark = theme === "dark"
 
-    const baseWidth = BASE_DIMENSIONS[docType]?.width || 480
+    const baseWidth = BASE_TABLE_WIDTHS[docType] || 480
     const scale = Math.max(0.2, width / baseWidth)
 
     const [activeTab, setActiveTab] = useState<string>("all")
@@ -107,6 +121,27 @@ export const SysDocLayer = memo(
       }
     }, [itemsJson])
 
+    const baseHeight = useMemo(() => computeDocBaseHeight(docType, items.length), [docType, items.length])
+    const renderedHeight = Math.round(baseHeight * scale)
+
+    // Sync layer height in storage so selection box perfectly hugs the card
+    const syncLayerHeight = useMutation(
+      ({ storage }, newH: number) => {
+        const liveLayers = storage.get("layers")
+        const currentLayer = liveLayers.get(id)
+        if (currentLayer && currentLayer.get("height") !== newH) {
+          ;(currentLayer as any).set("height", newH)
+        }
+      },
+      [id]
+    )
+
+    useEffect(() => {
+      if (Math.abs(height - renderedHeight) > 1) {
+        syncLayerHeight(renderedHeight)
+      }
+    }, [height, renderedHeight, syncLayerHeight])
+
     // Liveblocks mutation to update items
     const updateItems = useMutation(
       ({ storage }, newItems: any[]) => {
@@ -114,16 +149,9 @@ export const SysDocLayer = memo(
         const currentLayer = liveLayers.get(id)
         if (currentLayer) {
           ;(currentLayer as any).set("itemsJson", JSON.stringify(newItems))
-          const rowHeight = docType === "bottlenecks" ? 40 : docType === "api" || docType === "flow" ? 38 : 34
-          const headerHeight = 44
-          const tabsHeight = docType === "requirements" ? 36 : 0
-          const footerHeight = 42
-          const naturalBaseH = Math.max(
-            BASE_DIMENSIONS[docType]?.height || 360,
-            headerHeight + tabsHeight + newItems.length * rowHeight + footerHeight
-          )
+          const newBaseH = computeDocBaseHeight(docType, newItems.length)
           const currentScale = ((currentLayer as any).get("width") || baseWidth) / baseWidth
-          ;(currentLayer as any).set("height", Math.round(naturalBaseH * currentScale))
+          ;(currentLayer as any).set("height", Math.round(newBaseH * currentScale))
         }
       },
       [id, docType, baseWidth]
@@ -302,10 +330,10 @@ export const SysDocLayer = memo(
     const accentRgba = customRgba || config.defaultRgba
     const HeaderIcon = config.icon
 
-    // Card styling: translucent glassmorphism
+    // Card styling: translucent glassmorphism without shadows or ambient hue
     const cardBg = isDark
-      ? "bg-slate-900/80 backdrop-blur-xl text-slate-100 shadow-[0_16px_40px_rgba(0,0,0,0.5)]"
-      : "bg-white/80 backdrop-blur-xl text-slate-900 shadow-[0_16px_40px_rgba(0,0,0,0.08)]"
+      ? "bg-slate-900/80 backdrop-blur-xl text-slate-100"
+      : "bg-white/80 backdrop-blur-xl text-slate-900"
 
     const rowDivider = isDark ? "border-slate-800/60" : "border-slate-100"
     const inputSeamless = "bg-transparent outline-none transition-colors"
@@ -324,7 +352,7 @@ export const SysDocLayer = memo(
         x={x}
         y={y}
         width={width}
-        height={height}
+        height={renderedHeight}
         onPointerDown={handlePointerDown}
         style={{
           outline: isConnectingFrom
@@ -342,25 +370,21 @@ export const SysDocLayer = memo(
         <div
           style={{
             width: `${baseWidth}px`,
-            height: `${Math.round(height / scale)}px`,
+            height: `${baseHeight}px`,
             transform: `scale(${scale})`,
             transformOrigin: "0 0",
             borderColor: accentColor ? `${accentColor}85` : isDark ? "rgba(51, 65, 85, 0.8)" : "rgba(226, 232, 240, 0.9)",
             borderWidth: "1.5px",
             borderStyle: "solid",
-            boxShadow: accentColor
-              ? `0 0 20px ${accentColor}18, 0 16px 40px rgba(0,0,0,${isDark ? "0.55" : "0.08"})`
-              : isDark
-              ? "0 16px 40px rgba(0,0,0,0.55)"
-              : "0 16px 40px rgba(0,0,0,0.08)",
+            boxShadow: "none",
           }}
-          className={`flex flex-col rounded-xl transition-all duration-150 overflow-hidden font-sans ${cardBg} ${
-            isConnectingFrom ? "ring-2 ring-indigo-500 shadow-[0_0_24px_rgba(99,102,241,0.35)]" : ""
+          className={`flex flex-col rounded-xl overflow-hidden font-sans ${cardBg} ${
+            isConnectingFrom ? "ring-2 ring-indigo-500" : ""
           }`}
         >
           {/* ── CARD HEADER (Clean, Uncluttered, Flat, Uniform Border) ── */}
           <div
-            className={`px-3 py-2 border-b flex items-center justify-between gap-2 shrink-0 ${
+            className={`h-[40px] px-3 border-b flex items-center justify-between gap-2 shrink-0 ${
               isDark ? "border-slate-800/80 bg-slate-900/50" : "border-slate-200/80 bg-slate-100/60"
             }`}
           >
@@ -396,7 +420,7 @@ export const SysDocLayer = memo(
 
           {/* ── REQUIREMENTS TABS (Only for requirements) ── */}
           {docType === "requirements" && (
-            <div className={`px-3 py-1 border-b flex items-center gap-1 text-[11px] shrink-0 ${rowDivider}`}>
+            <div className={`h-[30px] px-3 border-b flex items-center gap-1 text-[11px] shrink-0 ${rowDivider}`}>
               {["all", "functional", "non-functional"].map((tab) => (
                 <button
                   key={tab}
@@ -414,9 +438,9 @@ export const SysDocLayer = memo(
             </div>
           )}
 
-          {/* ── CARD BODY (FLAT TABULAR LIST - NO SCROLLBARS) ── */}
+          {/* ── CARD BODY (FLAT TABULAR LIST - PERFECT FIT NO UNNECESSARY SPACE) ── */}
           <div
-            className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            className="divide-y divide-slate-100 dark:divide-slate-800/60 shrink-0 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
             onPointerDown={(e) => e.stopPropagation()}
           >
             {/* 1. REQUIREMENTS FLAT LIST */}
@@ -426,7 +450,7 @@ export const SysDocLayer = memo(
                 .map((item: RequirementItem) => (
                   <div
                     key={item.id}
-                    className="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-slate-500/5 transition-colors group"
+                    className="h-[32px] flex items-center gap-2 px-3 text-xs hover:bg-slate-500/5 transition-colors group shrink-0"
                   >
                     {/* Priority Toggle Chip */}
                     <button
@@ -490,7 +514,7 @@ export const SysDocLayer = memo(
                 return (
                   <div
                     key={item.id}
-                    className="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-slate-500/5 transition-colors group"
+                    className="h-[32px] flex items-center gap-2 px-3 text-xs hover:bg-slate-500/5 transition-colors group shrink-0"
                   >
                     <button
                       onClick={() => {
@@ -543,7 +567,7 @@ export const SysDocLayer = memo(
               items.map((item: EstimationItem) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between gap-2 px-3 py-1.5 text-xs hover:bg-slate-500/5 transition-colors group"
+                  className="h-[32px] flex items-center justify-between gap-2 px-3 text-xs hover:bg-slate-500/5 transition-colors group shrink-0"
                 >
                   <input
                     type="text"
@@ -587,7 +611,7 @@ export const SysDocLayer = memo(
                 return (
                   <div
                     key={item.id}
-                    className="px-3 py-2 text-xs hover:bg-slate-500/5 transition-colors group space-y-1"
+                    className="h-[46px] px-3 py-1 flex flex-col justify-center text-xs hover:bg-slate-500/5 transition-colors group shrink-0 space-y-0.5"
                   >
                     <div className="flex items-center justify-between gap-2">
                       <input
@@ -652,7 +676,7 @@ export const SysDocLayer = memo(
                 return (
                   <div
                     key={item.id}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs hover:bg-slate-500/5 transition-colors group"
+                    className="h-[32px] flex items-center gap-1.5 px-3 text-xs hover:bg-slate-500/5 transition-colors group shrink-0"
                   >
                     {/* Key Chip Toggle */}
                     <button
@@ -756,7 +780,7 @@ export const SysDocLayer = memo(
                 return (
                   <div
                     key={item.id}
-                    className="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-slate-500/5 transition-colors group"
+                    className="h-[32px] flex items-center gap-2 px-3 text-xs hover:bg-slate-500/5 transition-colors group shrink-0"
                   >
                     <div className="w-4 h-4 rounded-full bg-violet-500 text-white font-mono font-bold text-[9px] flex items-center justify-center shrink-0">
                       {idx + 1}
@@ -814,7 +838,7 @@ export const SysDocLayer = memo(
 
           {/* ── CARD FOOTER (Streamlined, minimal add actions) ── */}
           <div
-            className={`px-3 py-1.5 border-t flex items-center justify-between text-xs shrink-0 ${
+            className={`h-[36px] px-3 border-t flex items-center justify-between text-xs shrink-0 ${
               isDark ? "border-slate-800/80 bg-slate-900/40" : "border-slate-100 bg-slate-50/50"
             }`}
             onPointerDown={(e) => e.stopPropagation()}
