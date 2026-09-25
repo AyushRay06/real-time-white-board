@@ -89,6 +89,7 @@ export const Text = ({ layer, onPointDown, id, selectionColor }: TextProps) => {
           innerRef={editableRef as any}
           html={value !== undefined ? value : "Text"}
           onChange={handleContentChange}
+          onKeyDown={(e) => e.stopPropagation()}
           className={cn(
             "w-full outline-none leading-snug tracking-normal selection:bg-indigo-500/30",
             getFontFamilyClass(fontFamily)

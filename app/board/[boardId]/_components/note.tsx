@@ -63,6 +63,7 @@ export const Note = ({ layer, onPointDown, id, selectionColor }: NoteProps) => {
           innerRef={editableRef as any}
           html={value !== undefined ? value : "Note"}
           onChange={handleContentChange}
+          onKeyDown={(e) => e.stopPropagation()}
           className={cn(
             "w-full outline-none leading-snug tracking-wide",
             getFontFamilyClass(fontFamily)

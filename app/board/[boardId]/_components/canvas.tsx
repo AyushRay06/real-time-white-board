@@ -62,6 +62,16 @@ function ConnectingPreviewLine({ fromLayerId, to }: { fromLayerId: string; to: P
   )
 }
 
+function isTypingInEditableElement(target: EventTarget | null): boolean {
+  const el = (target instanceof HTMLElement ? target : (typeof document !== "undefined" ? document.activeElement : null)) as HTMLElement | null
+  if (!el) return false
+  const tag = el.tagName?.toLowerCase()
+  if (tag === "input" || tag === "textarea" || tag === "select") return true
+  if (el.isContentEditable) return true
+  if (el.closest?.("[contenteditable='true'], [role='textbox'], input, textarea")) return true
+  return false
+}
+
 const MAX_LAYERS = 200
 
 interface CanvasProps { boardId: string }
@@ -102,13 +112,6 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   const openSpecs = useCallback(() => {
     setActiveSpace("specs")
     setIsLibraryOpen(true)
-  }, [])
-  const onDocSelect = useCallback((docType: DocType) => {
-    setCanvasState({
-      mode: CanvasMode.Inserting,
-      layerType: LayerType.Doc,
-      docType,
-    })
   }, [])
   const [gridType, setGridType] = useState<"dots" | "cross" | "none">("dots")
   const toggleGrid = useCallback(() => {
@@ -311,12 +314,10 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   // Track spacebar key
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
+      if (isTypingInEditableElement(e.target)) return
       if (e.code === "Space" && !e.repeat) {
-        const activeTag = document.activeElement?.tagName.toLowerCase()
-        if (activeTag !== "input" && activeTag !== "textarea") {
-          e.preventDefault()
-          setIsSpacePressed(true)
-        }
+        e.preventDefault()
+        setIsSpacePressed(true)
       }
     }
     function handleKeyUp(e: KeyboardEvent) {
@@ -566,6 +567,36 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
     },
     []
   )
+
+  const getViewportCenterPoint = useCallback((): Point => {
+    if (typeof window === "undefined") return { x: 300, y: 300 }
+    const jitterX = (Math.random() - 0.5) * 30
+    const jitterY = (Math.random() - 0.5) * 30
+    return {
+      x: -camera.x / camera.zoom + window.innerWidth / (2 * camera.zoom) + jitterX,
+      y: -camera.y / camera.zoom + window.innerHeight / (2 * camera.zoom) + jitterY,
+    }
+  }, [camera.x, camera.y, camera.zoom])
+
+  const handleInsertLayerDirectly = useCallback((layerType: LayerType) => {
+    const center = getViewportCenterPoint()
+    insertLayer(layerType as any, center)
+    playDropSound()
+  }, [getViewportCenterPoint, insertLayer])
+
+  const onLibrarySelect = useCallback((type: SysComponent) => {
+    const center = getViewportCenterPoint()
+    insertComponent(type, center)
+    setIsLibraryOpen(false)
+    playDropSound()
+  }, [getViewportCenterPoint, insertComponent])
+
+  const onDocSelect = useCallback((docType: DocType) => {
+    const center = getViewportCenterPoint()
+    insertDoc(docType, center)
+    setIsLibraryOpen(false)
+    playDropSound()
+  }, [getViewportCenterPoint, insertDoc])
 
   // ─── INSERT ARROW ────────────────────────────────────────────────────────
   const insertArrow = useMutation(
@@ -1604,8 +1635,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   // ─── KEYBOARD SHORTCUTS ──────────────────────────────────────────────────
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
-      const activeTag = document.activeElement?.tagName.toLowerCase()
-      if (activeTag === "input" || activeTag === "textarea") return
+      if (isTypingInEditableElement(e.target)) return
 
       const isCtrl = e.ctrlKey || e.metaKey
 
@@ -1664,7 +1694,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         return
       }
 
-      // Non-ctrl shortcuts
+      // Function keys (F1-F12) & non-ctrl shortcuts (only active when not typing)
       switch (e.key) {
         case "Escape":
           setIsLibraryOpen(false)
@@ -1682,6 +1712,86 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
             setCanvasState({ mode: CanvasMode.None })
           }
           break
+        case "F1":
+        case "v":
+        case "V":
+          e.preventDefault()
+          setCanvasState({ mode: CanvasMode.None })
+          break
+        case "F2":
+        case "h":
+        case "H":
+          e.preventDefault()
+          if (canvasState.mode === CanvasMode.Panning) {
+            setCanvasState({ mode: CanvasMode.None })
+          } else {
+            setCanvasState({
+              mode: CanvasMode.Panning,
+              origin: { x: 0, y: 0 },
+              cameraOrigin: { x: camera.x, y: camera.y },
+            })
+          }
+          break
+        case "F3":
+        case "t":
+        case "T":
+          e.preventDefault()
+          handleInsertLayerDirectly(LayerType.Text)
+          break
+        case "F4":
+        case "n":
+        case "N":
+          e.preventDefault()
+          handleInsertLayerDirectly(LayerType.Note)
+          break
+        case "F5":
+        case "r":
+        case "R":
+          e.preventDefault()
+          handleInsertLayerDirectly(LayerType.Rectangle)
+          break
+        case "F6":
+        case "o":
+        case "O":
+          e.preventDefault()
+          handleInsertLayerDirectly(LayerType.Ellipse)
+          break
+        case "F7":
+        case "p":
+        case "P":
+          e.preventDefault()
+          setCanvasState({ mode: CanvasMode.Pencil })
+          break
+        case "F8":
+        case "c":
+        case "C":
+          e.preventDefault()
+          setCanvasState({ mode: CanvasMode.Connecting, from: null })
+          break
+        case "F9":
+        case "s":
+        case "S":
+          e.preventDefault()
+          handleInsertLayerDirectly(LayerType.Section)
+          break
+        case "F10":
+        case "e":
+        case "E":
+          e.preventDefault()
+          setCanvasState({ mode: CanvasMode.Eraser })
+          break
+        case "F11":
+          e.preventDefault()
+          handleAutoLayout()
+          break
+        case "F12":
+          e.preventDefault()
+          fitToScreen()
+          break
+        case "Delete":
+        case "Backspace":
+          deleteLayers()
+          break
         case "1":
           handleToggleSpace("components")
           break
@@ -1694,68 +1804,12 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         case "4":
           handleToggleSpace("templates")
           break
-        case "Delete":
-        case "Backspace":
-          deleteLayers()
-          break
         case "g":
         case "G":
           toggleGrid()
           break
         case "?":
           setIsShortcutsOpen(true)
-          break
-        case "n":
-        case "N":
-          setIsNotesOpen((prev) => !prev)
-          break
-        case "v":
-        case "V":
-          setCanvasState({ mode: CanvasMode.None })
-          break
-        case "e":
-        case "E":
-          setCanvasState({ mode: CanvasMode.Eraser })
-          break
-        case "h":
-        case "H":
-          if (canvasState.mode === CanvasMode.Panning) {
-            setCanvasState({ mode: CanvasMode.None })
-          } else {
-            setCanvasState({
-              mode: CanvasMode.Panning,
-              origin: { x: 0, y: 0 },
-              cameraOrigin: { x: camera.x, y: camera.y },
-            })
-          }
-          break
-        case "c":
-        case "C":
-          setCanvasState({ mode: CanvasMode.Connecting, from: null })
-          break
-        case "p":
-        case "P":
-          setCanvasState({ mode: CanvasMode.Pencil })
-          break
-        case "t":
-        case "T":
-          setCanvasState({ mode: CanvasMode.Inserting, layerType: LayerType.Text })
-          break
-        case "n":
-        case "N":
-          setCanvasState({ mode: CanvasMode.Inserting, layerType: LayerType.Note })
-          break
-        case "r":
-        case "R":
-          setCanvasState({ mode: CanvasMode.Inserting, layerType: LayerType.Rectangle })
-          break
-        case "o":
-        case "O":
-          setCanvasState({ mode: CanvasMode.Inserting, layerType: LayerType.Ellipse })
-          break
-        case "s":
-        case "S":
-          setCanvasState({ mode: CanvasMode.Inserting, layerType: LayerType.Section })
           break
         case "l":
         case "L":
@@ -1806,7 +1860,8 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
     deleteLayers, history, canvasState.mode, duplicateSelectedLayers,
     copySelectedLayers, pasteLayers, selectAllLayers, selectConnectedLayout,
     nudgeSelectedLayers, unselectLayer, zoomIn, zoomOut, resetZoom, mySelection.length,
-    handleToggleSpace
+    handleToggleSpace, handleInsertLayerDirectly, handleAutoLayout, fitToScreen,
+    toggleGrid, toggleLockSelected, isTourActive, stopTour, camera.x, camera.y
   ])
 
   // Global pointerup listener to ensure middle mouse panning is immediately released
@@ -1831,11 +1886,6 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       setSnappingGuides(null)
     }
   }, [mySelection.length, canvasState.mode])
-
-  const onLibrarySelect = useCallback((type: SysComponent) => {
-    setCanvasState({ mode: CanvasMode.Inserting, layerType: LayerType.Component, componentType: type })
-    setIsLibraryOpen(false)
-  }, [])
 
   // ─── EXPORT DIAGRAM ──────────────────────────────────────────────────────
   const handleExport = useCallback(
@@ -1906,6 +1956,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         arrowStyle={arrowStyle}
         onToggleArrowStyle={toggleDefaultArrowStyle}
         onSelectAllArchitecture={selectAllLayers}
+        onInsertLayerDirectly={handleInsertLayerDirectly}
       />
 
       <RightToolbar

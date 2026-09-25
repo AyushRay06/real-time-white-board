@@ -32,6 +32,7 @@ interface ToolbarProps {
   arrowStyle?: "curvy" | "sharp"
   onToggleArrowStyle?: () => void
   onSelectAllArchitecture?: () => void
+  onInsertLayerDirectly?: (layerType: LayerType) => void
 }
 
 export const Toolbar = ({
@@ -44,6 +45,7 @@ export const Toolbar = ({
   arrowStyle = "curvy",
   onToggleArrowStyle,
   onSelectAllArchitecture,
+  onInsertLayerDirectly,
 }: ToolbarProps) => {
   const { isSimulating, toggleSimulate } = useSimulation()
   const { theme } = useCanvasTheme()
@@ -55,12 +57,24 @@ export const Toolbar = ({
 
   const dividerClass = theme === "dark" ? "bg-slate-800" : "bg-neutral-200"
 
+  const handleInsert = (layerType: LayerType) => {
+    if (onInsertLayerDirectly) {
+      onInsertLayerDirectly(layerType)
+    } else {
+      setCanvasState({
+        mode: CanvasMode.Inserting,
+        layerType: layerType as any,
+      })
+    }
+  }
+
   return (
     <div className="absolute top-[50%] -translate-y-[50%] left-3 flex flex-col gap-y-2 z-40 select-none">
       {/* ── Group 1: Select & Navigation ── */}
       <div className={groupClass}>
         <ToolButton
-          label="Select (V)"
+          label="Select"
+          shortcut="F1"
           icon={MousePointer2}
           onClick={() => setCanvasState({ mode: CanvasMode.None })}
           isActive={
@@ -72,7 +86,8 @@ export const Toolbar = ({
           }
         />
         <ToolButton
-          label="Pan / Move Canvas (H or Hold Middle Click)"
+          label="Pan Canvas"
+          shortcut="F2"
           icon={Hand}
           onClick={() =>
             setCanvasState(
@@ -89,66 +104,51 @@ export const Toolbar = ({
         />
       </div>
 
-      {/* ── Group 2: Shapes & Content ── */}
+      {/* ── Group 2: Shapes & Content (Instant 1-Click Placement) ── */}
       <div className={groupClass}>
         <ToolButton
-          label="Text (T)"
+          label="Text"
+          shortcut="F3"
           icon={Type}
-          onClick={() =>
-            setCanvasState({
-              mode: CanvasMode.Inserting,
-              layerType: LayerType.Text,
-            })
-          }
+          onClick={() => handleInsert(LayerType.Text)}
           isActive={
             canvasState.mode === CanvasMode.Inserting &&
             canvasState.layerType === LayerType.Text
           }
         />
         <ToolButton
-          label="Sticky note (N)"
+          label="Sticky Note"
+          shortcut="F4"
           icon={StickyNote}
-          onClick={() =>
-            setCanvasState({
-              mode: CanvasMode.Inserting,
-              layerType: LayerType.Note,
-            })
-          }
+          onClick={() => handleInsert(LayerType.Note)}
           isActive={
             canvasState.mode === CanvasMode.Inserting &&
             canvasState.layerType === LayerType.Note
           }
         />
         <ToolButton
-          label="Rectangle (R)"
+          label="Rectangle"
+          shortcut="F5"
           icon={Square}
-          onClick={() =>
-            setCanvasState({
-              mode: CanvasMode.Inserting,
-              layerType: LayerType.Rectangle,
-            })
-          }
+          onClick={() => handleInsert(LayerType.Rectangle)}
           isActive={
             canvasState.mode === CanvasMode.Inserting &&
             canvasState.layerType === LayerType.Rectangle
           }
         />
         <ToolButton
-          label="Circle (O)"
+          label="Circle"
+          shortcut="F6"
           icon={Circle}
-          onClick={() =>
-            setCanvasState({
-              mode: CanvasMode.Inserting,
-              layerType: LayerType.Ellipse,
-            })
-          }
+          onClick={() => handleInsert(LayerType.Ellipse)}
           isActive={
             canvasState.mode === CanvasMode.Inserting &&
             canvasState.layerType === LayerType.Ellipse
           }
         />
         <ToolButton
-          label="Pen / Sketch (P)"
+          label="Pen / Sketch"
+          shortcut="F7"
           icon={Pencil}
           onClick={() => setCanvasState({ mode: CanvasMode.Pencil })}
           isActive={canvasState.mode === CanvasMode.Pencil}
@@ -158,7 +158,8 @@ export const Toolbar = ({
       {/* ── Group 3: Architecture Lines & Section Zones ── */}
       <div className={groupClass}>
         <ToolButton
-          label={`Connect Arrow (${arrowStyle === "sharp" ? "Sharp 90°" : "Curvy"}) [C]`}
+          label={`Connect Arrow (${arrowStyle === "sharp" ? "Sharp 90°" : "Curvy"})`}
+          shortcut="F8"
           icon={arrowStyle === "sharp" ? CornerDownRight : Spline}
           onClick={() => {
             if (canvasState.mode === CanvasMode.Connecting && onToggleArrowStyle) {
@@ -170,14 +171,10 @@ export const Toolbar = ({
           isActive={canvasState.mode === CanvasMode.Connecting}
         />
         <ToolButton
-          label="Architecture Section / Zone Box (S)"
+          label="Architecture Zone Box"
+          shortcut="F9"
           icon={Layers}
-          onClick={() =>
-            setCanvasState({
-              mode: CanvasMode.Inserting,
-              layerType: LayerType.Section,
-            })
-          }
+          onClick={() => handleInsert(LayerType.Section)}
           isActive={
             canvasState.mode === CanvasMode.Inserting &&
             canvasState.layerType === LayerType.Section
@@ -191,7 +188,7 @@ export const Toolbar = ({
         />
         {onSelectAllArchitecture && (
           <ToolButton
-            label="Move / Select Entire Architecture (Ctrl+A)"
+            label="Move / Select Entire Architecture"
             icon={Move}
             onClick={onSelectAllArchitecture}
           />
@@ -201,20 +198,23 @@ export const Toolbar = ({
       {/* ── Group 4: Eraser & History ── */}
       <div className={groupClass}>
         <ToolButton
-          label="Eraser (E) — Click or swipe to erase"
+          label="Eraser"
+          shortcut="F10"
           icon={Eraser}
           onClick={() => setCanvasState({ mode: CanvasMode.Eraser })}
           isActive={canvasState.mode === CanvasMode.Eraser}
         />
         <div className={cn("w-4 h-px my-0.5", dividerClass)} />
         <ToolButton
-          label="Undo (Ctrl+Z)"
+          label="Undo"
+          shortcut="Ctrl+Z"
           icon={Undo2}
           onClick={undo}
           isDisabled={!canUndo}
         />
         <ToolButton
-          label="Redo (Ctrl+Y)"
+          label="Redo"
+          shortcut="Ctrl+Y"
           icon={Redo2}
           onClick={redo}
           isDisabled={!canRedo}
