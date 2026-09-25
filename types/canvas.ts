@@ -376,6 +376,7 @@ export type CanvasState =
       mode: CanvasMode.Connecting
       // null = waiting for first click; string = layerId of starting component
       from: string | null
+      connectionLabel?: string
     }
   | {
       mode: CanvasMode.Panning

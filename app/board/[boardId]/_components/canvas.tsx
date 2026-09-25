@@ -1311,12 +1311,20 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       setConnectPreview(null)
     } else {
       if (canvasState.from !== layerId) {
-        insertArrow(canvasState.from, layerId)
+        insertArrow(canvasState.from, layerId, canvasState.connectionLabel)
       }
-      setCanvasState({ mode: CanvasMode.Connecting, from: null })
+      setCanvasState({ mode: CanvasMode.Connecting, from: null, connectionLabel: undefined })
       setConnectPreview(null)
     }
   }, [canvasState, insertArrow])
+
+  const onStartRelationConnect = useCallback((tableId: string, fieldName: string) => {
+    setCanvasState({
+      mode: CanvasMode.Connecting,
+      from: tableId,
+      connectionLabel: `FK: ${fieldName}`,
+    })
+  }, [])
 
   const layerIdsToColorSelection = useMemo(() => {
     const map: Record<string, string> = {}
@@ -1779,6 +1787,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
               canvasState={canvasState}
               connectingFromId={connectingFromId}
               onConnectClick={onConnectClick}
+              onStartRelationConnect={onStartRelationConnect}
             />
           ))}
 

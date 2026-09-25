@@ -23,18 +23,13 @@ import {
   AlertTriangle,
   Plus,
   Trash2,
-  ChevronDown,
-  Layers,
-  ArrowRight,
-  Flame,
-  ShieldAlert,
   Database,
-  Key,
   ListOrdered,
   Sparkles,
-  Route,
+  Link2,
 } from "lucide-react"
 import { nanoid } from "nanoid"
+import { colorToCss, colorToRgba } from "@/lib/utils"
 
 interface SysDocLayerProps {
   id: string
@@ -42,6 +37,10 @@ interface SysDocLayerProps {
   onPointerDown: (e: React.PointerEvent, id: string) => void
   selectionColor?: string
   onDoubleClick?: (id: string) => void
+  isConnecting?: boolean
+  isConnectingFrom?: boolean
+  onConnectClick?: (id: string) => void
+  onStartRelationConnect?: (id: string, fieldName: string) => void
 }
 
 const HTTP_METHODS: ("GET" | "POST" | "PUT" | "DELETE" | "PATCH")[] = [
@@ -71,14 +70,23 @@ const SCHEMA_KEYS: SchemaKeyType[] = ["none", "PK", "FK", "UQ"]
 const FLOW_PROTOCOLS: FlowProtocol[] = ["HTTPS", "gRPC", "WebSocket", "Kafka", "SQL", "Redis"]
 
 export const SysDocLayer = memo(
-  ({ id, layer, onPointerDown, selectionColor }: SysDocLayerProps) => {
-    const { x, y, width, height, docType, title, itemsJson } = layer
+  ({
+    id,
+    layer,
+    onPointerDown,
+    selectionColor,
+    isConnecting,
+    isConnectingFrom,
+    onConnectClick,
+    onStartRelationConnect,
+  }: SysDocLayerProps) => {
+    const { x, y, width, height, docType, title, itemsJson, fill } = layer
     const { theme } = useCanvasTheme()
     const isDark = theme === "dark"
 
     const [activeTab, setActiveTab] = useState<string>("all")
 
-    // Parse items from JSON safely
+    // Parse items safely
     const items = useMemo(() => {
       try {
         return itemsJson ? JSON.parse(itemsJson) : []
@@ -117,7 +125,7 @@ export const SysDocLayer = memo(
       const newItem: RequirementItem = {
         id: nanoid(),
         type,
-        text: type === "functional" ? "New functional requirement" : "New non-functional SLA",
+        text: type === "functional" ? "New requirement description" : "New SLA threshold",
         priority: "P0",
       }
       updateItems([...currentList, newItem])
@@ -129,7 +137,7 @@ export const SysDocLayer = memo(
         id: nanoid(),
         method: "GET",
         path: "/api/v1/resource",
-        description: "Fetch resource details",
+        description: "Resource description",
         responseCode: "200",
       }
       updateItems([...currentList, newItem])
@@ -139,9 +147,9 @@ export const SysDocLayer = memo(
       const currentList: EstimationItem[] = [...items]
       const newItem: EstimationItem = {
         id: nanoid(),
-        metric: "Metric Name",
+        metric: "Metric name",
         value: "10,000",
-        unit: "QPS / Day",
+        unit: "req/s",
         notes: "Peak traffic estimate",
       }
       updateItems([...currentList, newItem])
@@ -151,10 +159,10 @@ export const SysDocLayer = memo(
       const currentList: BottleneckItem[] = [...items]
       const newItem: BottleneckItem = {
         id: nanoid(),
-        component: "Component / Subsystem",
-        risk: "Identified SPOF or capacity limitation",
+        component: "Subsystem bottleneck",
+        risk: "Potential failure mode",
         severity: "High",
-        mitigation: "Sharding / caching / queue buffer mitigation",
+        mitigation: "Mitigation architecture",
       }
       updateItems([...currentList, newItem])
     }
@@ -166,7 +174,7 @@ export const SysDocLayer = memo(
         name: `column_${currentList.length + 1}`,
         dataType: "varchar",
         keyType: "none",
-        isNullable: true,
+        isNullable: false,
       }
       updateItems([...currentList, newItem])
     }
@@ -187,9 +195,9 @@ export const SysDocLayer = memo(
         id: nanoid(),
         step: stepNum,
         from: `Service ${stepNum}`,
-        to: `Target ${stepNum}`,
+        to: `Service ${stepNum + 1}`,
         protocol: "HTTPS",
-        action: "Process payload or execute query",
+        action: "Request or payload",
       }
       updateItems([...currentList, newItem])
     }
@@ -209,72 +217,85 @@ export const SysDocLayer = memo(
       updateItems(updated)
     }
 
-    // Config styling based on docType
+    // Dynamic accent color: bound to user-selected color from toolbar palette!
+    const customAccent = fill ? colorToCss(fill) : null
+    const customRgba = fill ? colorToRgba(fill, isDark ? 0.22 : 0.12) : null
+
+    // Base config styling per docType
     const config = useMemo(() => {
       switch (docType) {
         case "requirements":
           return {
-            title: title || "System Requirements",
+            title: title || "Requirements Matrix",
             icon: CheckSquare2,
-            accent: "emerald",
-            badgeColor: isDark ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" : "bg-emerald-50 text-emerald-700 border-emerald-200",
-            headerBg: isDark ? "from-emerald-950/40 via-slate-900/60 to-slate-900/90" : "from-emerald-50/70 via-white to-white",
+            typeLabel: "Requirements",
+            defaultAccent: "#10b981",
+            defaultRgba: isDark ? "rgba(16, 185, 129, 0.18)" : "rgba(16, 185, 129, 0.10)",
           }
         case "api":
           return {
-            title: title || "API Endpoints Specification",
+            title: title || "API Endpoints",
             icon: Globe,
-            accent: "indigo",
-            badgeColor: isDark ? "bg-indigo-500/20 text-indigo-400 border-indigo-500/30" : "bg-indigo-50 text-indigo-700 border-indigo-200",
-            headerBg: isDark ? "from-indigo-950/40 via-slate-900/60 to-slate-900/90" : "from-indigo-50/70 via-white to-white",
+            typeLabel: "Endpoints",
+            defaultAccent: "#6366f1",
+            defaultRgba: isDark ? "rgba(99, 102, 241, 0.18)" : "rgba(99, 102, 241, 0.10)",
           }
         case "estimation":
           return {
-            title: title || "Back-of-the-Envelope Estimation",
+            title: title || "Capacity Estimations",
             icon: Calculator,
-            accent: "amber",
-            badgeColor: isDark ? "bg-amber-500/20 text-amber-400 border-amber-500/30" : "bg-amber-50 text-amber-700 border-amber-200",
-            headerBg: isDark ? "from-amber-950/40 via-slate-900/60 to-slate-900/90" : "from-amber-50/70 via-white to-white",
+            typeLabel: "Estimations",
+            defaultAccent: "#f59e0b",
+            defaultRgba: isDark ? "rgba(245, 158, 11, 0.18)" : "rgba(245, 158, 11, 0.10)",
           }
         case "schema":
           return {
-            title: title || "users (Table Schema)",
+            title: title || "users",
             icon: Database,
-            accent: "cyan",
-            badgeColor: isDark ? "bg-cyan-500/20 text-cyan-400 border-cyan-500/30" : "bg-cyan-50 text-cyan-700 border-cyan-200",
-            headerBg: isDark ? "from-cyan-950/40 via-slate-900/60 to-slate-900/90" : "from-cyan-50/70 via-white to-white",
+            typeLabel: "Table Schema",
+            defaultAccent: "#06b6d4",
+            defaultRgba: isDark ? "rgba(6, 182, 212, 0.18)" : "rgba(6, 182, 212, 0.10)",
           }
         case "flow":
           return {
-            title: title || "Request Lifecycle & Data Flow",
+            title: title || "Request Flow",
             icon: ListOrdered,
-            accent: "violet",
-            badgeColor: isDark ? "bg-violet-500/20 text-violet-400 border-violet-500/30" : "bg-violet-50 text-violet-700 border-violet-200",
-            headerBg: isDark ? "from-violet-950/40 via-slate-900/60 to-slate-900/90" : "from-violet-50/70 via-white to-white",
+            typeLabel: "Data Flow",
+            defaultAccent: "#8b5cf6",
+            defaultRgba: isDark ? "rgba(139, 92, 246, 0.18)" : "rgba(139, 92, 246, 0.10)",
           }
         case "bottlenecks":
         default:
           return {
-            title: title || "Bottlenecks & SPOF Analysis",
+            title: title || "Bottlenecks & Mitigations",
             icon: AlertTriangle,
-            accent: "rose",
-            badgeColor: isDark ? "bg-rose-500/20 text-rose-400 border-rose-500/30" : "bg-rose-50 text-rose-700 border-rose-200",
-            headerBg: isDark ? "from-rose-950/40 via-slate-900/60 to-slate-900/90" : "from-rose-50/70 via-white to-white",
+            typeLabel: "Bottlenecks",
+            defaultAccent: "#f43f5e",
+            defaultRgba: isDark ? "rgba(244, 63, 94, 0.18)" : "rgba(244, 63, 94, 0.10)",
           }
       }
     }, [docType, title, isDark])
 
+    const accentColor = customAccent || config.defaultAccent
+    const accentRgba = customRgba || config.defaultRgba
     const HeaderIcon = config.icon
 
-    // Card background classes
+    // Card styling
     const cardBg = isDark
-      ? "bg-slate-900/95 border-slate-800 text-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.5)]"
-      : "bg-white/95 border-slate-200 text-slate-900 shadow-xl shadow-slate-900/5"
+      ? "bg-slate-900/95 border-slate-800 text-slate-100 shadow-[0_12px_36px_rgba(0,0,0,0.55)]"
+      : "bg-white/98 border-slate-200/90 text-slate-900 shadow-xl shadow-slate-900/5"
 
-    const rowBorder = isDark ? "border-slate-800/80 hover:bg-slate-800/40" : "border-slate-100 hover:bg-slate-50/70"
-    const inputClass = isDark
-      ? "bg-transparent text-slate-200 placeholder:text-slate-500 focus:bg-slate-800/80 focus:ring-1 focus:ring-indigo-400 rounded px-1.5 py-0.5 outline-none transition"
-      : "bg-transparent text-slate-800 placeholder:text-slate-400 focus:bg-slate-100 focus:ring-1 focus:ring-indigo-500 rounded px-1.5 py-0.5 outline-none transition"
+    const rowDivider = isDark ? "border-slate-800/60" : "border-slate-100"
+    const inputSeamless = "bg-transparent outline-none transition-colors"
+
+    const handlePointerDown = (e: React.PointerEvent) => {
+      if (isConnecting) {
+        e.stopPropagation()
+        onConnectClick?.(id)
+      } else {
+        onPointerDown(e, id)
+      }
+    }
 
     return (
       <foreignObject
@@ -282,417 +303,279 @@ export const SysDocLayer = memo(
         y={y}
         width={width}
         height={height}
-        onPointerDown={(e) => onPointerDown(e, id)}
+        onPointerDown={handlePointerDown}
         style={{
-          outline: selectionColor ? `2px solid ${selectionColor}` : "none",
+          outline: isConnectingFrom
+            ? "3px solid #6366f1"
+            : selectionColor
+            ? `2px solid ${selectionColor}`
+            : "none",
           outlineOffset: "3px",
-          borderRadius: "16px",
+          borderRadius: "14px",
           overflow: "visible",
+          cursor: isConnecting ? "crosshair" : "default",
         }}
-        className="cursor-move select-none"
+        className="select-none"
       >
         <div
-          className={`w-full h-full flex flex-col rounded-2xl border backdrop-blur-xl transition-all duration-150 overflow-hidden font-sans ${cardBg}`}
+          className={`w-full h-full flex flex-col rounded-xl border transition-all duration-150 overflow-hidden font-sans ${cardBg} ${
+            isConnectingFrom ? "ring-2 ring-indigo-500 shadow-[0_0_24px_rgba(99,102,241,0.35)]" : ""
+          }`}
         >
-          {/* ── CARD HEADER ── */}
+          {/* ── TOP ACCENT COLOR BAR (Reflects Color Picker Instantly) ── */}
+          <div style={{ backgroundColor: accentColor }} className="h-1 w-full shrink-0" />
+
+          {/* ── CARD HEADER (Clean, Uncluttered, Flat) ── */}
           <div
-            className={`px-3.5 py-2.5 border-b flex items-center justify-between bg-gradient-to-r ${config.headerBg} ${
-              isDark ? "border-slate-800" : "border-slate-200/80"
+            className={`px-3 py-2 border-b flex items-center justify-between gap-2 shrink-0 ${
+              isDark ? "border-slate-800/80 bg-slate-900/40" : "border-slate-100 bg-slate-50/50"
             }`}
           >
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              <div className={`p-1.5 rounded-lg border shadow-xs ${config.badgeColor}`}>
-                <HeaderIcon className="w-4 h-4" />
+              <div
+                style={{ color: accentColor, backgroundColor: accentRgba }}
+                className="w-6 h-6 rounded-md flex items-center justify-center shrink-0 border border-current/20"
+              >
+                <HeaderIcon className="w-3.5 h-3.5" />
               </div>
               <input
                 type="text"
                 value={title || config.title}
                 onChange={(e) => updateTitle(e.target.value)}
                 onPointerDown={(e) => e.stopPropagation()}
-                className={`font-bold text-xs tracking-wide flex-1 min-w-0 ${inputClass}`}
+                className={`font-mono text-xs font-bold flex-1 min-w-0 ${inputSeamless} hover:underline focus:underline text-slate-900 dark:text-slate-100`}
+                placeholder="Title..."
               />
             </div>
 
-            {/* Quick Badge / Filter */}
-            <div className="flex items-center gap-1.5 pl-2">
-              <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${config.badgeColor}`}>
-                {items.length} {docType === "api" ? "Routes" : docType === "requirements" ? "Items" : "Entries"}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span
+                style={{ color: accentColor }}
+                className="text-[10px] font-mono font-semibold tracking-wide uppercase px-1.5 py-0.5 rounded bg-slate-500/10"
+              >
+                {config.typeLabel}
+              </span>
+              <span className={`text-[10px] font-mono ${isDark ? "text-slate-500" : "text-slate-400"}`}>
+                ({items.length})
               </span>
             </div>
           </div>
 
-          {/* ── REQUIREMENTS FILTER TABS (FOR REQUIREMENTS DOC ONLY) ── */}
+          {/* ── REQUIREMENTS TABS (Only for requirements) ── */}
           {docType === "requirements" && (
-            <div className={`px-3 py-1.5 border-b flex items-center gap-1 text-[11px] font-medium ${isDark ? "border-slate-800 bg-slate-900/60" : "border-slate-100 bg-slate-50/50"}`}>
+            <div className={`px-3 py-1 border-b flex items-center gap-1 text-[11px] shrink-0 ${rowDivider}`}>
               {["all", "functional", "non-functional"].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
                   onPointerDown={(e) => e.stopPropagation()}
-                  className={`px-2 py-0.5 rounded-md capitalize transition ${
+                  className={`px-2 py-0.5 rounded capitalize transition font-medium ${
                     activeTab === tab
-                      ? isDark
-                        ? "bg-indigo-500/20 text-indigo-400 font-semibold border border-indigo-500/30"
-                        : "bg-white text-indigo-600 font-semibold border border-slate-200 shadow-2xs"
-                      : isDark
-                      ? "text-slate-400 hover:text-slate-200"
-                      : "text-slate-500 hover:text-slate-800"
+                      ? "bg-slate-500/15 text-slate-900 dark:text-white font-bold"
+                      : "text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                   }`}
                 >
-                  {tab === "all" ? `All (${items.length})` : tab}
+                  {tab}
                 </button>
               ))}
             </div>
           )}
 
-          {/* ── CARD BODY (SCROLLABLE TABLE) ── */}
+          {/* ── CARD BODY (FLAT TABULAR LIST - NO BOX-INSIDE-A-BOX) ── */}
           <div
-            className="flex-1 overflow-y-auto p-2 space-y-1.5 scrollbar-thin text-xs"
+            className="flex-1 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60"
             onPointerDown={(e) => e.stopPropagation()}
           >
-            {/* 1. REQUIREMENTS LIST */}
-            {docType === "requirements" && (
-              <div className="space-y-1">
-                {items
-                  .filter((item: RequirementItem) => (activeTab === "all" ? true : item.type === activeTab))
-                  .map((item: RequirementItem) => {
-                    const isFunc = item.type === "functional"
-                    return (
-                      <div
-                        key={item.id}
-                        className={`flex items-center gap-2 p-1.5 rounded-lg border transition group ${rowBorder}`}
-                      >
-                        {/* Type toggle */}
-                        <button
-                          onClick={() =>
-                            updateItemField(
-                              item.id,
-                              "type",
-                              isFunc ? "non-functional" : "functional"
-                            )
-                          }
-                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider shrink-0 transition ${
-                            isFunc
-                              ? isDark
-                                ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/30"
-                                : "bg-indigo-50 text-indigo-700 border-indigo-200"
-                              : isDark
-                              ? "bg-purple-500/20 text-purple-300 border-purple-500/30"
-                              : "bg-purple-50 text-purple-700 border-purple-200"
-                          }`}
-                        >
-                          {isFunc ? "Func" : "Non-Func"}
-                        </button>
-
-                        {/* Priority cycle */}
-                        <button
-                          onClick={() => {
-                            const nextPriority =
-                              item.priority === "P0" ? "P1" : item.priority === "P1" ? "P2" : "P0"
-                            updateItemField(item.id, "priority", nextPriority)
-                          }}
-                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded border shrink-0 transition ${
-                            item.priority === "P0"
-                              ? "bg-rose-500/15 text-rose-500 border-rose-500/30"
-                              : item.priority === "P1"
-                              ? "bg-amber-500/15 text-amber-500 border-amber-500/30"
-                              : "bg-slate-500/15 text-slate-400 border-slate-500/30"
-                          }`}
-                        >
-                          {item.priority || "P0"}
-                        </button>
-
-                        {/* Requirement Description */}
-                        <input
-                          type="text"
-                          value={item.text}
-                          onChange={(e) => updateItemField(item.id, "text", e.target.value)}
-                          placeholder="Requirement description..."
-                          className={`flex-1 font-medium text-xs ${inputClass}`}
-                        />
-
-                        {/* Delete row */}
-                        <button
-                          onClick={() => removeItem(item.id)}
-                          className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition-opacity"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    )
-                  })}
-              </div>
-            )}
-
-            {/* 2. API ENDPOINTS LIST */}
-            {docType === "api" && (
-              <div className="space-y-1">
-                {items.map((item: ApiEndpointItem) => {
-                  const methodColors: Record<string, string> = {
-                    GET: isDark ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" : "bg-emerald-50 text-emerald-700 border-emerald-200",
-                    POST: isDark ? "bg-blue-500/20 text-blue-300 border-blue-500/40" : "bg-blue-50 text-blue-700 border-blue-200",
-                    PUT: isDark ? "bg-amber-500/20 text-amber-300 border-amber-500/40" : "bg-amber-50 text-amber-700 border-amber-200",
-                    DELETE: isDark ? "bg-rose-500/20 text-rose-300 border-rose-500/40" : "bg-rose-50 text-rose-700 border-rose-200",
-                    PATCH: isDark ? "bg-purple-500/20 text-purple-300 border-purple-500/40" : "bg-purple-50 text-purple-700 border-purple-200",
-                  }
-                  return (
-                    <div
-                      key={item.id}
-                      className={`flex items-center gap-2 p-1.5 rounded-lg border transition group ${rowBorder}`}
-                    >
-                      {/* Method selector */}
-                      <button
-                        onClick={() => {
-                          const idx = HTTP_METHODS.indexOf(item.method)
-                          const next = HTTP_METHODS[(idx + 1) % HTTP_METHODS.length]
-                          updateItemField(item.id, "method", next)
-                        }}
-                        className={`text-[9px] font-bold font-mono px-1.5 py-0.5 rounded border shrink-0 transition ${
-                          methodColors[item.method] || methodColors.GET
-                        }`}
-                      >
-                        {item.method}
-                      </button>
-
-                      {/* Path */}
-                      <input
-                        type="text"
-                        value={item.path}
-                        onChange={(e) => updateItemField(item.id, "path", e.target.value)}
-                        placeholder="/api/v1/path"
-                        className={`font-mono text-[11px] font-medium w-40 sm:w-48 shrink-0 ${inputClass}`}
-                      />
-
-                      {/* Description */}
-                      <input
-                        type="text"
-                        value={item.description}
-                        onChange={(e) => updateItemField(item.id, "description", e.target.value)}
-                        placeholder="Endpoint description..."
-                        className={`flex-1 font-medium text-xs ${inputClass}`}
-                      />
-
-                      {/* Response status */}
-                      <input
-                        type="text"
-                        value={item.responseCode || "200"}
-                        onChange={(e) => updateItemField(item.id, "responseCode", e.target.value)}
-                        placeholder="200"
-                        className={`w-12 text-center font-mono text-[10px] font-semibold rounded border py-0.5 shrink-0 ${
-                          isDark ? "border-slate-800 bg-slate-800/40 text-slate-300" : "border-slate-200 bg-slate-50 text-slate-600"
-                        }`}
-                      />
-
-                      {/* Delete */}
-                      <button
-                        onClick={() => removeItem(item.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition-opacity shrink-0"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {/* 3. ESTIMATIONS LIST */}
-            {docType === "estimation" && (
-              <div className="space-y-1">
-                {items.map((item: EstimationItem) => (
+            {/* 1. REQUIREMENTS FLAT LIST */}
+            {docType === "requirements" &&
+              items
+                .filter((item: RequirementItem) => activeTab === "all" || item.type === activeTab)
+                .map((item: RequirementItem) => (
                   <div
                     key={item.id}
-                    className={`flex items-center gap-2 p-1.5 rounded-lg border transition group ${rowBorder}`}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-slate-500/5 transition-colors group"
                   >
+                    {/* Priority Toggle Chip */}
+                    <button
+                      onClick={() => {
+                        const idx = PRIORITIES.indexOf(item.priority || "P0")
+                        const next = PRIORITIES[(idx + 1) % PRIORITIES.length]
+                        updateItemField(item.id, "priority", next)
+                      }}
+                      className={`text-[9px] font-bold font-mono px-1 py-0.5 rounded shrink-0 ${
+                        item.priority === "P0"
+                          ? "bg-rose-500/15 text-rose-500"
+                          : item.priority === "P1"
+                          ? "bg-amber-500/15 text-amber-500"
+                          : "bg-blue-500/15 text-blue-500"
+                      }`}
+                    >
+                      {item.priority || "P0"}
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        updateItemField(
+                          item.id,
+                          "type",
+                          item.type === "functional" ? "non-functional" : "functional"
+                        )
+                      }
+                      className="text-[9px] font-mono text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 shrink-0 uppercase"
+                    >
+                      {item.type === "functional" ? "func" : "non-func"}
+                    </button>
+
                     <input
                       type="text"
-                      value={item.metric}
-                      onChange={(e) => updateItemField(item.id, "metric", e.target.value)}
-                      placeholder="Metric..."
-                      className={`w-32 sm:w-40 font-semibold text-xs shrink-0 ${inputClass}`}
+                      value={item.text}
+                      onChange={(e) => updateItemField(item.id, "text", e.target.value)}
+                      placeholder="Requirement scope..."
+                      className={`flex-1 text-xs text-slate-800 dark:text-slate-200 ${inputSeamless}`}
                     />
-                    <input
-                      type="text"
-                      value={item.value}
-                      onChange={(e) => updateItemField(item.id, "value", e.target.value)}
-                      placeholder="Value (e.g. 100M)"
-                      className={`w-24 sm:w-28 font-mono text-xs font-bold shrink-0 text-amber-500 ${inputClass}`}
-                    />
-                    <input
-                      type="text"
-                      value={item.notes || ""}
-                      onChange={(e) => updateItemField(item.id, "notes", e.target.value)}
-                      placeholder="Notes / Calculation assumption..."
-                      className={`flex-1 text-[11px] text-slate-500 ${inputClass}`}
-                    />
+
                     <button
                       onClick={() => removeItem(item.id)}
-                      className="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-500 transition-opacity shrink-0"
+                      className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-rose-500 transition-opacity shrink-0"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}
-              </div>
-            )}
 
-            {/* 4. BOTTLENECKS & SPOFS LIST */}
-            {docType === "bottlenecks" && (
-              <div className="space-y-1">
-                {items.map((item: BottleneckItem) => {
-                  const sevColors: Record<string, string> = {
-                    Critical: isDark ? "bg-rose-500/20 text-rose-300 border-rose-500/40" : "bg-rose-50 text-rose-700 border-rose-200",
-                    High: isDark ? "bg-amber-500/20 text-amber-300 border-amber-500/40" : "bg-amber-50 text-amber-700 border-amber-200",
-                    Medium: isDark ? "bg-sky-500/20 text-sky-300 border-sky-500/40" : "bg-sky-50 text-sky-700 border-sky-200",
-                  }
-                  return (
-                    <div
-                      key={item.id}
-                      className={`p-2 rounded-lg border transition group space-y-1.5 ${rowBorder}`}
+            {/* 2. API ENDPOINTS FLAT LIST */}
+            {docType === "api" &&
+              items.map((item: ApiEndpointItem) => {
+                const methodColors: Record<string, string> = {
+                  GET: "text-emerald-500 bg-emerald-500/10",
+                  POST: "text-blue-500 bg-blue-500/10",
+                  PUT: "text-amber-500 bg-amber-500/10",
+                  DELETE: "text-rose-500 bg-rose-500/10",
+                  PATCH: "text-purple-500 bg-purple-500/10",
+                }
+
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-slate-500/5 transition-colors group"
+                  >
+                    <button
+                      onClick={() => {
+                        const idx = HTTP_METHODS.indexOf(item.method)
+                        const next = HTTP_METHODS[(idx + 1) % HTTP_METHODS.length]
+                        updateItemField(item.id, "method", next)
+                      }}
+                      className={`font-mono text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                        methodColors[item.method] || methodColors.GET
+                      }`}
                     >
-                      <div className="flex items-center justify-between gap-2">
-                        <input
-                          type="text"
-                          value={item.component}
-                          onChange={(e) => updateItemField(item.id, "component", e.target.value)}
-                          placeholder="Subsystem / Component Bottleneck"
-                          className={`font-bold text-xs flex-1 ${inputClass}`}
-                        />
-                        <button
-                          onClick={() => {
-                            const idx = SEVERITIES.indexOf(item.severity)
-                            const next = SEVERITIES[(idx + 1) % SEVERITIES.length]
-                            updateItemField(item.id, "severity", next)
-                          }}
-                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded border transition shrink-0 ${
-                            sevColors[item.severity] || sevColors.High
-                          }`}
-                        >
-                          {item.severity}
-                        </button>
-                        <button
-                          onClick={() => removeItem(item.id)}
-                          className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-rose-500 transition-opacity shrink-0"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                      {item.method}
+                    </button>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px]">
-                        <div className={`p-1.5 rounded border flex flex-col gap-0.5 ${isDark ? "bg-slate-900/60 border-slate-800" : "bg-slate-50/80 border-slate-100"}`}>
-                          <span className="text-[9px] font-semibold uppercase text-slate-400">Risk / Impact</span>
-                          <input
-                            type="text"
-                            value={item.risk}
-                            onChange={(e) => updateItemField(item.id, "risk", e.target.value)}
-                            placeholder="Risk details..."
-                            className={`w-full ${inputClass}`}
-                          />
-                        </div>
-                        <div className={`p-1.5 rounded border flex flex-col gap-0.5 ${isDark ? "bg-indigo-950/20 border-indigo-900/30" : "bg-indigo-50/50 border-indigo-100"}`}>
-                          <span className="text-[9px] font-semibold uppercase text-indigo-400">Mitigation</span>
-                          <input
-                            type="text"
-                            value={item.mitigation}
-                            onChange={(e) => updateItemField(item.id, "mitigation", e.target.value)}
-                            placeholder="Architectural mitigation..."
-                            className={`w-full ${inputClass}`}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+                    <input
+                      type="text"
+                      value={item.path}
+                      onChange={(e) => updateItemField(item.id, "path", e.target.value)}
+                      placeholder="/api/v1/..."
+                      className={`font-mono text-xs font-semibold w-40 text-slate-900 dark:text-slate-100 shrink-0 ${inputSeamless}`}
+                    />
 
-            {/* 5. DATABASE SCHEMA & ERD TABLE */}
-            {docType === "schema" && (
-              <div className="space-y-1">
-                {/* Column header row */}
+                    <input
+                      type="text"
+                      value={item.description}
+                      onChange={(e) => updateItemField(item.id, "description", e.target.value)}
+                      placeholder="Route description..."
+                      className={`flex-1 text-xs text-slate-500 dark:text-slate-400 truncate ${inputSeamless}`}
+                    />
+
+                    <input
+                      type="text"
+                      value={item.responseCode || "200"}
+                      onChange={(e) => updateItemField(item.id, "responseCode", e.target.value)}
+                      className={`font-mono text-[10px] text-slate-400 w-9 text-right shrink-0 ${inputSeamless}`}
+                    />
+
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-rose-500 transition-opacity shrink-0"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )
+              })}
+
+            {/* 3. CAPACITY ESTIMATION FLAT LIST */}
+            {docType === "estimation" &&
+              items.map((item: EstimationItem) => (
                 <div
-                  className={`grid grid-cols-[48px_1fr_90px_72px_24px] items-center px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded ${
-                    isDark ? "bg-slate-950/60 text-slate-400" : "bg-slate-100 text-slate-500"
-                  }`}
+                  key={item.id}
+                  className="flex items-center justify-between gap-2 px-3 py-1.5 text-xs hover:bg-slate-500/5 transition-colors group"
                 >
-                  <span>Key</span>
-                  <span>Field Name</span>
-                  <span>Type</span>
-                  <span>Null</span>
-                  <span />
+                  <input
+                    type="text"
+                    value={item.metric}
+                    onChange={(e) => updateItemField(item.id, "metric", e.target.value)}
+                    placeholder="Metric"
+                    className={`flex-1 font-medium text-slate-800 dark:text-slate-200 ${inputSeamless}`}
+                  />
+                  <input
+                    type="text"
+                    value={item.value}
+                    onChange={(e) => updateItemField(item.id, "value", e.target.value)}
+                    placeholder="Value"
+                    className={`font-mono text-xs font-bold text-amber-500 w-24 text-right shrink-0 ${inputSeamless}`}
+                  />
+                  <input
+                    type="text"
+                    value={item.notes || ""}
+                    onChange={(e) => updateItemField(item.id, "notes", e.target.value)}
+                    placeholder="Notes"
+                    className={`w-32 text-[11px] text-slate-400 truncate text-right shrink-0 ${inputSeamless}`}
+                  />
+                  <button
+                    onClick={() => removeItem(item.id)}
+                    className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-rose-500 transition-opacity shrink-0"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
                 </div>
+              ))}
 
-                {items.map((item: SchemaColumnItem) => {
-                  const keyColors: Record<string, string> = {
-                    PK: isDark ? "bg-amber-500/25 text-amber-300 border-amber-500/40" : "bg-amber-50 text-amber-800 border-amber-300",
-                    FK: isDark ? "bg-cyan-500/25 text-cyan-300 border-cyan-500/40" : "bg-cyan-50 text-cyan-800 border-cyan-300",
-                    UQ: isDark ? "bg-purple-500/25 text-purple-300 border-purple-500/40" : "bg-purple-50 text-purple-800 border-purple-300",
-                    none: isDark ? "bg-slate-800/40 text-slate-400 border-slate-700/60" : "bg-slate-50 text-slate-400 border-slate-200",
-                  }
+            {/* 4. BOTTLENECKS FLAT LIST */}
+            {docType === "bottlenecks" &&
+              items.map((item: BottleneckItem) => {
+                const sevColors: Record<string, string> = {
+                  Critical: "text-rose-500 bg-rose-500/10",
+                  High: "text-amber-500 bg-amber-500/10",
+                  Medium: "text-sky-500 bg-sky-500/10",
+                }
 
-                  return (
-                    <div
-                      key={item.id}
-                      className={`grid grid-cols-[48px_1fr_90px_72px_24px] items-center gap-1.5 px-2 py-1 rounded-lg border transition group text-xs ${rowBorder}`}
-                    >
-                      {/* Key Chip Toggle */}
-                      <button
-                        onClick={() => {
-                          const idx = SCHEMA_KEYS.indexOf(item.keyType || "none")
-                          const next = SCHEMA_KEYS[(idx + 1) % SCHEMA_KEYS.length]
-                          updateItemField(item.id, "keyType", next)
-                        }}
-                        title="Click to cycle PK (Primary Key), FK (Foreign Key), UQ (Unique), none"
-                        className={`text-[9px] font-mono font-bold py-0.5 px-1 rounded border flex items-center justify-center transition shrink-0 ${
-                          keyColors[item.keyType || "none"]
-                        }`}
-                      >
-                        {item.keyType === "PK" ? "PK" : item.keyType === "FK" ? "FK" : item.keyType === "UQ" ? "UQ" : "—"}
-                      </button>
-
-                      {/* Field Name */}
+                return (
+                  <div
+                    key={item.id}
+                    className="px-3 py-2 text-xs hover:bg-slate-500/5 transition-colors group space-y-1"
+                  >
+                    <div className="flex items-center justify-between gap-2">
                       <input
                         type="text"
-                        value={item.name}
-                        onChange={(e) => updateItemField(item.id, "name", e.target.value)}
-                        placeholder="field_name"
-                        className={`font-mono text-xs font-semibold ${inputClass}`}
+                        value={item.component}
+                        onChange={(e) => updateItemField(item.id, "component", e.target.value)}
+                        placeholder="Bottleneck component"
+                        className={`font-semibold text-slate-900 dark:text-slate-100 flex-1 ${inputSeamless}`}
                       />
-
-                      {/* Data Type Selector */}
                       <button
                         onClick={() => {
-                          const idx = SCHEMA_DATA_TYPES.indexOf(item.dataType || "varchar")
-                          const next = SCHEMA_DATA_TYPES[(idx + 1) % SCHEMA_DATA_TYPES.length]
-                          updateItemField(item.id, "dataType", next)
+                          const idx = SEVERITIES.indexOf(item.severity)
+                          const next = SEVERITIES[(idx + 1) % SEVERITIES.length]
+                          updateItemField(item.id, "severity", next)
                         }}
-                        title="Click to cycle data type"
-                        className={`text-[10px] font-mono px-1.5 py-0.5 rounded border transition truncate text-left ${
-                          isDark
-                            ? "bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-500"
-                            : "bg-slate-100 text-slate-700 border-slate-200 hover:border-slate-300"
+                        className={`text-[9px] font-bold font-mono px-1.5 py-0.5 rounded shrink-0 ${
+                          sevColors[item.severity] || sevColors.High
                         }`}
                       >
-                        {item.dataType || "varchar"}
+                        {item.severity}
                       </button>
-
-                      {/* Nullable Toggle */}
-                      <button
-                        onClick={() => updateItemField(item.id, "isNullable", !item.isNullable)}
-                        className={`text-[9px] font-semibold py-0.5 px-1 rounded border transition text-center shrink-0 ${
-                          item.isNullable
-                            ? isDark
-                              ? "bg-sky-500/15 text-sky-400 border-sky-500/30"
-                              : "bg-sky-50 text-sky-700 border-sky-200"
-                            : isDark
-                            ? "bg-slate-800/40 text-slate-400 border-slate-700/50"
-                            : "bg-slate-100 text-slate-500 border-slate-200"
-                        }`}
-                      >
-                        {item.isNullable ? "NULL" : "NOT NULL"}
-                      </button>
-
-                      {/* Delete */}
                       <button
                         onClick={() => removeItem(item.id)}
                         className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-rose-500 transition-opacity shrink-0"
@@ -700,134 +583,224 @@ export const SysDocLayer = memo(
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                  )
-                })}
-              </div>
-            )}
-
-            {/* 6. REQUEST LIFECYCLE & DATA FLOW STEPS */}
-            {docType === "flow" && (
-              <div className="space-y-1">
-                {/* Header Row */}
-                <div
-                  className={`grid grid-cols-[28px_140px_70px_1fr_24px] items-center px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded ${
-                    isDark ? "bg-slate-950/60 text-slate-400" : "bg-slate-100 text-slate-500"
-                  }`}
-                >
-                  <span>#</span>
-                  <span>From ➔ To</span>
-                  <span>Protocol</span>
-                  <span>Action / Request</span>
-                  <span />
-                </div>
-
-                {items.map((item: FlowStepItem, idx: number) => {
-                  const protoColors: Record<string, string> = {
-                    HTTPS: isDark ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" : "bg-emerald-50 text-emerald-700 border-emerald-200",
-                    gRPC: isDark ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/40" : "bg-indigo-50 text-indigo-700 border-indigo-200",
-                    WebSocket: isDark ? "bg-purple-500/20 text-purple-300 border-purple-500/40" : "bg-purple-50 text-purple-700 border-purple-200",
-                    Kafka: isDark ? "bg-amber-500/20 text-amber-300 border-amber-500/40" : "bg-amber-50 text-amber-700 border-amber-200",
-                    SQL: isDark ? "bg-cyan-500/20 text-cyan-300 border-cyan-500/40" : "bg-cyan-50 text-cyan-700 border-cyan-200",
-                    Redis: isDark ? "bg-rose-500/20 text-rose-300 border-rose-500/40" : "bg-rose-50 text-rose-700 border-rose-200",
-                  }
-
-                  return (
-                    <div
-                      key={item.id}
-                      className={`grid grid-cols-[28px_140px_70px_1fr_24px] items-center gap-1.5 px-2 py-1 rounded-lg border transition group text-xs ${rowBorder}`}
-                    >
-                      {/* Step Number Badge */}
-                      <div className="w-5 h-5 rounded-full bg-violet-500 text-white font-bold text-[10px] flex items-center justify-center shrink-0 shadow-xs">
-                        {idx + 1}
-                      </div>
-
-                      {/* From ➔ To */}
-                      <div className="flex items-center gap-1 text-[11px] font-medium">
-                        <input
-                          type="text"
-                          value={item.from}
-                          onChange={(e) => updateItemField(item.id, "from", e.target.value)}
-                          placeholder="Source"
-                          className={`w-14 truncate ${inputClass}`}
-                        />
-                        <span className="text-slate-400">➔</span>
-                        <input
-                          type="text"
-                          value={item.to}
-                          onChange={(e) => updateItemField(item.id, "to", e.target.value)}
-                          placeholder="Target"
-                          className={`w-14 truncate ${inputClass}`}
-                        />
-                      </div>
-
-                      {/* Protocol Chip */}
-                      <button
-                        onClick={() => {
-                          const pIdx = FLOW_PROTOCOLS.indexOf(item.protocol || "HTTPS")
-                          const next = FLOW_PROTOCOLS[(pIdx + 1) % FLOW_PROTOCOLS.length]
-                          updateItemField(item.id, "protocol", next)
-                        }}
-                        title="Click to cycle protocol"
-                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded border transition text-center shrink-0 ${
-                          protoColors[item.protocol || "HTTPS"] || protoColors.HTTPS
-                        }`}
-                      >
-                        {item.protocol || "HTTPS"}
-                      </button>
-
-                      {/* Action / Request payload */}
+                    <div className="flex items-center gap-2 text-[11px] text-slate-400">
                       <input
                         type="text"
-                        value={item.action}
-                        onChange={(e) => updateItemField(item.id, "action", e.target.value)}
-                        placeholder="Action or query payload..."
-                        className={`font-medium ${inputClass}`}
+                        value={item.risk}
+                        onChange={(e) => updateItemField(item.id, "risk", e.target.value)}
+                        placeholder="Risk impact..."
+                        className={`flex-1 text-slate-500 dark:text-slate-400 truncate ${inputSeamless}`}
                       />
-
-                      {/* Delete */}
-                      <button
-                        onClick={() => removeItem(item.id)}
-                        className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-rose-500 transition-opacity shrink-0"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <span>→</span>
+                      <input
+                        type="text"
+                        value={item.mitigation}
+                        onChange={(e) => updateItemField(item.id, "mitigation", e.target.value)}
+                        placeholder="Mitigation..."
+                        className={`flex-1 font-medium text-indigo-500 dark:text-indigo-400 truncate ${inputSeamless}`}
+                      />
                     </div>
-                  )
-                })}
-              </div>
-            )}
+                  </div>
+                )
+              })}
+
+            {/* 5. DATABASE SCHEMA & ERD TABLE (Sleek Flat Rows + FK Relation Link) */}
+            {docType === "schema" &&
+              items.map((item: SchemaColumnItem) => {
+                const keyColors: Record<string, string> = {
+                  PK: "bg-amber-500/15 text-amber-500 font-bold",
+                  FK: "bg-cyan-500/15 text-cyan-500 font-bold",
+                  UQ: "bg-purple-500/15 text-purple-400 font-bold",
+                  none: "text-transparent",
+                }
+
+                const isFk = item.keyType === "FK"
+
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs hover:bg-slate-500/5 transition-colors group"
+                  >
+                    {/* Key Chip Toggle */}
+                    <button
+                      onClick={() => {
+                        const idx = SCHEMA_KEYS.indexOf(item.keyType || "none")
+                        const next = SCHEMA_KEYS[(idx + 1) % SCHEMA_KEYS.length]
+                        updateItemField(item.id, "keyType", next)
+                      }}
+                      title="Click to cycle PK, FK, UQ, none"
+                      className={`text-[9px] font-mono px-1 py-0.5 rounded shrink-0 min-w-[24px] text-center ${
+                        keyColors[item.keyType || "none"]
+                      }`}
+                    >
+                      {item.keyType === "PK"
+                        ? "PK"
+                        : item.keyType === "FK"
+                        ? "FK"
+                        : item.keyType === "UQ"
+                        ? "UQ"
+                        : "—"}
+                    </button>
+
+                    {/* Field Name */}
+                    <input
+                      type="text"
+                      value={item.name}
+                      onChange={(e) => updateItemField(item.id, "name", e.target.value)}
+                      placeholder="column_name"
+                      className={`font-mono text-xs font-semibold text-slate-800 dark:text-slate-100 flex-1 truncate ${inputSeamless}`}
+                    />
+
+                    {/* Data Type Selector */}
+                    <button
+                      onClick={() => {
+                        const idx = SCHEMA_DATA_TYPES.indexOf(item.dataType || "varchar")
+                        const next = SCHEMA_DATA_TYPES[(idx + 1) % SCHEMA_DATA_TYPES.length]
+                        updateItemField(item.id, "dataType", next)
+                      }}
+                      title="Click to cycle data type"
+                      className="font-mono text-[11px] text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors shrink-0 text-right w-18 truncate"
+                    >
+                      {item.dataType || "varchar"}
+                    </button>
+
+                    {/* Nullability Toggle: Only show badge when nullable */}
+                    <button
+                      onClick={() => updateItemField(item.id, "isNullable", !item.isNullable)}
+                      className="text-[9px] font-mono shrink-0 w-8 text-center"
+                      title={item.isNullable ? "Nullable (click to toggle)" : "Not null (click to make nullable)"}
+                    >
+                      {item.isNullable ? (
+                        <span className="text-sky-500 font-semibold bg-sky-500/10 px-1 py-0.5 rounded">
+                          null
+                        </span>
+                      ) : (
+                        <span className="text-slate-300 dark:text-slate-700 opacity-0 group-hover:opacity-40">
+                          —
+                        </span>
+                      )}
+                    </button>
+
+                    {/* Foreign Key Relation Connector Anchor */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onStartRelationConnect?.(id, item.name)
+                      }}
+                      title="Draw relation arrow from this foreign key to another table"
+                      className={`p-1 rounded transition-all shrink-0 ${
+                        isFk
+                          ? "text-cyan-500 bg-cyan-500/10 hover:bg-cyan-500/20 opacity-90 group-hover:opacity-100"
+                          : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 opacity-0 group-hover:opacity-100"
+                      }`}
+                    >
+                      <Link2 className="w-3.5 h-3.5" />
+                    </button>
+
+                    {/* Delete Column */}
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-rose-500 transition-opacity shrink-0"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )
+              })}
+
+            {/* 6. REQUEST FLOW FLAT LIST */}
+            {docType === "flow" &&
+              items.map((item: FlowStepItem, idx: number) => {
+                const protoColors: Record<string, string> = {
+                  HTTPS: "text-emerald-500 bg-emerald-500/10",
+                  gRPC: "text-indigo-500 bg-indigo-500/10",
+                  WebSocket: "text-purple-500 bg-purple-500/10",
+                  Kafka: "text-amber-500 bg-amber-500/10",
+                  SQL: "text-cyan-500 bg-cyan-500/10",
+                  Redis: "text-rose-500 bg-rose-500/10",
+                }
+
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs hover:bg-slate-500/5 transition-colors group"
+                  >
+                    <div className="w-4 h-4 rounded-full bg-violet-500 text-white font-mono font-bold text-[9px] flex items-center justify-center shrink-0">
+                      {idx + 1}
+                    </div>
+
+                    <div className="flex items-center gap-1 font-mono text-[11px] text-slate-700 dark:text-slate-300 shrink-0">
+                      <input
+                        type="text"
+                        value={item.from}
+                        onChange={(e) => updateItemField(item.id, "from", e.target.value)}
+                        placeholder="Source"
+                        className={`w-18 truncate ${inputSeamless}`}
+                      />
+                      <span className="text-slate-400">➔</span>
+                      <input
+                        type="text"
+                        value={item.to}
+                        onChange={(e) => updateItemField(item.id, "to", e.target.value)}
+                        placeholder="Target"
+                        className={`w-18 truncate ${inputSeamless}`}
+                      />
+                    </div>
+
+                    <button
+                      onClick={() => {
+                        const pIdx = FLOW_PROTOCOLS.indexOf(item.protocol || "HTTPS")
+                        const next = FLOW_PROTOCOLS[(pIdx + 1) % FLOW_PROTOCOLS.length]
+                        updateItemField(item.id, "protocol", next)
+                      }}
+                      className={`font-mono text-[9px] font-bold px-1.5 py-0.5 rounded shrink-0 ${
+                        protoColors[item.protocol || "HTTPS"] || protoColors.HTTPS
+                      }`}
+                    >
+                      {item.protocol || "HTTPS"}
+                    </button>
+
+                    <input
+                      type="text"
+                      value={item.action}
+                      onChange={(e) => updateItemField(item.id, "action", e.target.value)}
+                      placeholder="Request action / payload..."
+                      className={`flex-1 text-slate-700 dark:text-slate-300 text-xs truncate ${inputSeamless}`}
+                    />
+
+                    <button
+                      onClick={() => removeItem(item.id)}
+                      className="opacity-0 group-hover:opacity-100 p-0.5 text-slate-400 hover:text-rose-500 transition-opacity shrink-0"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                )
+              })}
           </div>
 
-          {/* ── CARD FOOTER (ADD ROW ACTION) ── */}
+          {/* ── CARD FOOTER (Streamlined, minimal add actions) ── */}
           <div
-            className={`p-2 border-t flex items-center justify-between text-xs ${
-              isDark ? "border-slate-800 bg-slate-900/60" : "border-slate-100 bg-slate-50/60"
+            className={`px-3 py-1.5 border-t flex items-center justify-between text-xs shrink-0 ${
+              isDark ? "border-slate-800/80 bg-slate-900/40" : "border-slate-100 bg-slate-50/50"
             }`}
             onPointerDown={(e) => e.stopPropagation()}
           >
             {docType === "requirements" && (
-              <div className="flex items-center gap-1.5 w-full">
+              <div className="flex items-center gap-3 w-full">
                 <button
                   onClick={() => addRequirement("functional")}
-                  className={`flex-1 flex items-center justify-center gap-1 py-1 rounded-lg border text-xs font-semibold transition ${
-                    isDark
-                      ? "border-indigo-500/30 bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20"
-                      : "border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
-                  }`}
+                  className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-indigo-500 transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>+ Functional</span>
+                  <span>Functional</span>
                 </button>
                 <button
                   onClick={() => addRequirement("non-functional")}
-                  className={`flex-1 flex items-center justify-center gap-1 py-1 rounded-lg border text-xs font-semibold transition ${
-                    isDark
-                      ? "border-purple-500/30 bg-purple-500/10 text-purple-300 hover:bg-purple-500/20"
-                      : "border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"
-                  }`}
+                  className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-purple-500 transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>+ Non-Functional</span>
+                  <span>Non-Functional</span>
                 </button>
               </div>
             )}
@@ -835,68 +808,49 @@ export const SysDocLayer = memo(
             {docType === "api" && (
               <button
                 onClick={addApiEndpoint}
-                className={`w-full flex items-center justify-center gap-1.5 py-1 rounded-lg border text-xs font-semibold transition ${
-                  isDark
-                    ? "border-indigo-500/30 bg-indigo-500/10 text-indigo-300 hover:bg-indigo-500/20"
-                    : "border-indigo-200 bg-indigo-50 text-indigo-700 hover:bg-indigo-100"
-                }`}
+                className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-indigo-500 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>+ Add API Endpoint</span>
+                <span>Add Endpoint</span>
               </button>
             )}
 
             {docType === "estimation" && (
               <button
                 onClick={addEstimation}
-                className={`w-full flex items-center justify-center gap-1.5 py-1 rounded-lg border text-xs font-semibold transition ${
-                  isDark
-                    ? "border-amber-500/30 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
-                    : "border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100"
-                }`}
+                className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-amber-500 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>+ Add Metric / Calculation</span>
+                <span>Add Metric</span>
               </button>
             )}
 
             {docType === "bottlenecks" && (
               <button
                 onClick={addBottleneck}
-                className={`w-full flex items-center justify-center gap-1.5 py-1 rounded-lg border text-xs font-semibold transition ${
-                  isDark
-                    ? "border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500/20"
-                    : "border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100"
-                }`}
+                className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-rose-500 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>+ Add Bottleneck & Mitigation</span>
+                <span>Add Bottleneck</span>
               </button>
             )}
 
             {docType === "schema" && (
-              <div className="flex items-center gap-1.5 w-full">
+              <div className="flex items-center justify-between w-full">
                 <button
                   onClick={addSchemaColumn}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-1 rounded-lg border text-xs font-semibold transition ${
-                    isDark
-                      ? "border-cyan-500/30 bg-cyan-500/10 text-cyan-300 hover:bg-cyan-500/20"
-                      : "border-cyan-200 bg-cyan-50 text-cyan-700 hover:bg-cyan-100"
-                  }`}
+                  style={{ color: accentColor }}
+                  className="flex items-center gap-1 text-[11px] font-semibold hover:opacity-80 transition-opacity"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>+ Add Column</span>
+                  <span>Add Column</span>
                 </button>
                 <button
                   onClick={addCommonAuditColumns}
-                  className={`flex items-center justify-center gap-1 py-1 px-2.5 rounded-lg border text-xs font-medium transition ${
-                    isDark
-                      ? "border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700"
-                      : "border-slate-200 bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  }`}
+                  className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
                 >
                   <Sparkles className="w-3 h-3 text-cyan-500" />
-                  <span>+ Audit Fields</span>
+                  <span>+ Timestamps</span>
                 </button>
               </div>
             )}
@@ -904,14 +858,10 @@ export const SysDocLayer = memo(
             {docType === "flow" && (
               <button
                 onClick={addFlowStep}
-                className={`w-full flex items-center justify-center gap-1.5 py-1 rounded-lg border text-xs font-semibold transition ${
-                  isDark
-                    ? "border-violet-500/30 bg-violet-500/10 text-violet-300 hover:bg-violet-500/20"
-                    : "border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100"
-                }`}
+                className="flex items-center gap-1 text-[11px] font-medium text-slate-500 hover:text-violet-500 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>+ Add Flow Step</span>
+                <span>Add Step</span>
               </button>
             )}
           </div>

@@ -22,10 +22,11 @@ interface LayerPreviewProps {
   canvasState?: CanvasState
   connectingFromId?: string | null
   onConnectClick?: (layerId: string) => void
+  onStartRelationConnect?: (layerId: string, fieldName: string) => void
 }
 
 export const LayerPreview = memo(
-  ({ id, onLayerPointerDown, onLayerDoubleClick, selectionColor, canvasState, connectingFromId, onConnectClick }: LayerPreviewProps) => {
+  ({ id, onLayerPointerDown, onLayerDoubleClick, selectionColor, canvasState, connectingFromId, onConnectClick, onStartRelationConnect }: LayerPreviewProps) => {
     const layer = useStorage((root) => root.layers.get(id))
 
     if (!layer) return null
@@ -61,6 +62,10 @@ export const LayerPreview = memo(
             onPointerDown={onLayerPointerDown}
             selectionColor={selectionColor}
             onDoubleClick={onLayerDoubleClick}
+            isConnecting={isConnecting}
+            isConnectingFrom={connectingFromId === id}
+            onConnectClick={onConnectClick}
+            onStartRelationConnect={onStartRelationConnect}
           />
         )
       case LayerType.Component:
