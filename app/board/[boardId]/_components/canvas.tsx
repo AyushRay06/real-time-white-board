@@ -122,6 +122,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   const [isNotesOpen, setIsNotesOpen] = useState(false)
   const [isCheckpointsOpen, setIsCheckpointsOpen] = useState(false)
   const [snappingGuides, setSnappingGuides] = useState<{ x?: number; y?: number } | null>(null)
+  const dragUnsnappedRef = useRef<{ x: number; y: number } | null>(null)
 
   const { startTour, stopTour, isTourActive } = useSimulation()
 
@@ -975,19 +976,28 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
           const curY = targetLayer.get("y") as number
           const curW = (targetLayer.get("width") as number) || 100
           const curH = (targetLayer.get("height") as number) || 100
-          const testX = curX + offset.x
-          const testY = curY + offset.y
-          const testCX = testX + curW / 2
-          const testCY = testY + curH / 2
 
-          let guideX: number | undefined
-          let guideY: number | undefined
-          const THRESHOLD = 6
+          // Track continuous unsnapped ideal cursor position to prevent any hard freezing or glitching
+          if (!dragUnsnappedRef.current) {
+            dragUnsnappedRef.current = { x: curX, y: curY }
+          }
+          dragUnsnappedRef.current.x += offset.x
+          dragUnsnappedRef.current.y += offset.y
 
-          liveLayerIds.forEach((otherId) => {
-            if (otherId === targetId) return
+          const idealX = dragUnsnappedRef.current.x
+          const idealY = dragUnsnappedRef.current.y
+          const idealCX = idealX + curW / 2
+          const idealCY = idealY + curH / 2
+
+          let bestSnapX: { guide: number; snapPos: number; dist: number } | null = null
+          let bestSnapY: { guide: number; snapPos: number; dist: number } | null = null
+          const SNAP_THRESHOLD = 5
+
+          for (let i = 0; i < liveLayerIds.length; i++) {
+            const otherId = liveLayerIds.get(i)
+            if (!otherId || otherId === targetId) continue
             const other = liveLayers.get(otherId)
-            if (!other || other.get("type") === LayerType.Arrow) return
+            if (!other || other.get("type") === LayerType.Arrow) continue
             const ox = (other.get("x") as number) || 0
             const oy = (other.get("y") as number) || 0
             const ow = (other.get("width") as number) || 100
@@ -995,33 +1005,74 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
             const ocx = ox + ow / 2
             const ocy = oy + oh / 2
 
-            // X snapping: left, center, right
-            if (Math.abs(testX - ox) < THRESHOLD) {
-              finalOffsetX = ox - curX
-              guideX = ox
-            } else if (Math.abs(testCX - ocx) < THRESHOLD) {
-              finalOffsetX = ocx - curW / 2 - curX
-              guideX = ocx
-            } else if (Math.abs(testX + curW - (ox + ow)) < THRESHOLD) {
-              finalOffsetX = ox + ow - curW - curX
-              guideX = ox + ow
+            // X alignments: left to left, center to center, right to right
+            const xCandidates = [
+              { guide: ox, snapPos: ox, dist: idealX - ox },
+              { guide: ocx, snapPos: ocx - curW / 2, dist: idealCX - ocx },
+              { guide: ox + ow, snapPos: ox + ow - curW, dist: (idealX + curW) - (ox + ow) },
+            ]
+            for (const cand of xCandidates) {
+              const absD = Math.abs(cand.dist)
+              if (absD <= SNAP_THRESHOLD) {
+                if (!bestSnapX || absD < Math.abs(bestSnapX.dist)) {
+                  bestSnapX = cand
+                }
+              }
             }
 
-            // Y snapping: top, center, bottom
-            if (Math.abs(testY - oy) < THRESHOLD) {
-              finalOffsetY = oy - curY
-              guideY = oy
-            } else if (Math.abs(testCY - ocy) < THRESHOLD) {
-              finalOffsetY = ocy - curH / 2 - curY
-              guideY = ocy
-            } else if (Math.abs(testY + curH - (oy + oh)) < THRESHOLD) {
-              finalOffsetY = oy + oh - curH - curY
-              guideY = oy + oh
+            // Y alignments: top to top, center to center, bottom to bottom
+            const yCandidates = [
+              { guide: oy, snapPos: oy, dist: idealY - oy },
+              { guide: ocy, snapPos: ocy - curH / 2, dist: idealCY - ocy },
+              { guide: oy + oh, snapPos: oy + oh - curH, dist: (idealY + curH) - (oy + oh) },
+            ]
+            for (const cand of yCandidates) {
+              const absD = Math.abs(cand.dist)
+              if (absD <= SNAP_THRESHOLD) {
+                if (!bestSnapY || absD < Math.abs(bestSnapY.dist)) {
+                  bestSnapY = cand
+                }
+              }
             }
-          })
+          }
+
+          let actualTargetX = idealX
+          let guideX: number | undefined = undefined
+          if (bestSnapX) {
+            guideX = bestSnapX.guide
+            const absD = Math.abs(bestSnapX.dist)
+            // Subtle magnetic detent: near center, snap cleanly; pulling away has gentle resistance
+            if (absD <= 1.5) {
+              actualTargetX = bestSnapX.snapPos
+            } else {
+              const resistance = 0.35
+              actualTargetX = bestSnapX.snapPos + Math.sign(bestSnapX.dist) * (1.5 + (absD - 1.5) * resistance)
+            }
+          }
+
+          let actualTargetY = idealY
+          let guideY: number | undefined = undefined
+          if (bestSnapY) {
+            guideY = bestSnapY.guide
+            const absD = Math.abs(bestSnapY.dist)
+            if (absD <= 1.5) {
+              actualTargetY = bestSnapY.snapPos
+            } else {
+              const resistance = 0.35
+              actualTargetY = bestSnapY.snapPos + Math.sign(bestSnapY.dist) * (1.5 + (absD - 1.5) * resistance)
+            }
+          }
+
+          finalOffsetX = actualTargetX - curX
+          finalOffsetY = actualTargetY - curY
 
           if (guideX !== undefined || guideY !== undefined) {
-            setSnappingGuides({ x: guideX, y: guideY })
+            setSnappingGuides((prev) => {
+              if (!prev || prev.x !== guideX || prev.y !== guideY) {
+                playSnapSound()
+              }
+              return { x: guideX, y: guideY }
+            })
           } else {
             setSnappingGuides(null)
           }
@@ -1051,6 +1102,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
     (e: React.PointerEvent) => {
       history.pause()
       e.stopPropagation()
+      dragUnsnappedRef.current = null
       const point = pointerEventToCanvasPoint(e, camera)
       setCanvasState({ mode: CanvasMode.Translating, current: point })
     },
@@ -1058,6 +1110,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   )
 
   const unselectLayer = useMutation(({ self, setMyPresence }) => {
+    dragUnsnappedRef.current = null
     setSnappingGuides(null)
     if (self.presence.selection.length > 0) setMyPresence({ selection: [] }, { addToHistory: true })
   }, [])
@@ -1408,6 +1461,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   }, [camera, canvasState, startDrawing, contextMenu, isSpacePressed, eraseAtPoint])
 
   const onPointerUp = useMutation(({}, e: React.PointerEvent) => {
+    dragUnsnappedRef.current = null
     setSnappingGuides(null)
     // Releasing the middle mouse button immediately ends panning and switches back to default mode
     if (e.button === 1 || isMiddlePanningRef.current) {
@@ -1509,6 +1563,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       if (!self.presence.selection.includes(layerId)) {
         setMyPresence({ selection: [layerId] }, { addToHistory: true })
       }
+      dragUnsnappedRef.current = null
       setCanvasState({ mode: CanvasMode.Translating, current: point })
     },
     [setCanvasState, camera, history, canvasState.mode, isSpacePressed, deleteLayerById]
@@ -1758,6 +1813,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   // and snapping reference lines are dismissed upon releasing the pointer anywhere
   useEffect(() => {
     const handleWindowPointerUp = (e: PointerEvent) => {
+      dragUnsnappedRef.current = null
       setSnappingGuides(null)
       if (e.button === 1 || isMiddlePanningRef.current) {
         isMiddlePanningRef.current = false
@@ -1771,6 +1827,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   // Ensure magnetic reference guide lines strictly disappear whenever an element is done moving or unselected
   useEffect(() => {
     if (mySelection.length === 0 || canvasState.mode !== CanvasMode.Translating) {
+      dragUnsnappedRef.current = null
       setSnappingGuides(null)
     }
   }, [mySelection.length, canvasState.mode])
