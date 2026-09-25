@@ -1119,8 +1119,25 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   const onPointerDown = useCallback((e: React.PointerEvent) => {
     if (contextMenu) setContextMenu(null)
 
-    // Hand tool / Spacebar held / Middle-click pans canvas
-    if (canvasState.mode === CanvasMode.Panning || isSpacePressed || e.button === 1) {
+    // Central scroll mouse button (middle-click): toggle between Move and default Select mode
+    if (e.button === 1) {
+      e.preventDefault()
+      if (canvasState.mode === CanvasMode.Panning) {
+        // Toggle OFF: switch back to default arrow/click interaction
+        setCanvasState({ mode: CanvasMode.None })
+      } else {
+        // Toggle ON: switch to move canvas mode
+        setCanvasState({
+          mode: CanvasMode.Panning,
+          origin: { x: e.clientX, y: e.clientY },
+          cameraOrigin: { x: camera.x, y: camera.y },
+        })
+      }
+      return
+    }
+
+    // Hand tool / Spacebar held pans canvas
+    if (canvasState.mode === CanvasMode.Panning || isSpacePressed) {
       setCanvasState({
         mode: CanvasMode.Panning,
         origin: { x: e.clientX, y: e.clientY },
@@ -1147,7 +1164,20 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
     setCanvasState({ origin: point, mode: CanvasMode.Pressing })
   }, [camera, canvasState, startDrawing, contextMenu, isSpacePressed, eraseAtPoint])
 
-  const onPointerUp = useMutation(({}, e) => {
+  const onPointerUp = useMutation(({}, e: React.PointerEvent) => {
+    // Releasing the middle button should not trigger layer selection/insertion
+    if (e.button === 1) {
+      if (canvasState.mode === CanvasMode.Panning) {
+        // Keep Hand tool active with reset origin so subsequent drags work
+        setCanvasState({
+          mode: CanvasMode.Panning,
+          origin: { x: 0, y: 0 },
+          cameraOrigin: { x: camera.x, y: camera.y },
+        })
+      }
+      return
+    }
+
     if (canvasState.mode === CanvasMode.Eraser) {
       isErasingRef.current = false
       return
@@ -1190,6 +1220,24 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
 
   const onLayerPointerDown = useMutation(
     ({ self, setMyPresence }, e: React.PointerEvent, layerId: string) => {
+      // Central scroll mouse button (middle-click): toggle between Move and default Select mode even over layers
+      if (e.button === 1) {
+        e.preventDefault()
+        e.stopPropagation()
+        if (canvasState.mode === CanvasMode.Panning) {
+          // Toggle OFF: switch back to default arrow/click interaction
+          setCanvasState({ mode: CanvasMode.None })
+        } else {
+          // Toggle ON: switch to move canvas mode
+          setCanvasState({
+            mode: CanvasMode.Panning,
+            origin: { x: e.clientX, y: e.clientY },
+            cameraOrigin: { x: camera.x, y: camera.y },
+          })
+        }
+        return
+      }
+
       if (canvasState.mode === CanvasMode.Pencil || canvasState.mode === CanvasMode.Inserting) return
       if (canvasState.mode === CanvasMode.Connecting) return
       if (canvasState.mode === CanvasMode.Eraser) {
@@ -1198,7 +1246,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         deleteLayerById(layerId)
         return
       }
-      if (canvasState.mode === CanvasMode.Panning || isSpacePressed || e.button === 1) {
+      if (canvasState.mode === CanvasMode.Panning || isSpacePressed) {
         setCanvasState({
           mode: CanvasMode.Panning,
           origin: { x: e.clientX, y: e.clientY },
@@ -1348,11 +1396,15 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
           break
         case "h":
         case "H":
-          setCanvasState({
-            mode: CanvasMode.Panning,
-            origin: { x: 0, y: 0 },
-            cameraOrigin: { x: camera.x, y: camera.y },
-          })
+          if (canvasState.mode === CanvasMode.Panning) {
+            setCanvasState({ mode: CanvasMode.None })
+          } else {
+            setCanvasState({
+              mode: CanvasMode.Panning,
+              origin: { x: 0, y: 0 },
+              cameraOrigin: { x: camera.x, y: camera.y },
+            })
+          }
           break
         case "c":
         case "C":
@@ -1653,6 +1705,9 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         onPointerLeave={onPointerLeave as any}
         onPointerDown={onPointerDown}
         onPointerUp={onPointerUp}
+        onAuxClick={(e) => {
+          if (e.button === 1) e.preventDefault()
+        }}
         style={{ cursor: cursorStyle }}
       >
         <defs>

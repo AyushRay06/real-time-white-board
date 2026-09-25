@@ -86,11 +86,15 @@ export const Toolbar = ({
           label="Pan / Move Canvas (H or Hold Space)"
           icon={Hand}
           onClick={() =>
-            setCanvasState({
-              mode: CanvasMode.Panning,
-              origin: { x: 0, y: 0 },
-              cameraOrigin: { x: 0, y: 0 },
-            })
+            setCanvasState(
+              canvasState.mode === CanvasMode.Panning
+                ? { mode: CanvasMode.None }
+                : {
+                    mode: CanvasMode.Panning,
+                    origin: { x: 0, y: 0 },
+                    cameraOrigin: { x: 0, y: 0 },
+                  }
+            )
           }
           isActive={canvasState.mode === CanvasMode.Panning}
         />
