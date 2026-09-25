@@ -1058,6 +1058,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   )
 
   const unselectLayer = useMutation(({ self, setMyPresence }) => {
+    setSnappingGuides(null)
     if (self.presence.selection.length > 0) setMyPresence({ selection: [] }, { addToHistory: true })
   }, [])
 
@@ -1356,6 +1357,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   )
 
   const onPointerLeave = useMutation(({ setMyPresence }) => {
+    setSnappingGuides(null)
     isErasingRef.current = false
     setEraserPoint(null)
     setMyPresence({ cursor: null })
@@ -1406,6 +1408,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   }, [camera, canvasState, startDrawing, contextMenu, isSpacePressed, eraseAtPoint])
 
   const onPointerUp = useMutation(({}, e: React.PointerEvent) => {
+    setSnappingGuides(null)
     // Releasing the middle mouse button immediately ends panning and switches back to default mode
     if (e.button === 1 || isMiddlePanningRef.current) {
       isMiddlePanningRef.current = false
@@ -1752,8 +1755,10 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   ])
 
   // Global pointerup listener to ensure middle mouse panning is immediately released
+  // and snapping reference lines are dismissed upon releasing the pointer anywhere
   useEffect(() => {
     const handleWindowPointerUp = (e: PointerEvent) => {
+      setSnappingGuides(null)
       if (e.button === 1 || isMiddlePanningRef.current) {
         isMiddlePanningRef.current = false
         setCanvasState((prev) => (prev.mode === CanvasMode.Panning ? { mode: CanvasMode.None } : prev))
@@ -1762,6 +1767,13 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
     window.addEventListener("pointerup", handleWindowPointerUp)
     return () => window.removeEventListener("pointerup", handleWindowPointerUp)
   }, [])
+
+  // Ensure magnetic reference guide lines strictly disappear whenever an element is done moving or unselected
+  useEffect(() => {
+    if (mySelection.length === 0 || canvasState.mode !== CanvasMode.Translating) {
+      setSnappingGuides(null)
+    }
+  }, [mySelection.length, canvasState.mode])
 
   const onLibrarySelect = useCallback((type: SysComponent) => {
     setCanvasState({ mode: CanvasMode.Inserting, layerType: LayerType.Component, componentType: type })
@@ -2072,8 +2084,8 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
             />
           )}
 
-          {/* Smart Magnetic Snapping Alignment Guides */}
-          {snappingGuides?.x !== undefined && (
+          {/* Smart Magnetic Snapping Alignment Guides - only rendered while actively translating */}
+          {canvasState.mode === CanvasMode.Translating && mySelection.length > 0 && snappingGuides?.x !== undefined && (
             <line
               x1={snappingGuides.x}
               y1={-50000}
@@ -2085,7 +2097,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
               className="pointer-events-none"
             />
           )}
-          {snappingGuides?.y !== undefined && (
+          {canvasState.mode === CanvasMode.Translating && mySelection.length > 0 && snappingGuides?.y !== undefined && (
             <line
               x1={-50000}
               y1={snappingGuides.y}
