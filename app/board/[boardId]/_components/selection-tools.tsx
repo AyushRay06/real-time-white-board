@@ -65,6 +65,9 @@ import {
   AlertTriangle,
   Database,
   ListOrdered,
+  Boxes,
+  Maximize2,
+  Move,
 } from "lucide-react"
 import {
   DropdownMenu,
@@ -81,7 +84,20 @@ interface SelectionToolsProps {
   onDuplicate?: () => void
   onRename?: () => void
   onSelectConnected?: () => void
+  onSelectEnclosed?: (sectionId: string) => void
+  onFitSectionToEnclosed?: (sectionId: string) => void
+  moveSectionWithContents?: boolean
+  onToggleMoveSectionWithContents?: () => void
 }
+
+const SECTION_PRESETS = [
+  { name: "VPC Network", fill: { r: 99, g: 102, b: 241 }, pattern: "dashed" as const, desc: "Virtual Private Cloud boundary" },
+  { name: "Public Subnet (DMZ)", fill: { r: 16, g: 185, b: 129 }, pattern: "dashed" as const, desc: "Public facing DMZ & Load Balancers" },
+  { name: "Private App Subnet", fill: { r: 14, g: 165, b: 233 }, pattern: "dashed" as const, desc: "Internal microservices tier" },
+  { name: "Database & Storage Tier", fill: { r: 245, g: 158, b: 11 }, pattern: "dotted" as const, desc: "Stateful databases, caches & queues" },
+  { name: "Kubernetes Cluster", fill: { r: 168, g: 85, b: 247 }, pattern: "dashed" as const, desc: "Container pods & service mesh" },
+  { name: "Security & Auth Zone", fill: { r: 244, g: 63, b: 94 }, pattern: "solid" as const, desc: "IAM, Key Vault & Auth services" },
+]
 
 const PALETTE: { name: string; color: Color; hex: string }[] = [
   { name: "Dark", hex: "#0f172a", color: { r: 15, g: 23, b: 42 } },
@@ -97,7 +113,16 @@ const PALETTE: { name: string; color: Color; hex: string }[] = [
 ]
 
 export const SelectionTools = memo(
-  ({ camera, setLastUsedColor, onDuplicate, onSelectConnected }: SelectionToolsProps) => {
+  ({
+    camera,
+    setLastUsedColor,
+    onDuplicate,
+    onSelectConnected,
+    onSelectEnclosed,
+    onFitSectionToEnclosed,
+    moveSectionWithContents = true,
+    onToggleMoveSectionWithContents,
+  }: SelectionToolsProps) => {
     const selection = useSelf((me) => me.presence.selection)
     const selectionBounds = useSelectionBounds()
     const { theme } = useCanvasTheme()
@@ -294,6 +319,24 @@ export const SelectionTools = memo(
             default:           statusText = "";           break
           }
           ;(layer as any).set("statusText", statusText)
+        }
+      },
+      [soleLayerId]
+    )
+
+    // Architecture Section Preset mutation
+    const applySectionPreset = useMutation(
+      (
+        { storage },
+        preset: { name: string; fill: Color; pattern: "solid" | "dashed" | "dotted" }
+      ) => {
+        if (!soleLayerId) return
+        const layer = storage.get("layers").get(soleLayerId)
+        if (layer && layer.get("type") === LayerType.Section) {
+          layer.set("value", preset.name)
+          layer.set("fill", preset.fill)
+          ;(layer as any).set("strokePattern", preset.pattern)
+          setLabelInput(preset.name)
         }
       },
       [soleLayerId]
@@ -762,6 +805,28 @@ export const SelectionTools = memo(
                 }
               }}
               className={`outline-none rounded-lg px-2 py-0.5 text-xs font-semibold w-32 sm:w-44 transition border ${inputClassComp}`}
+            />
+          </div>
+        )}
+
+        {isSection && (
+          <div className={`flex items-center gap-1.5 border-r pr-2 ${dividerClass}`}>
+            <div className={`p-1 rounded-md ${isLight ? "bg-indigo-50 text-indigo-600" : "bg-indigo-500/20 text-indigo-400"}`}>
+              <Layers className="w-3.5 h-3.5" />
+            </div>
+            <input
+              type="text"
+              value={labelInput}
+              placeholder="Zone / Subnet Name"
+              onChange={(e) => setLabelInput(e.target.value)}
+              onBlur={(e) => saveLabel(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  saveLabel(e.currentTarget.value)
+                  e.currentTarget.blur()
+                }
+              }}
+              className={`outline-none rounded-lg px-2 py-0.5 text-xs font-semibold w-32 sm:w-40 transition border ${inputClassComp}`}
             />
           </div>
         )}
@@ -1316,6 +1381,123 @@ export const SelectionTools = memo(
               </DropdownMenu>
             </div>
           )}
+
+        {/* ─── ARCHITECTURE SECTION / ZONE CONTROLS ─── */}
+        {isSection && (
+          <div className={`flex items-center gap-1.5 border-r pr-2 ${dividerClass}`}>
+            {/* Zone Presets Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-medium transition ${buttonPillClass}`}
+                >
+                  <span>Presets</span>
+                  <ChevronDown className={`w-3 h-3 ${isLight ? "text-slate-400" : "text-neutral-400"}`} />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="start"
+                side={shouldFlipBelow ? "bottom" : "top"}
+                className={`rounded-xl p-1.5 z-50 min-w-[220px] border ${dropdownMenuContentClass}`}
+              >
+                {SECTION_PRESETS.map((p) => (
+                  <DropdownMenuItem
+                    key={p.name}
+                    onClick={() => applySectionPreset(p)}
+                    className={`flex items-center gap-2 text-xs py-1.5 ${dropdownMenuItemClass}`}
+                  >
+                    <div
+                      className="w-3 h-3 rounded-full shrink-0"
+                      style={{ backgroundColor: `rgb(${p.fill.r}, ${p.fill.g}, ${p.fill.b})` }}
+                    />
+                    <div className="flex flex-col">
+                      <span className="font-semibold">{p.name}</span>
+                      <span className="text-[10px] opacity-60">{p.desc}</span>
+                    </div>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Stroke Pattern */}
+            <div className={`flex items-center p-0.5 rounded-lg border ${buttonPillClass}`}>
+              <Hint label="Solid Line">
+                <button
+                  onClick={() => setStrokePattern("solid")}
+                  className={`px-1.5 py-0.5 rounded text-[11px] font-mono ${
+                    currentStrokePattern === "solid" ? "bg-indigo-500 text-white" : buttonPillInactive
+                  }`}
+                >
+                  —
+                </button>
+              </Hint>
+              <Hint label="Dashed Line (Default for Subnets)">
+                <button
+                  onClick={() => setStrokePattern("dashed")}
+                  className={`px-1.5 py-0.5 rounded text-[11px] font-mono ${
+                    currentStrokePattern === "dashed" ? "bg-indigo-500 text-white" : buttonPillInactive
+                  }`}
+                >
+                  - -
+                </button>
+              </Hint>
+              <Hint label="Dotted Line">
+                <button
+                  onClick={() => setStrokePattern("dotted")}
+                  className={`px-1.5 py-0.5 rounded text-[11px] font-mono ${
+                    currentStrokePattern === "dotted" ? "bg-indigo-500 text-white" : buttonPillInactive
+                  }`}
+                >
+                  ···
+                </button>
+              </Hint>
+            </div>
+
+            {/* Select All Enclosed Components */}
+            {soleLayerId && onSelectEnclosed && (
+              <Hint label="Select all components inside this zone">
+                <button
+                  onClick={() => onSelectEnclosed(soleLayerId)}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-lg border text-xs font-medium transition ${buttonPillClass}`}
+                >
+                  <Boxes className="w-3.5 h-3.5 text-indigo-500" />
+                  <span className="hidden sm:inline">Select Inside</span>
+                </button>
+              </Hint>
+            )}
+
+            {/* Auto-Fit Zone Boundary */}
+            {soleLayerId && onFitSectionToEnclosed && (
+              <Hint label="Auto-fit zone boundary around enclosed components">
+                <button
+                  onClick={() => onFitSectionToEnclosed(soleLayerId)}
+                  className={`p-1.5 rounded-lg border text-xs font-medium transition ${buttonPillClass}`}
+                >
+                  <Maximize2 className="w-3.5 h-3.5 text-indigo-500" />
+                </button>
+              </Hint>
+            )}
+
+            {/* Move with contents toggle */}
+            {onToggleMoveSectionWithContents && (
+              <Hint label={moveSectionWithContents ? "Dragging zone moves enclosed components (Hold Alt to move zone only)" : "Dragging moves zone boundary only"}>
+                <button
+                  onClick={onToggleMoveSectionWithContents}
+                  className={`flex items-center gap-1 px-1.5 py-1 rounded-lg border text-xs font-medium transition ${
+                    moveSectionWithContents
+                      ? "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-500/30"
+                      : buttonPillInactive
+                  }`}
+                >
+                  <Move className="w-3.5 h-3.5" />
+                  <span className="text-[10px] hidden md:inline">
+                    {moveSectionWithContents ? "Grouped" : "Frame Only"}
+                  </span>
+                </button>
+              </Hint>
+            )}
+          </div>
+        )}
 
         {/* ── SECTION 3: COMPACT COLOR DROPDOWN ── */}
         <div className={`flex items-center border-r pr-2 ${dividerClass}`}>

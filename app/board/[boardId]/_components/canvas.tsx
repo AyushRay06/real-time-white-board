@@ -190,6 +190,14 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   // Clipboard for Copy / Paste
   const clipboardRef = useRef<any[]>([])
 
+  // Architecture Section Dragging & Enclosure Support
+  const dragInitialLayersToMoveRef = useRef<string[] | null>(null)
+  const [moveSectionWithContents, setMoveSectionWithContents] = useState(true)
+  const moveSectionWithContentsRef = useRef(true)
+  useEffect(() => {
+    moveSectionWithContentsRef.current = moveSectionWithContents
+  }, [moveSectionWithContents])
+
   // Preview arrow endpoint while the user has clicked "from" and is moving the mouse
   const [connectPreview, setConnectPreview] = useState<Point | null>(null)
 
@@ -967,34 +975,12 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       const liveLayers = storage.get("layers")
       const liveLayerIds = storage.get("layerIds")
 
-      const layersToMove = new Set<string>(self.presence.selection)
-
-      // If any selected layer is an Architecture Section, also move all components/layers enclosed inside it!
-      for (const selId of self.presence.selection) {
-        const selLayer = liveLayers.get(selId)
-        if (selLayer && selLayer.get("type") === LayerType.Section) {
-          const sx = selLayer.get("x") || 0
-          const sy = selLayer.get("y") || 0
-          const sw = selLayer.get("width") || 440
-          const sh = selLayer.get("height") || 300
-
-          liveLayerIds.forEach((otherId) => {
-            if (otherId === selId || layersToMove.has(otherId)) return
-            const other = liveLayers.get(otherId)
-            if (!other || other.get("type") === LayerType.Arrow) return
-            const ox = other.get("x") || 0
-            const oy = other.get("y") || 0
-            const ow = other.get("width") || 100
-            const oh = other.get("height") || 100
-            const cx = ox + ow / 2
-            const cy = oy + oh / 2
-            // If the element's center is inside this section
-            if (cx >= sx && cx <= sx + sw && cy >= sy && cy <= sy + sh) {
-              layersToMove.add(otherId)
-            }
-          })
-        }
-      }
+      // Use frozen initial snapshot from drag start.
+      // Crucial: NEVER search for or capture new layers during mousemove!
+      const movingLayerIds =
+        dragInitialLayersToMoveRef.current && dragInitialLayersToMoveRef.current.length > 0
+          ? dragInitialLayersToMoveRef.current
+          : self.presence.selection
 
       let finalOffsetX = offset.x
       let finalOffsetY = offset.y
@@ -1024,44 +1010,47 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
           let bestSnapY: { guide: number; snapPos: number; dist: number } | null = null
           const SNAP_THRESHOLD = 5
 
-          for (let i = 0; i < liveLayerIds.length; i++) {
-            const otherId = liveLayerIds.get(i)
-            if (!otherId || otherId === targetId) continue
-            const other = liveLayers.get(otherId)
-            if (!other || other.get("type") === LayerType.Arrow) continue
-            const ox = (other.get("x") as number) || 0
-            const oy = (other.get("y") as number) || 0
-            const ow = (other.get("width") as number) || 100
-            const oh = (other.get("height") as number) || 100
-            const ocx = ox + ow / 2
-            const ocy = oy + oh / 2
+          // Only compute magnetic snapping guides if not dragging a Section
+          if (targetLayer.get("type") !== LayerType.Section) {
+            for (let i = 0; i < liveLayerIds.length; i++) {
+              const otherId = liveLayerIds.get(i)
+              if (!otherId || otherId === targetId) continue
+              const other = liveLayers.get(otherId)
+              if (!other || other.get("type") === LayerType.Arrow || other.get("type") === LayerType.Section) continue
+              const ox = (other.get("x") as number) || 0
+              const oy = (other.get("y") as number) || 0
+              const ow = (other.get("width") as number) || 100
+              const oh = (other.get("height") as number) || 100
+              const ocx = ox + ow / 2
+              const ocy = oy + oh / 2
 
-            // X alignments: left to left, center to center, right to right
-            const xCandidates = [
-              { guide: ox, snapPos: ox, dist: idealX - ox },
-              { guide: ocx, snapPos: ocx - curW / 2, dist: idealCX - ocx },
-              { guide: ox + ow, snapPos: ox + ow - curW, dist: (idealX + curW) - (ox + ow) },
-            ]
-            for (const cand of xCandidates) {
-              const absD = Math.abs(cand.dist)
-              if (absD <= SNAP_THRESHOLD) {
-                if (!bestSnapX || absD < Math.abs(bestSnapX.dist)) {
-                  bestSnapX = cand
+              // X alignments: left to left, center to center, right to right
+              const xCandidates = [
+                { guide: ox, snapPos: ox, dist: idealX - ox },
+                { guide: ocx, snapPos: ocx - curW / 2, dist: idealCX - ocx },
+                { guide: ox + ow, snapPos: ox + ow - curW, dist: (idealX + curW) - (ox + ow) },
+              ]
+              for (const cand of xCandidates) {
+                const absD = Math.abs(cand.dist)
+                if (absD <= SNAP_THRESHOLD) {
+                  if (!bestSnapX || absD < Math.abs(bestSnapX.dist)) {
+                    bestSnapX = cand
+                  }
                 }
               }
-            }
 
-            // Y alignments: top to top, center to center, bottom to bottom
-            const yCandidates = [
-              { guide: oy, snapPos: oy, dist: idealY - oy },
-              { guide: ocy, snapPos: ocy - curH / 2, dist: idealCY - ocy },
-              { guide: oy + oh, snapPos: oy + oh - curH, dist: (idealY + curH) - (oy + oh) },
-            ]
-            for (const cand of yCandidates) {
-              const absD = Math.abs(cand.dist)
-              if (absD <= SNAP_THRESHOLD) {
-                if (!bestSnapY || absD < Math.abs(bestSnapY.dist)) {
-                  bestSnapY = cand
+              // Y alignments: top to top, center to center, bottom to bottom
+              const yCandidates = [
+                { guide: oy, snapPos: oy, dist: idealY - oy },
+                { guide: ocy, snapPos: ocy - curH / 2, dist: idealCY - ocy },
+                { guide: oy + oh, snapPos: oy + oh - curH, dist: (idealY + curH) - (oy + oh) },
+              ]
+              for (const cand of yCandidates) {
+                const absD = Math.abs(cand.dist)
+                if (absD <= SNAP_THRESHOLD) {
+                  if (!bestSnapY || absD < Math.abs(bestSnapY.dist)) {
+                    bestSnapY = cand
+                  }
                 }
               }
             }
@@ -1110,7 +1099,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         }
       }
 
-      layersToMove.forEach((id) => {
+      movingLayerIds.forEach((id) => {
         const layer = liveLayers.get(id)
         if (layer && !layer.get("isLocked")) {
           if (layer.get("type") === LayerType.Arrow) {
@@ -1134,10 +1123,38 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       history.pause()
       e.stopPropagation()
       dragUnsnappedRef.current = null
+      const layersToMove = new Set<string>(mySelection)
+      if (!e.altKey && moveSectionWithContentsRef.current) {
+        for (const selId of mySelection) {
+          const selLayer = layers.get(selId)
+          if (selLayer && selLayer.type === LayerType.Section) {
+            const sx = selLayer.x || 0
+            const sy = selLayer.y || 0
+            const sw = selLayer.width || 440
+            const sh = selLayer.height || 300
+
+            layerIds.forEach((otherId) => {
+              if (otherId === selId || layersToMove.has(otherId)) return
+              const other = layers.get(otherId)
+              if (!other || other.type === LayerType.Arrow || other.type === LayerType.Section) return
+              const ox = other.x || 0
+              const oy = other.y || 0
+              const ow = other.width || 100
+              const oh = other.height || 100
+              const cx = ox + ow / 2
+              const cy = oy + oh / 2
+              if (cx >= sx && cx <= sx + sw && cy >= sy && cy <= sy + sh) {
+                layersToMove.add(otherId)
+              }
+            })
+          }
+        }
+      }
+      dragInitialLayersToMoveRef.current = Array.from(layersToMove)
       const point = pointerEventToCanvasPoint(e, camera)
       setCanvasState({ mode: CanvasMode.Translating, current: point })
     },
-    [camera, history]
+    [camera, history, mySelection, layers, layerIds]
   )
 
   const unselectLayer = useMutation(({ self, setMyPresence }) => {
@@ -1493,6 +1510,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
 
   const onPointerUp = useMutation(({}, e: React.PointerEvent) => {
     dragUnsnappedRef.current = null
+    dragInitialLayersToMoveRef.current = null
     setSnappingGuides(null)
     // Releasing the middle mouse button immediately ends panning and switches back to default mode
     if (e.button === 1 || isMiddlePanningRef.current) {
@@ -1543,7 +1561,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   const selections = useOthersMapped((other) => other.presence.selection)
 
   const onLayerPointerDown = useMutation(
-    ({ self, setMyPresence }, e: React.PointerEvent, layerId: string) => {
+    ({ storage, self, setMyPresence }, e: React.PointerEvent, layerId: string) => {
       // Central scroll mouse button (middle-click): ONLY active while holding/pressing, even over layers
       if (e.button === 1) {
         e.preventDefault()
@@ -1591,9 +1609,47 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
 
       // If clicked item is not in current multi-selection, select it alone
       // But if it IS already part of the multi-selection, keep whole group selected!
-      if (!self.presence.selection.includes(layerId)) {
+      const isAlreadySelected = self.presence.selection.includes(layerId)
+      const currentSelection = isAlreadySelected ? self.presence.selection : [layerId]
+      if (!isAlreadySelected) {
         setMyPresence({ selection: [layerId] }, { addToHistory: true })
       }
+
+      // ── SNAPSHOT LAYERS TO MOVE AT DRAG START ──
+      // Crucial: Only layers that are ALREADY inside this section before drag begins are moved.
+      // External components passed over during drag are NEVER captured!
+      const layersToMove = new Set<string>(currentSelection)
+      const liveLayers = storage.get("layers")
+      const liveLayerIds = storage.get("layerIds")
+
+      if (!e.altKey && moveSectionWithContentsRef.current) {
+        for (const selId of currentSelection) {
+          const selLayer = liveLayers.get(selId)
+          if (selLayer && selLayer.get("type") === LayerType.Section) {
+            const sx = (selLayer.get("x") as number) || 0
+            const sy = (selLayer.get("y") as number) || 0
+            const sw = (selLayer.get("width") as number) || 440
+            const sh = (selLayer.get("height") as number) || 300
+
+            liveLayerIds.forEach((otherId) => {
+              if (otherId === selId || layersToMove.has(otherId)) return
+              const other = liveLayers.get(otherId)
+              if (!other || other.get("type") === LayerType.Arrow || other.get("type") === LayerType.Section) return
+              const ox = (other.get("x") as number) || 0
+              const oy = (other.get("y") as number) || 0
+              const ow = (other.get("width") as number) || 100
+              const oh = (other.get("height") as number) || 100
+              const cx = ox + ow / 2
+              const cy = oy + oh / 2
+              if (cx >= sx && cx <= sx + sw && cy >= sy && cy <= sy + sh) {
+                layersToMove.add(otherId)
+              }
+            })
+          }
+        }
+      }
+
+      dragInitialLayersToMoveRef.current = Array.from(layersToMove)
       dragUnsnappedRef.current = null
       setCanvasState({ mode: CanvasMode.Translating, current: point })
     },
@@ -1851,6 +1907,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   useEffect(() => {
     const handleWindowPointerUp = (e: PointerEvent) => {
       dragUnsnappedRef.current = null
+      dragInitialLayersToMoveRef.current = null
       setSnappingGuides(null)
       if (e.button === 1 || isMiddlePanningRef.current) {
         isMiddlePanningRef.current = false
@@ -1865,9 +1922,88 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   useEffect(() => {
     if (mySelection.length === 0 || canvasState.mode !== CanvasMode.Translating) {
       dragUnsnappedRef.current = null
+      dragInitialLayersToMoveRef.current = null
       setSnappingGuides(null)
     }
   }, [mySelection.length, canvasState.mode])
+
+  // ─── ARCHITECTURE SECTION UTILITIES ─────────────────────────────────────
+  const selectSectionEnclosed = useMutation(({ storage, setMyPresence }, sectionId: string) => {
+    const liveLayers = storage.get("layers")
+    const liveLayerIds = storage.get("layerIds")
+    const section = liveLayers.get(sectionId)
+    if (!section || section.get("type") !== LayerType.Section) return
+
+    const sx = (section.get("x") as number) || 0
+    const sy = (section.get("y") as number) || 0
+    const sw = (section.get("width") as number) || 440
+    const sh = (section.get("height") as number) || 300
+
+    const enclosed: string[] = [sectionId]
+    liveLayerIds.forEach((id) => {
+      if (id === sectionId) return
+      const l = liveLayers.get(id)
+      if (!l || l.get("type") === LayerType.Arrow || l.get("type") === LayerType.Section) return
+      const ox = (l.get("x") as number) || 0
+      const oy = (l.get("y") as number) || 0
+      const ow = (l.get("width") as number) || 100
+      const oh = (l.get("height") as number) || 100
+      const cx = ox + ow / 2
+      const cy = oy + oh / 2
+      if (cx >= sx && cx <= sx + sw && cy >= sy && cy <= sy + sh) {
+        enclosed.push(id)
+      }
+    })
+
+    setMyPresence({ selection: enclosed }, { addToHistory: true })
+    playSnapSound()
+  }, [])
+
+  const fitSectionToEnclosed = useMutation(({ storage }, sectionId: string) => {
+    const liveLayers = storage.get("layers")
+    const liveLayerIds = storage.get("layerIds")
+    const section = liveLayers.get(sectionId)
+    if (!section || section.get("type") !== LayerType.Section) return
+
+    const sx = (section.get("x") as number) || 0
+    const sy = (section.get("y") as number) || 0
+    const sw = (section.get("width") as number) || 440
+    const sh = (section.get("height") as number) || 300
+
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity
+    let count = 0
+
+    liveLayerIds.forEach((id) => {
+      if (id === sectionId) return
+      const l = liveLayers.get(id)
+      if (!l || l.get("type") === LayerType.Arrow || l.get("type") === LayerType.Section) return
+      const ox = (l.get("x") as number) || 0
+      const oy = (l.get("y") as number) || 0
+      const ow = (l.get("width") as number) || 100
+      const oh = (l.get("height") as number) || 100
+      const cx = ox + ow / 2
+      const cy = oy + oh / 2
+      if (cx >= sx && cx <= sx + sw && cy >= sy && cy <= sy + sh) {
+        count++
+        minX = Math.min(minX, ox)
+        minY = Math.min(minY, oy)
+        maxX = Math.max(maxX, ox + ow)
+        maxY = Math.max(maxY, oy + oh)
+      }
+    })
+
+    if (count > 0) {
+      const padding = 32
+      const headerPaddingTop = 48
+      section.update({
+        x: Math.round(minX - padding),
+        y: Math.round(minY - headerPaddingTop),
+        width: Math.round(Math.max(300, maxX - minX + padding * 2)),
+        height: Math.round(Math.max(200, maxY - minY + padding + headerPaddingTop)),
+      })
+      playSnapSound()
+    }
+  }, [])
 
   // ─── EXPORT DIAGRAM ──────────────────────────────────────────────────────
   const handleExport = useCallback(
@@ -2006,6 +2142,10 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
           if (soleLayerId) setRenamingLayerId(soleLayerId)
         }}
         onSelectConnected={selectConnectedLayout}
+        onSelectEnclosed={selectSectionEnclosed}
+        onFitSectionToEnclosed={fitSectionToEnclosed}
+        moveSectionWithContents={moveSectionWithContents}
+        onToggleMoveSectionWithContents={() => setMoveSectionWithContents((v) => !v)}
       />
 
       {/* Floating Zoom & Controls Widget */}

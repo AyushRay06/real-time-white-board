@@ -62,12 +62,16 @@ export const SectionLayerComponent = memo(
         <foreignObject
           x={12}
           y={12}
-          width={Math.max(160, Math.min(width - 24, 340))}
+          width={Math.max(160, Math.min(width - 24, 380))}
           height={38}
           className="pointer-events-auto"
         >
           <div
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold shadow-sm backdrop-blur-md transition-all ${
+            onPointerDown={(e) => {
+              // Ensure clicking/dragging header selects and moves the section
+              onPointerDown(e, id)
+            }}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold shadow-xs backdrop-blur-md transition-all cursor-move select-none ${
               isSelected
                 ? isDark
                   ? "bg-slate-900/95 text-indigo-300 border-indigo-500 shadow-md ring-2 ring-indigo-500/20"
@@ -76,7 +80,7 @@ export const SectionLayerComponent = memo(
                 ? "bg-slate-900/85 text-slate-200 border-slate-700 hover:bg-slate-900/95"
                 : "bg-white/85 text-neutral-800 border-neutral-300 hover:bg-white/95"
             }`}
-            title="Double-click to rename this section"
+            title="Drag to reposition · Double-click to rename"
             onDoubleClick={(e) => {
               e.stopPropagation()
               onDoubleClick?.(id)
@@ -88,7 +92,7 @@ export const SectionLayerComponent = memo(
             >
               <Layers className="w-2.5 h-2.5" />
             </div>
-            <span className="truncate max-w-[200px] tracking-wide font-medium">
+            <span className="truncate max-w-[220px] tracking-wide font-medium">
               {label}
             </span>
             <Edit2 className="w-2.5 h-2.5 opacity-40 hover:opacity-100 cursor-pointer ml-auto" />

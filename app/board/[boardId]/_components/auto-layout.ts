@@ -21,10 +21,15 @@ export function computeAutoLayout(
 ): Map<string, { x: number; y: number }> {
   const result = new Map<string, { x: number; y: number }>()
 
-  // 1. Filter out only node layers (components, rectangles, notes, docs, sections)
+  // 1. Filter out only node layers (components, rectangles, notes, docs - excluding sections which are containers)
   const nodeIds = layerIds.filter((id) => {
     const l = layers.get(id)
-    return l && l.type !== LayerType.Arrow && l.type !== LayerType.Path
+    return (
+      l &&
+      l.type !== LayerType.Arrow &&
+      l.type !== LayerType.Path &&
+      l.type !== LayerType.Section
+    )
   })
 
   if (nodeIds.length === 0) return result
