@@ -220,10 +220,71 @@ export function ExcalidrawStoryline() {
                 </div>
               </div>
 
-              {/* Hand-drawn style sticky note with tilt */}
-              <div className="absolute right-4 top-4 w-44 p-3 bg-amber-100 border border-amber-300/80 shadow-md rounded-xl rotate-[2.5deg] text-xs font-medium text-amber-950 hidden md:block">
-                <span className="block font-bold mb-1 text-[11px] text-amber-800">⚡️ RFC Decision</span>
-                Add Redis cluster in private subnet for sub-2ms caching.
+              {/* 3D Hand-drawn sticky note with flying curled corner */}
+              <div className="absolute right-4 top-4 w-48 select-none hidden md:block rotate-[2.5deg]">
+                {/* 3D Lifted Corner Shadow */}
+                <div
+                  className="absolute -bottom-2 -right-1 w-3/4 h-8 pointer-events-none rounded-full"
+                  style={{
+                    background:
+                      "radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.12) 55%, transparent 75%)",
+                    transform: "rotate(6deg) skewX(8deg)",
+                    filter: "blur(4px)",
+                  }}
+                />
+
+                {/* Main Paper Body with clipped corner */}
+                <div
+                  className="relative p-3.5 pt-2 pb-5 pr-6 bg-amber-100 border border-amber-300/80 rounded-[2px]"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.08) 25%, rgba(0,0,0,0.02) 75%, rgba(0,0,0,0.08) 100%)",
+                    boxShadow:
+                      "0 1px 3px rgba(0,0,0,0.08), 0 6px 14px -2px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.6)",
+                    clipPath:
+                      "polygon(0% 0%, 100% 0%, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0% 100%)",
+                  }}
+                >
+                  {/* Top adhesive band */}
+                  <div className="w-full h-3.5 -mt-2 -mx-3.5 mb-2 px-3.5 bg-black/[0.04] border-b border-black/[0.06] flex items-center">
+                    <div className="w-full h-[1px] bg-white/30 rounded-full" />
+                  </div>
+                  <span className="block font-bold mb-1 text-[11px] text-amber-800">⚡️ RFC Decision</span>
+                  <p className="text-xs font-medium text-amber-950 leading-snug">
+                    Add Redis cluster in private subnet for sub-2ms caching.
+                  </p>
+                </div>
+
+                {/* 3D Flying / Curled Corner Flap */}
+                <div className="absolute bottom-0 right-0 w-6 h-6 pointer-events-none select-none overflow-visible">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="w-full h-full overflow-visible"
+                    style={{ filter: "drop-shadow(-2px -2px 2.5px rgba(0,0,0,0.22))" }}
+                  >
+                    <defs>
+                      <linearGradient id="lp-curl-1" x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#fef08a" />
+                        <stop offset="30%" stopColor="#ffffff" stopOpacity="0.6" />
+                        <stop offset="60%" stopColor="#fef08a" />
+                        <stop offset="100%" stopColor="#000000" stopOpacity="0.2" />
+                      </linearGradient>
+                      <radialGradient id="lp-curl-shadow-1" cx="20%" cy="20%" r="80%">
+                        <stop offset="0%" stopColor="#000000" stopOpacity="0.45" />
+                        <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+                      </radialGradient>
+                    </defs>
+                    <path d="M 0 24 Q 12 20 24 0 L 24 24 Z" fill="url(#lp-curl-shadow-1)" />
+                    <path d="M 0 24 Q 9 9 24 0 C 19 9 12 18 0 24 Z" fill="#fef08a" />
+                    <path d="M 0 24 Q 9 9 24 0 C 19 9 12 18 0 24 Z" fill="url(#lp-curl-1)" />
+                    <path
+                      d="M 24 0 C 19 9 12 18 0 24"
+                      stroke="rgba(255, 255, 255, 0.75)"
+                      strokeWidth="0.8"
+                      fill="none"
+                    />
+                  </svg>
+                </div>
               </div>
             </div>
 
@@ -382,12 +443,73 @@ export function ExcalidrawStoryline() {
                 </div>
               </div>
 
-              {/* Collaborative Sticky Note */}
-              <div className="w-48 p-4 bg-yellow-100 border border-yellow-300 shadow-md rounded-2xl rotate-[-2deg] text-xs text-yellow-950 font-medium">
-                <span className="font-bold text-[11px] text-yellow-800 block mb-1">
-                  💬 Dave commented:
-                </span>
-                We should queue webhook events via Kafka before hitting the database.
+              {/* 3D Collaborative Sticky Note with flying corner */}
+              <div className="relative w-52 select-none rotate-[-2deg]">
+                {/* 3D Lifted Shadow */}
+                <div
+                  className="absolute -bottom-2 -right-1 w-3/4 h-8 pointer-events-none rounded-full"
+                  style={{
+                    background:
+                      "radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.12) 55%, transparent 75%)",
+                    transform: "rotate(6deg) skewX(8deg)",
+                    filter: "blur(4px)",
+                  }}
+                />
+
+                {/* Main Paper Body with clipped corner */}
+                <div
+                  className="relative p-3.5 pt-2 pb-5 pr-6 bg-amber-100 border border-amber-300/80 rounded-[2px]"
+                  style={{
+                    backgroundImage:
+                      "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.08) 25%, rgba(0,0,0,0.02) 75%, rgba(0,0,0,0.08) 100%)",
+                    boxShadow:
+                      "0 1px 3px rgba(0,0,0,0.08), 0 6px 14px -2px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.6)",
+                    clipPath:
+                      "polygon(0% 0%, 100% 0%, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0% 100%)",
+                  }}
+                >
+                  {/* Top adhesive band */}
+                  <div className="w-full h-3.5 -mt-2 -mx-3.5 mb-2 px-3.5 bg-black/[0.04] border-b border-black/[0.06] flex items-center">
+                    <div className="w-full h-[1px] bg-white/30 rounded-full" />
+                  </div>
+                  <span className="font-bold text-[11px] text-amber-800 block mb-1">
+                    💬 Dave commented:
+                  </span>
+                  <p className="text-xs text-amber-950 font-medium leading-snug">
+                    We should queue webhook events via Kafka before hitting the database.
+                  </p>
+                </div>
+
+                {/* 3D Flying / Curled Corner Flap */}
+                <div className="absolute bottom-0 right-0 w-6 h-6 pointer-events-none select-none overflow-visible">
+                  <svg
+                    viewBox="0 0 24 24"
+                    className="w-full h-full overflow-visible"
+                    style={{ filter: "drop-shadow(-2px -2px 2.5px rgba(0,0,0,0.22))" }}
+                  >
+                    <defs>
+                      <linearGradient id="lp-curl-2" x1="0%" y1="100%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#fef08a" />
+                        <stop offset="30%" stopColor="#ffffff" stopOpacity="0.6" />
+                        <stop offset="60%" stopColor="#fef08a" />
+                        <stop offset="100%" stopColor="#000000" stopOpacity="0.2" />
+                      </linearGradient>
+                      <radialGradient id="lp-curl-shadow-2" cx="20%" cy="20%" r="80%">
+                        <stop offset="0%" stopColor="#000000" stopOpacity="0.45" />
+                        <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+                      </radialGradient>
+                    </defs>
+                    <path d="M 0 24 Q 12 20 24 0 L 24 24 Z" fill="url(#lp-curl-shadow-2)" />
+                    <path d="M 0 24 Q 9 9 24 0 C 19 9 12 18 0 24 Z" fill="#fef08a" />
+                    <path d="M 0 24 Q 9 9 24 0 C 19 9 12 18 0 24 Z" fill="url(#lp-curl-2)" />
+                    <path
+                      d="M 24 0 C 19 9 12 18 0 24"
+                      stroke="rgba(255, 255, 255, 0.75)"
+                      strokeWidth="0.8"
+                      fill="none"
+                    />
+                  </svg>
+                </div>
               </div>
             </div>
 

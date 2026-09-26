@@ -688,25 +688,58 @@ function renderDiagramDirectToCanvas({
         ctx.fillStyle = "rgba(0, 0, 0, 0.06)"
         ctx.fillRect(note.x, note.y + 17, note.width, 1)
 
-        // Bottom-Right folded dog-ear corner
-        const fold = 16
-        // Under-fold shadow
-        ctx.fillStyle = "rgba(0, 0, 0, 0.16)"
+        // 3D Flying / Curled corner fold
+        const fold = 24
+        // Lifted 3D curl shadow beneath the fold
+        ctx.fillStyle = "rgba(0, 0, 0, 0.28)"
         ctx.beginPath()
         ctx.moveTo(note.x + note.width - fold, note.y + note.height)
-        ctx.lineTo(note.x + note.width, note.y + note.height - fold)
+        ctx.quadraticCurveTo(note.x + note.width - fold / 2, note.y + note.height - 4, note.x + note.width, note.y + note.height - fold)
         ctx.lineTo(note.x + note.width, note.y + note.height)
         ctx.closePath()
         ctx.fill()
 
-        // Folded flap
-        ctx.fillStyle = "rgba(0, 0, 0, 0.09)"
+        // 3D Curled Flap with gradient
+        const flapGrad = ctx.createLinearGradient(
+          note.x + note.width - fold,
+          note.y + note.height,
+          note.x + note.width,
+          note.y + note.height - fold
+        )
+        flapGrad.addColorStop(0, note.fill ? colorToCss(note.fill) : "#fef08a")
+        flapGrad.addColorStop(0.3, "rgba(255, 255, 255, 0.6)")
+        flapGrad.addColorStop(0.6, note.fill ? colorToCss(note.fill) : "#fef08a")
+        flapGrad.addColorStop(1, "rgba(0, 0, 0, 0.18)")
+
+        ctx.fillStyle = flapGrad
         ctx.beginPath()
         ctx.moveTo(note.x + note.width - fold, note.y + note.height)
-        ctx.lineTo(note.x + note.width, note.y + note.height - fold)
-        ctx.lineTo(note.x + note.width - fold, note.y + note.height - fold)
+        ctx.quadraticCurveTo(note.x + note.width - fold * 0.6, note.y + note.height - fold * 0.6, note.x + note.width, note.y + note.height - fold)
+        ctx.bezierCurveTo(
+          note.x + note.width - fold * 0.2,
+          note.y + note.height - fold * 0.6,
+          note.x + note.width - fold * 0.5,
+          note.y + note.height - fold * 0.2,
+          note.x + note.width - fold,
+          note.y + note.height
+        )
         ctx.closePath()
         ctx.fill()
+
+        // Flap rim highlight
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.75)"
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(note.x + note.width, note.y + note.height - fold)
+        ctx.bezierCurveTo(
+          note.x + note.width - fold * 0.2,
+          note.y + note.height - fold * 0.6,
+          note.x + note.width - fold * 0.5,
+          note.y + note.height - fold * 0.2,
+          note.x + note.width - fold,
+          note.y + note.height
+        )
+        ctx.stroke()
 
         if (note.value) {
           ctx.fillStyle = note.fill ? getContrastingTextColor(note.fill) : "#1c1917"
