@@ -284,6 +284,7 @@ export type ComponentLayer = {
   statusText?: string
   customColor?: Color
   isLocked?: boolean
+  iconSvg?: string
 }
 
 export type ArrowStyle = "curvy" | "sharp" | "orthogonal"

@@ -570,9 +570,17 @@ export const SysComponentLayer = memo(function SysComponentLayer({
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
+              padding: 4,
             }}
           >
-            <Icon size={24} color={theme.icon} strokeWidth={1.8} />
+            {layer.iconSvg ? (
+              <div
+                className="w-full h-full flex items-center justify-center select-none"
+                dangerouslySetInnerHTML={{ __html: layer.iconSvg }}
+              />
+            ) : (
+              <Icon size={24} color={theme.icon} strokeWidth={1.8} />
+            )}
           </div>
 
           {/* Label */}

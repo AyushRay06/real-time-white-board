@@ -3,6 +3,7 @@
 import React, { useState } from "react"
 import { SysComponent, DocType } from "@/types/canvas"
 import { COMPONENT_LABELS, COMPONENT_COLORS, ComponentIcon } from "./sys-component-layer"
+import { EXCALIDRAW_LIBRARY_ITEMS } from "@/lib/excalidraw-library"
 import {
   Network,
   Server,
@@ -13,10 +14,11 @@ import {
   Globe,
   Calculator,
   Database,
+  Shapes,
 } from "lucide-react"
 import { useCanvasTheme } from "./canvas-theme-context"
 
-export type ArchitectureSpace = "components" | "tables" | "specs" | "templates"
+export type ArchitectureSpace = "components" | "excalidraw" | "tables" | "specs" | "templates"
 
 const LIBRARY_GROUPS: { label: string; items: SysComponent[] }[] = [
   {
@@ -231,7 +233,7 @@ export const ARCHITECTURE_SPECS: SpecItem[] = [
 ]
 
 interface ComponentLibraryProps {
-  onSelect: (type: SysComponent) => void
+  onSelect: (type: SysComponent, customLabel?: string, iconSvg?: string) => void
   onSelectTemplate?: (templateId: "three-tier" | "microservices" | "cdn-caching") => void
   onSelectDoc?: (docType: DocType) => void
   isOpen: boolean
@@ -286,12 +288,14 @@ export function ComponentLibrary({
         <div className="flex items-center gap-1.5 min-w-0">
           <span className="text-xs font-bold tracking-wide truncate">
             {activeSpace === "components" && "Components"}
+            {activeSpace === "excalidraw" && "Excalidraw Icons"}
             {activeSpace === "tables" && "Tables"}
             {activeSpace === "specs" && "Specifications"}
             {activeSpace === "templates" && "Templates"}
           </span>
           <span className="px-1.5 py-0.5 text-[9px] font-semibold bg-indigo-500/15 text-indigo-400 rounded-full border border-indigo-500/30 shrink-0">
             {activeSpace === "components" && "49"}
+            {activeSpace === "excalidraw" && "18"}
             {activeSpace === "tables" && "6"}
             {activeSpace === "specs" && "4"}
             {activeSpace === "templates" && "3"}
@@ -401,7 +405,94 @@ export function ComponentLibrary({
         </>
       )}
 
-      {/* ── SPACE 2: DATA MODELING & TABLES ── */}
+      {/* ── SPACE 2: EXCALIDRAW / DRAW.IO ICONS ── */}
+      {activeSpace === "excalidraw" && (
+        <>
+          {/* Search Box */}
+          <div className="px-2.5 py-2 border-b border-neutral-100 dark:border-slate-800/60 shrink-0">
+            <div className="relative">
+              <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-400" />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search Excalidraw icons..."
+                className={`w-full pl-8 pr-7 py-1 text-xs rounded-lg border outline-none transition-colors ${
+                  isDark
+                    ? "border-slate-800 bg-slate-800/60 text-slate-100 focus:border-indigo-500 focus:bg-slate-800"
+                    : "border-neutral-200 bg-neutral-50 focus:border-indigo-400 focus:bg-white"
+                }`}
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-neutral-700"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Grid of Excalidraw vector icons */}
+          <div className="overflow-y-auto flex-1 p-2 [scrollbar-width:none]">
+            <div className="grid grid-cols-2 gap-2">
+              {EXCALIDRAW_LIBRARY_ITEMS.filter(
+                (item) =>
+                  !search ||
+                  item.name.toLowerCase().includes(search.toLowerCase()) ||
+                  item.category.toLowerCase().includes(search.toLowerCase())
+              ).map((item) => (
+                <div
+                  key={item.id}
+                  draggable={true}
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData(
+                      "application/json",
+                      JSON.stringify({
+                        type: "sys-component",
+                        componentType: item.componentType,
+                        customLabel: item.name,
+                        iconSvg: item.svg,
+                      })
+                    )
+                    e.dataTransfer.effectAllowed = "copy"
+                  }}
+                  onClick={() => {
+                    onSelect(item.componentType, item.name, item.svg)
+                    onClose()
+                  }}
+                  className={`p-2 rounded-xl border cursor-grab active:cursor-grabbing transition-all group flex flex-col items-center text-center gap-1.5 shadow-2xs hover:scale-[1.02] active:scale-[0.98] ${cardBorder}`}
+                >
+                  <div
+                    className="w-12 h-12 flex items-center justify-center p-1 rounded-lg bg-slate-100 dark:bg-slate-800/70 overflow-hidden shrink-0 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950/40 transition-colors"
+                    dangerouslySetInnerHTML={{ __html: item.svg }}
+                  />
+                  <div className="min-w-0 w-full">
+                    <span className="text-[11px] font-semibold leading-tight group-hover:text-indigo-500 transition-colors block truncate">
+                      {item.name}
+                    </span>
+                    <span className="text-[9px] text-neutral-400 dark:text-slate-500 block truncate">
+                      {item.category}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div
+            className={`px-2.5 py-1.5 border-t text-[10px] text-center shrink-0 ${
+              isDark
+                ? "border-slate-800 text-slate-500 bg-slate-900/60"
+                : "border-neutral-100 text-neutral-400 bg-neutral-50/50"
+            }`}
+          >
+            Drag or click to place icon on canvas
+          </div>
+        </>
+      )}
+
+      {/* ── SPACE 3: DATA MODELING & TABLES ── */}
       {activeSpace === "tables" && (
         <div className="overflow-y-auto flex-1 p-2 space-y-1.5 [scrollbar-width:none]">
           <div className={`text-[10px] font-medium px-1 mb-1 ${isDark ? "text-slate-400" : "text-neutral-500"}`}>

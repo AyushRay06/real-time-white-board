@@ -431,7 +431,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
 
   // ─── INSERT SYSTEM DESIGN COMPONENT ─────────────────────────────────────
   const insertComponent = useMutation(
-    ({ storage, setMyPresence }, componentType: SysComponent, position: Point, customLabel?: string) => {
+    ({ storage, setMyPresence }, componentType: SysComponent, position: Point, customLabel?: string, iconSvg?: string) => {
       const liveLayers = storage.get("layers")
       if (liveLayers.size >= MAX_LAYERS) return
       const liveLayerIds = storage.get("layerIds")
@@ -443,6 +443,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         fill: { r: 99, g: 102, b: 241 },
         componentType,
         value: customLabel,
+        iconSvg,
       })
       liveLayerIds.push(layerId)
       liveLayers.set(layerId, layer as any)
@@ -592,9 +593,9 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
     playDropSound()
   }, [getViewportCenterPoint, insertLayer])
 
-  const onLibrarySelect = useCallback((type: SysComponent) => {
+  const onLibrarySelect = useCallback((type: SysComponent, customLabel?: string, iconSvg?: string) => {
     const center = getViewportCenterPoint()
-    insertComponent(type, center)
+    insertComponent(type, center, customLabel, iconSvg)
     setIsLibraryOpen(false)
     playDropSound()
   }, [getViewportCenterPoint, insertComponent])
@@ -2288,7 +2289,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
             const point = pointerEventToCanvasPoint(e as any, camera)
 
             if (data.type === "sys-component" && data.componentType) {
-              insertComponent(data.componentType, point)
+              insertComponent(data.componentType, point, data.customLabel, data.iconSvg)
             } else if (data.type === "sys-doc" && data.docType) {
               insertDoc(data.docType, point)
             }

@@ -10,11 +10,12 @@ import {
   BookOpen,
   History,
   Command,
+  Shapes,
 } from "lucide-react"
 import { ToolButton } from "./tool-button"
 import { useCanvasTheme } from "./canvas-theme-context"
 
-export type ArchitectureSpace = "components" | "tables" | "specs" | "templates"
+export type ArchitectureSpace = "components" | "excalidraw" | "tables" | "specs" | "templates"
 
 interface RightToolbarProps {
   activeSpace: ArchitectureSpace
@@ -53,21 +54,28 @@ export const RightToolbar = memo(function RightToolbar({
           isActive={isOpen && activeSpace === "components"}
         />
         <ToolButton
-          label="Data Modeling & Tables (2)"
+          label="Excalidraw / Draw.io Icons (2)"
+          icon={Shapes}
+          side="left"
+          onClick={() => onToggleSpace("excalidraw")}
+          isActive={isOpen && activeSpace === "excalidraw"}
+        />
+        <ToolButton
+          label="Data Modeling & Tables (3)"
           icon={TableProperties}
           side="left"
           onClick={() => onToggleSpace("tables")}
           isActive={isOpen && activeSpace === "tables"}
         />
         <ToolButton
-          label="Architecture Specs & Calculations (3)"
+          label="Architecture Specs & Calculations (4)"
           icon={CheckSquare2}
           side="left"
           onClick={() => onToggleSpace("specs")}
           isActive={isOpen && activeSpace === "specs"}
         />
         <ToolButton
-          label="Architecture Templates & Blueprints (4)"
+          label="Architecture Templates & Blueprints (5)"
           icon={LayoutTemplate}
           side="left"
           onClick={() => onToggleSpace("templates")}
