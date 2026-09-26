@@ -81,97 +81,113 @@ const INITIAL_ITEMS: CanvasItem[] = [
   {
     id: "item-1",
     type: "rect",
-    title: "Client Layer",
-    content: "Web & Mobile Browsers\nReact / Next.js Client",
+    title: "Web & Mobile Client",
+    content: "Next.js 14 • React App\nPublic HTTPS Traffic",
     author: "Client",
     authorColor: "bg-indigo-600",
     color: "bg-indigo-50/95",
     borderColor: "border-indigo-400",
     textColor: "text-indigo-950",
-    x: 45,
-    y: 190,
-    width: 185,
-    height: 115,
+    x: 80,
+    y: 160,
+    width: 170,
+    height: 105,
     rotation: 0,
   },
   {
     id: "item-2",
     type: "circle",
     title: "API Gateway",
-    content: "NGINX / CDN\nSSL • Routing",
-    author: "Network",
+    content: "Envoy / NGINX\nTLS • JWT • Rate Limiting",
+    author: "Gateway",
     authorColor: "bg-sky-600",
     color: "bg-sky-50/95",
     borderColor: "border-sky-400",
     textColor: "text-sky-950",
-    x: 290,
-    y: 178,
-    width: 140,
-    height: 140,
+    x: 295,
+    y: 145,
+    width: 135,
+    height: 135,
     rotation: 0,
   },
   {
     id: "item-3",
     type: "rect",
-    title: "App Server",
-    content: "Node.js / Express API\nAuth • Business Logic",
-    author: "Backend",
+    title: "Auth Microservice",
+    content: "Node.js / Express\nJWT Validation & OAuth2",
+    author: "Auth",
     authorColor: "bg-purple-600",
     color: "bg-purple-50/95",
     borderColor: "border-purple-400",
     textColor: "text-purple-950",
-    x: 520,
-    y: 190,
-    width: 195,
-    height: 115,
+    x: 505,
+    y: 55,
+    width: 175,
+    height: 100,
     rotation: 0,
   },
   {
     id: "item-4",
     type: "rect",
-    title: "Database",
-    content: "PostgreSQL Database\nACID • Relational Data",
-    author: "Data",
-    authorColor: "bg-emerald-600",
-    color: "bg-emerald-50/95",
-    borderColor: "border-emerald-400",
-    textColor: "text-emerald-950",
-    x: 820,
-    y: 95,
-    width: 195,
-    height: 115,
+    title: "Order Microservice",
+    content: "Go / gRPC Service\nCheckout & Transactions",
+    author: "Orders",
+    authorColor: "bg-blue-600",
+    color: "bg-blue-50/95",
+    borderColor: "border-blue-400",
+    textColor: "text-blue-950",
+    x: 505,
+    y: 205,
+    width: 175,
+    height: 100,
     rotation: 0,
   },
   {
     id: "item-5",
     type: "rect",
-    title: "Cache Layer",
-    content: "Redis In-Memory Cache\nSessions • Fast Lookup",
+    title: "Redis Cache",
+    content: "Redis In-Memory Cluster\n< 2ms Token & Session Store",
     author: "Cache",
     authorColor: "bg-rose-600",
     color: "bg-rose-50/95",
     borderColor: "border-rose-400",
     textColor: "text-rose-950",
-    x: 820,
-    y: 295,
-    width: 195,
-    height: 115,
+    x: 755,
+    y: 55,
+    width: 175,
+    height: 100,
     rotation: 0,
   },
   {
     id: "item-6",
+    type: "rect",
+    title: "PostgreSQL DB",
+    content: "PostgreSQL 16 Primary\nACID Relational Orders Core",
+    author: "Database",
+    authorColor: "bg-emerald-600",
+    color: "bg-emerald-50/95",
+    borderColor: "border-emerald-400",
+    textColor: "text-emerald-950",
+    x: 755,
+    y: 205,
+    width: 175,
+    height: 100,
+    rotation: 0,
+  },
+  {
+    id: "item-7",
     type: "sticky",
-    title: "Architecture Notes",
-    content: "• HTTPS on Port 443\n• JWT Token validation\n• Connection pool: 20",
+    title: "⚡️ Architecture RFC",
+    content: "• gRPC for inter-service RPC\n• Redis TTL: 3600s\n• Connection pool: 25\n• Multi-AZ automatic failover",
     author: "Ayush",
     authorColor: "bg-amber-600",
-    color: "bg-amber-100/95",
+    color: "bg-amber-100",
     borderColor: "border-amber-300",
     textColor: "text-amber-950",
-    x: 480,
-    y: 385,
-    width: 200,
-    height: 125,
+    x: 505,
+    y: 350,
+    width: 215,
+    height: 130,
     rotation: -1.5,
   },
 ]
@@ -182,34 +198,41 @@ const INITIAL_CONNECTORS: Connector[] = [
     fromId: "item-1",
     toId: "item-2",
     color: "#6366F1",
-    label: "HTTPS / REST",
+    label: "HTTPS / TLS",
   },
   {
     id: "conn-2",
     fromId: "item-2",
     toId: "item-3",
     color: "#8B5CF6",
-    label: "Reverse Proxy",
+    label: "/auth route",
   },
   {
     id: "conn-3",
-    fromId: "item-3",
+    fromId: "item-2",
     toId: "item-4",
-    color: "#10B981",
-    label: "Read / Write",
+    color: "#3B82F6",
+    label: "/orders route",
   },
   {
     id: "conn-4",
     fromId: "item-3",
     toId: "item-5",
     color: "#F43F5E",
-    label: "Session Cache",
+    label: "Session check",
     dashed: true,
   },
   {
     id: "conn-5",
-    fromId: "item-3",
+    fromId: "item-4",
     toId: "item-6",
+    color: "#10B981",
+    label: "Read / Write",
+  },
+  {
+    id: "conn-6",
+    fromId: "item-4",
+    toId: "item-7",
     color: "#F59E0B",
     label: "RFC Spec",
     dashed: true,
@@ -654,157 +677,13 @@ export function CanvasSimulator() {
         </div>
       </div>
 
-      {/* Floating Whiteboard Tools Dock */}
-      <div className="absolute top-16 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1 bg-white/95 p-1.5 rounded-2xl border border-slate-200/80 shadow-lg shadow-slate-300/40 backdrop-blur-md">
-        {/* Select & Drag Tool */}
-        <button
-          onClick={() => setActiveTool("select")}
-          className={`p-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-            activeTool === "select"
-              ? "bg-indigo-600 text-white shadow-sm"
-              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-          }`}
-          title="Select & Move Objects: Drag boxes to see dynamic arrows follow!"
-        >
-          <MousePointer className="w-4 h-4" />
-        </button>
-
-        {/* Pencil Freehand Tool */}
-        <button
-          onClick={() => setActiveTool("pen")}
-          className={`p-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-            activeTool === "pen"
-              ? "bg-indigo-600 text-white shadow-sm"
-              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-          }`}
-          title="Pencil: Click and drag anywhere to draw freely"
-        >
-          <Pencil className="w-4 h-4" />
-        </button>
-
-        {/* Sticky Note Tool */}
-        <button
-          onClick={() => {
-            if (activeTool === "sticky") {
-              spawnItem("sticky")
-            } else {
-              setActiveTool("sticky")
-              spawnItem("sticky")
-            }
-          }}
-          className={`p-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-            activeTool === "sticky"
-              ? "bg-indigo-600 text-white shadow-sm"
-              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-          }`}
-          title="Sticky Note: Click to place a note, or click on canvas"
-        >
-          <StickyNote className="w-4 h-4" />
-        </button>
-
-        {/* Rectangle / Square Tool */}
-        <button
-          onClick={() => {
-            if (activeTool === "rect") {
-              spawnItem("rect")
-            } else {
-              setActiveTool("rect")
-              spawnItem("rect")
-            }
-          }}
-          className={`p-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-            activeTool === "rect"
-              ? "bg-indigo-600 text-white shadow-sm"
-              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-          }`}
-          title="Rectangle Tool: Click to place a box, or click on canvas"
-        >
-          <Square className="w-4 h-4" />
-        </button>
-
-        {/* Circle Tool */}
-        <button
-          onClick={() => {
-            if (activeTool === "circle") {
-              spawnItem("circle")
-            } else {
-              setActiveTool("circle")
-              spawnItem("circle")
-            }
-          }}
-          className={`p-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-            activeTool === "circle"
-              ? "bg-indigo-600 text-white shadow-sm"
-              : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
-          }`}
-          title="Circle Tool: Click to place a circle, or click on canvas"
-        >
-          <CircleIcon className="w-4 h-4" />
-        </button>
-
-        <div className="w-[1px] h-5 bg-slate-200 mx-1" />
-
-        {/* Color Palette Swatches */}
-        <div className="flex items-center gap-1 px-1">
-          {COLOR_PRESETS.map((c, i) => (
-            <button
-              key={c.name}
-              onClick={() => handleColorSelect(i)}
-              className={`w-4 h-4 rounded-full transition-transform cursor-pointer ${
-                activeColorIndex === i ? "scale-125 ring-2 ring-indigo-400 ring-offset-1" : "hover:scale-110"
-              }`}
-              style={{ backgroundColor: c.hex }}
-              title={`Color: ${c.name} (applies to drawing & shapes)`}
-            />
-          ))}
-        </div>
-
-        <div className="w-[1px] h-5 bg-slate-200 mx-1" />
-
-        {/* Emoji Quick Stamp Buttons */}
-        <div className="flex items-center gap-0.5">
-          {[
-            { id: "rocket", emoji: "🚀", title: "Rocket" },
-            { id: "fire", emoji: "🔥", title: "Fire" },
-            { id: "idea", emoji: "💡", title: "Idea" },
-            { id: "heart", emoji: "❤️", title: "Love" },
-            { id: "thumbs", emoji: "👍", title: "Approve" },
-          ].map((item) => (
-            <button
-              key={item.id}
-              onClick={(e) => {
-                setActiveTool(item.id)
-                triggerReactionBurst(item.emoji, e.clientX, e.clientY)
-                const rect = containerRef.current?.getBoundingClientRect()
-                if (rect) {
-                  const stampX = (rect.width / 2) + (Math.random() - 0.5) * 200
-                  const stampY = (rect.height / 2) + (Math.random() - 0.5) * 120
-                  setPinnedReactions((prev) => [
-                    ...prev.slice(-25),
-                    { id: `pin-${Date.now()}`, emoji: item.emoji, x: stampX, y: stampY },
-                  ])
-                }
-              }}
-              className={`p-1.5 text-sm transition-transform rounded-lg cursor-pointer ${
-                activeTool === item.id
-                  ? "bg-indigo-100 scale-125 shadow-xs"
-                  : "hover:scale-125 hover:bg-slate-100"
-              }`}
-              title={`Stamp ${item.title}: Click to burst and stamp on canvas`}
-            >
-              {item.emoji}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Main Interactive Canvas Area */}
       <div
         ref={containerRef}
         onPointerDown={handleCanvasPointerDown}
         onPointerMove={handleCanvasPointerMove}
         onPointerUp={handleCanvasPointerUp}
-        className={`relative w-full h-[520px] sm:h-[580px] overflow-hidden select-none bg-[#FAFBFD] ${
+        className={`relative w-full h-[540px] sm:h-[600px] overflow-hidden select-none bg-[#FAFBFD] ${
           activeTool === "pen"
             ? "cursor-crosshair"
             : activeTool !== "select"
@@ -816,8 +695,150 @@ export function CanvasSimulator() {
           backgroundSize: "24px 24px",
         }}
       >
+        {/* Left-Hand Vertical Tools Dock (matching actual canvas toolbar) */}
+        <div className="absolute top-1/2 -translate-y-1/2 left-3 sm:left-4 z-30 flex flex-col items-center gap-1 bg-white/95 p-1.5 rounded-2xl border border-slate-200/80 shadow-lg shadow-slate-300/40 backdrop-blur-md">
+          {/* Select & Drag Tool */}
+          <button
+            onClick={() => setActiveTool("select")}
+            className={`p-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+              activeTool === "select"
+                ? "bg-indigo-600 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            }`}
+            title="Select & Move Objects: Drag boxes to see dynamic arrows follow!"
+          >
+            <MousePointer className="w-4 h-4" />
+          </button>
+
+          {/* Pencil Freehand Tool */}
+          <button
+            onClick={() => setActiveTool("pen")}
+            className={`p-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+              activeTool === "pen"
+                ? "bg-indigo-600 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            }`}
+            title="Pencil: Click and drag anywhere to draw freely"
+          >
+            <Pencil className="w-4 h-4" />
+          </button>
+
+          {/* Sticky Note Tool */}
+          <button
+            onClick={() => {
+              if (activeTool === "sticky") {
+                spawnItem("sticky")
+              } else {
+                setActiveTool("sticky")
+                spawnItem("sticky")
+              }
+            }}
+            className={`p-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+              activeTool === "sticky"
+                ? "bg-indigo-600 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            }`}
+            title="Sticky Note: Click to place a 3D sticky note"
+          >
+            <StickyNote className="w-4 h-4" />
+          </button>
+
+          {/* Rectangle / Microservice Node Tool */}
+          <button
+            onClick={() => {
+              if (activeTool === "rect") {
+                spawnItem("rect")
+              } else {
+                setActiveTool("rect")
+                spawnItem("rect")
+              }
+            }}
+            className={`p-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+              activeTool === "rect"
+                ? "bg-indigo-600 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            }`}
+            title="Architecture Box: Click to place a service block"
+          >
+            <Square className="w-4 h-4" />
+          </button>
+
+          {/* Circle / Cache Node Tool */}
+          <button
+            onClick={() => {
+              if (activeTool === "circle") {
+                spawnItem("circle")
+              } else {
+                setActiveTool("circle")
+                spawnItem("circle")
+              }
+            }}
+            className={`p-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+              activeTool === "circle"
+                ? "bg-indigo-600 text-white shadow-sm"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
+            }`}
+            title="Service Node: Click to place a cache or state node"
+          >
+            <CircleIcon className="w-4 h-4" />
+          </button>
+
+          <div className="w-5 h-[1px] bg-slate-200 my-0.5" />
+
+          {/* Color Palette Swatches */}
+          <div className="flex flex-col items-center gap-1.5 py-0.5">
+            {COLOR_PRESETS.map((c, i) => (
+              <button
+                key={c.name}
+                onClick={() => handleColorSelect(i)}
+                className={`w-3.5 h-3.5 rounded-full transition-transform cursor-pointer ${
+                  activeColorIndex === i ? "scale-125 ring-2 ring-indigo-400 ring-offset-1" : "hover:scale-110"
+                }`}
+                style={{ backgroundColor: c.hex }}
+                title={`Color: ${c.name} (applies to drawing & shapes)`}
+              />
+            ))}
+          </div>
+
+          <div className="w-5 h-[1px] bg-slate-200 my-0.5" />
+
+          {/* Quick Emoji Reaction Stamps */}
+          <div className="flex flex-col items-center gap-0.5">
+            {[
+              { id: "rocket", emoji: "🚀", title: "Rocket" },
+              { id: "fire", emoji: "🔥", title: "Fire" },
+              { id: "idea", emoji: "💡", title: "Idea" },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={(e) => {
+                  setActiveTool(item.id)
+                  triggerReactionBurst(item.emoji, e.clientX, e.clientY)
+                  const rect = containerRef.current?.getBoundingClientRect()
+                  if (rect) {
+                    const stampX = (rect.width / 2) + (Math.random() - 0.5) * 200
+                    const stampY = (rect.height / 2) + (Math.random() - 0.5) * 120
+                    setPinnedReactions((prev) => [
+                      ...prev.slice(-25),
+                      { id: `pin-${Date.now()}`, emoji: item.emoji, x: stampX, y: stampY },
+                    ])
+                  }
+                }}
+                className={`p-1.5 text-sm transition-transform rounded-lg cursor-pointer ${
+                  activeTool === item.id
+                    ? "bg-indigo-100 scale-125 shadow-xs"
+                    : "hover:scale-125 hover:bg-slate-100"
+                }`}
+                title={`Stamp ${item.title}: Click to burst and stamp on canvas`}
+              >
+                {item.emoji}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Dynamic Tool Notification Badge */}
-        <div className="absolute top-20 left-6 z-20 hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 border border-slate-200 shadow-sm text-xs font-medium text-slate-700 backdrop-blur-md pointer-events-none">
+        <div className="absolute top-4 right-4 sm:right-6 z-20 hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 border border-slate-200 shadow-sm text-xs font-medium text-slate-700 backdrop-blur-md pointer-events-none">
           {activeTool === "pen" ? (
             <>
               <Pencil className="w-3.5 h-3.5 text-indigo-600 animate-bounce" />
@@ -1000,17 +1021,64 @@ export function CanvasSimulator() {
                   transform: `rotate(${item.rotation}deg)`,
                   zIndex: isDragging ? 50 : isSelected ? 40 : 20,
                   touchAction: "none",
+                  clipPath:
+                    item.type === "sticky"
+                      ? "polygon(0% 0%, 100% 0%, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0% 100%)"
+                      : undefined,
                 }}
-                className={`group p-4 border transition-shadow select-none ${
+                className={`group p-4 border transition-shadow select-none relative ${
                   isDragging ? "cursor-grabbing shadow-2xl scale-[1.02]" : "cursor-grab shadow-md hover:shadow-lg"
                 } ${item.borderColor} ${item.color} ${item.textColor} ${
                   isSelected ? "ring-2 ring-indigo-500 ring-offset-2" : ""
                 } ${
                   item.type === "circle"
                     ? "rounded-full flex flex-col items-center justify-center text-center p-3 aspect-square"
+                    : item.type === "sticky"
+                    ? "rounded-[2px]"
                     : "rounded-2xl"
                 }`}
               >
+                {/* 3D Paper Sticky Note Details */}
+                {item.type === "sticky" && (
+                  <>
+                    {/* Top Adhesive Band */}
+                    <div className="w-full h-3 -mt-4 -mx-4 mb-2.5 px-4 bg-black/[0.04] border-b border-black/[0.06] flex items-center pointer-events-none">
+                      <div className="w-full h-[1px] bg-white/30 rounded-full" />
+                    </div>
+
+                    {/* 3D Curled Corner Flap */}
+                    <div className="absolute bottom-0 right-0 w-6 h-6 pointer-events-none select-none overflow-visible">
+                      <svg
+                        viewBox="0 0 24 24"
+                        className="w-full h-full overflow-visible"
+                        style={{ filter: "drop-shadow(-2px -2px 2.5px rgba(0,0,0,0.22))" }}
+                      >
+                        <defs>
+                          <linearGradient id={`sim-curl-${item.id}`} x1="0%" y1="100%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#fef08a" />
+                            <stop offset="30%" stopColor="#ffffff" stopOpacity="0.6" />
+                            <stop offset="60%" stopColor="#fef08a" />
+                            <stop offset="100%" stopColor="#000000" stopOpacity="0.2" />
+                          </linearGradient>
+                          <radialGradient id={`sim-shadow-${item.id}`} cx="20%" cy="20%" r="80%">
+                            <stop offset="0%" stopColor="#000000" stopOpacity="0.45" />
+                            <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+                          </radialGradient>
+                        </defs>
+                        <path d="M 0 24 Q 12 20 24 0 L 24 24 Z" fill={`url(#sim-shadow-${item.id})`} />
+                        <path d="M 0 24 Q 9 9 24 0 C 19 9 12 18 0 24 Z" fill="#fef08a" />
+                        <path d="M 0 24 Q 9 9 24 0 C 19 9 12 18 0 24 Z" fill={`url(#sim-curl-${item.id})`} />
+                        <path
+                          d="M 24 0 C 19 9 12 18 0 24"
+                          stroke="rgba(255, 255, 255, 0.75)"
+                          strokeWidth="0.8"
+                          fill="none"
+                        />
+                      </svg>
+                    </div>
+                  </>
+                )}
+
                 {/* Floating Action Controls on Selected Item */}
                 {isSelected && (
                   <div className="absolute -top-3.5 right-2 flex items-center gap-1 bg-white border border-slate-200 rounded-full px-1.5 py-0.5 shadow-md z-30">
