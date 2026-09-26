@@ -575,7 +575,7 @@ export const SysComponentLayer = memo(function SysComponentLayer({
           >
             {layer.iconSvg ? (
               <div
-                className="w-full h-full flex items-center justify-center select-none"
+                className="w-full h-full flex items-center justify-center select-none [&>svg]:w-full [&>svg]:h-full [&>svg]:max-w-full [&>svg]:max-h-full"
                 dangerouslySetInnerHTML={{ __html: layer.iconSvg }}
               />
             ) : (

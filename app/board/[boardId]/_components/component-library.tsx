@@ -491,7 +491,7 @@ export function ComponentLibrary({
                   className={`p-2 rounded-xl border cursor-grab active:cursor-grabbing transition-all group flex flex-col items-center text-center gap-1.5 shadow-2xs hover:scale-[1.02] active:scale-[0.98] ${cardBorder}`}
                 >
                   <div
-                    className="w-12 h-12 flex items-center justify-center p-1 rounded-lg bg-slate-100 dark:bg-slate-800/70 overflow-hidden shrink-0 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950/40 transition-colors"
+                    className="w-12 h-12 flex items-center justify-center p-1 rounded-lg bg-slate-100 dark:bg-slate-800/70 overflow-hidden shrink-0 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-950/40 transition-colors [&>svg]:w-full [&>svg]:h-full [&>svg]:max-w-full [&>svg]:max-h-full"
                     dangerouslySetInnerHTML={{ __html: item.svg }}
                   />
                   <div className="min-w-0 w-full">

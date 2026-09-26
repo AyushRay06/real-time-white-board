@@ -1,6 +1,81 @@
 const fs = require("fs");
 
-function renderElementToSvg(el) {
+function rotatePoint(x, y, cx, cy, angle) {
+  if (!angle) return [x, y];
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+  const dx = x - cx;
+  const dy = y - cy;
+  return [
+    cx + dx * cos - dy * sin,
+    cy + dx * sin + dy * cos
+  ];
+}
+
+function getElementBounds(el) {
+  const w = el.width || 0;
+  const h = el.height || 0;
+  const cx = el.x + w / 2;
+  const cy = el.y + h / 2;
+  const angle = el.angle || 0;
+
+  if (el.points && el.points.length > 0) {
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    el.points.forEach(pt => {
+      const px = el.x + pt[0];
+      const py = el.y + pt[1];
+      const [rx, ry] = rotatePoint(px, py, cx, cy, angle);
+      minX = Math.min(minX, rx);
+      minY = Math.min(minY, ry);
+      maxX = Math.max(maxX, rx);
+      maxY = Math.max(maxY, ry);
+    });
+    return { minX, minY, maxX, maxY };
+  }
+
+  const corners = [
+    [el.x, el.y],
+    [el.x + w, el.y],
+    [el.x + w, el.y + h],
+    [el.x, el.y + h]
+  ];
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  corners.forEach(([px, py]) => {
+    const [rx, ry] = rotatePoint(px, py, cx, cy, angle);
+    minX = Math.min(minX, rx);
+    minY = Math.min(minY, ry);
+    maxX = Math.max(maxX, rx);
+    maxY = Math.max(maxY, ry);
+  });
+  return { minX, minY, maxX, maxY };
+}
+
+function isDescriptiveText(text) {
+  if (!text) return true;
+  const t = text.trim();
+  if (t === "JSON" || t === "DNS" || t === "{" || t === "}" || t === "PK" || t === "FK") return false;
+  return true;
+}
+
+function renderArrowhead(pFrom, pTo, stroke, strokeWidth) {
+  const dx = pTo[0] - pFrom[0];
+  const dy = pTo[1] - pFrom[1];
+  const len = Math.hypot(dx, dy);
+  if (len < 1) return "";
+  const angle = Math.atan2(dy, dx);
+  const headLen = Math.max(strokeWidth * 4.5, 9);
+  const a1 = angle - Math.PI / 6;
+  const a2 = angle + Math.PI / 6;
+  const p1x = (pTo[0] - headLen * Math.cos(a1)).toFixed(1);
+  const p1y = (pTo[1] - headLen * Math.sin(a1)).toFixed(1);
+  const p2x = (pTo[0] - headLen * Math.cos(a2)).toFixed(1);
+  const p2y = (pTo[1] - headLen * Math.sin(a2)).toFixed(1);
+  const tox = pTo[0].toFixed(1);
+  const toy = pTo[1].toFixed(1);
+  return `<path d="M ${p1x} ${p1y} L ${tox} ${toy} L ${p2x} ${p2y}" stroke="${stroke}" stroke-width="${strokeWidth}" fill="none" stroke-linecap="round" stroke-linejoin="round" />`;
+}
+
+function renderElementInner(el) {
   if (el.isDeleted) return "";
   const stroke = el.strokeColor || "#000000";
   const strokeWidth = el.strokeWidth || 1.5;
@@ -8,14 +83,15 @@ function renderElementToSvg(el) {
   const strokeDash = el.strokeStyle === "dashed" ? 'stroke-dasharray="6 4"' : el.strokeStyle === "dotted" ? 'stroke-dasharray="2 2"' : "";
 
   if (el.type === "rectangle") {
-    return `<rect x="${el.x.toFixed(1)}" y="${el.y.toFixed(1)}" width="${el.width.toFixed(1)}" height="${el.height.toFixed(1)}" stroke="${stroke}" stroke-width="${strokeWidth}" fill="${fill}" rx="4" ${strokeDash} stroke-linecap="round" stroke-linejoin="round" />`;
+    const rx = el.strokeSharpness === "round" || el.roundness ? 4 : 0;
+    return `<rect x="${el.x.toFixed(1)}" y="${el.y.toFixed(1)}" width="${el.width.toFixed(1)}" height="${el.height.toFixed(1)}" stroke="${stroke}" stroke-width="${strokeWidth}" fill="${fill}" rx="${rx}" ${strokeDash} stroke-linecap="round" stroke-linejoin="round" />`;
   }
   if (el.type === "ellipse") {
     const cx = (el.x + el.width / 2).toFixed(1);
     const cy = (el.y + el.height / 2).toFixed(1);
     const rx = (el.width / 2).toFixed(1);
     const ry = (el.height / 2).toFixed(1);
-    return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" stroke="${stroke}" stroke-width="${strokeWidth}" fill="${fill}" ${strokeDash} />`;
+    return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" stroke="${stroke}" stroke-width="${strokeWidth}" fill="${fill}" ${strokeDash} stroke-linecap="round" stroke-linejoin="round" />`;
   }
   if (el.type === "diamond") {
     const p1 = `${(el.x + el.width / 2).toFixed(1)},${el.y.toFixed(1)}`;
@@ -27,18 +103,40 @@ function renderElementToSvg(el) {
   if (el.type === "line" || el.type === "arrow" || el.type === "draw") {
     if (el.points && el.points.length > 0) {
       let d = "";
+      const isClosed = el.points.length > 2 && (
+        Math.hypot(
+          el.points[0][0] - el.points[el.points.length - 1][0],
+          el.points[0][1] - el.points[el.points.length - 1][1]
+        ) < 12
+      );
+
       el.points.forEach((pt, i) => {
         const px = (el.x + pt[0]).toFixed(1);
         const py = (el.y + pt[1]).toFixed(1);
         d += (i === 0 ? `M ${px} ${py}` : ` L ${px} ${py}`);
       });
-      return `<path d="${d}" stroke="${stroke}" stroke-width="${strokeWidth}" fill="${fill}" ${strokeDash} stroke-linecap="round" stroke-linejoin="round" />`;
+      if (isClosed) d += " Z";
+
+      // If line is open, do NOT fill it (prevent stray triangle spikes)
+      const actualFill = isClosed ? fill : "none";
+      let svg = `<path d="${d}" stroke="${stroke}" stroke-width="${strokeWidth}" fill="${actualFill}" ${strokeDash} stroke-linecap="round" stroke-linejoin="round" />`;
+
+      // Draw arrowhead if arrow or endArrowhead is set
+      if ((el.type === "arrow" || el.endArrowhead) && el.points.length >= 2) {
+        const pLast = el.points[el.points.length - 1];
+        const pPrev = el.points[el.points.length - 2];
+        const pTo = [el.x + pLast[0], el.y + pLast[1]];
+        const pFrom = [el.x + pPrev[0], el.y + pPrev[1]];
+        svg += renderArrowhead(pFrom, pTo, stroke, strokeWidth);
+      }
+
+      return svg;
     }
   }
   if (el.type === "text") {
-    if (el.text && el.text.length > 30) return "";
+    if (isDescriptiveText(el.text)) return "";
     const lines = (el.text || "").split("\n");
-    const fontSize = Math.min(el.fontSize || 14, 24);
+    const fontSize = Math.min(el.fontSize || 14, 28);
     const lineHeight = fontSize * 1.2;
     const textFill = el.strokeColor || "#000000";
     let tspans = "";
@@ -47,41 +145,72 @@ function renderElementToSvg(el) {
       const safeLine = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       tspans += `<tspan x="${el.x.toFixed(1)}" y="${ly}">${safeLine}</tspan>`;
     });
-    return `<text font-family="sans-serif" font-size="${fontSize}" font-weight="600" fill="${textFill}">${tspans}</text>`;
+    return `<text font-family="sans-serif" font-size="${fontSize}" font-weight="700" fill="${textFill}" text-anchor="middle" dominant-baseline="middle">${tspans}</text>`;
   }
   return "";
 }
 
+function renderElement(el) {
+  const inner = renderElementInner(el);
+  if (!inner) return "";
+  if (el.angle && el.angle !== 0) {
+    const cx = (el.x + (el.width || 0) / 2).toFixed(2);
+    const cy = (el.y + (el.height || 0) / 2).toFixed(2);
+    const deg = ((el.angle * 180) / Math.PI).toFixed(2);
+    return `<g transform="rotate(${deg} ${cx} ${cy})">${inner}</g>`;
+  }
+  return inner;
+}
+
 function getItemSvg(elements) {
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  const validEls = elements.filter(e => !e.isDeleted);
+  // Filter out deleted elements and descriptive text labels
+  let validEls = elements.filter(e => !e.isDeleted);
+  const nonTextEls = validEls.filter(e => e.type !== "text");
+
+  // If there are non-text shapes, strip out descriptive texts
+  if (nonTextEls.length > 0) {
+    validEls = validEls.filter(e => e.type !== "text" || !isDescriptiveText(e.text));
+  }
+
   if (validEls.length === 0) return "";
 
+  // Outlier detection: if an element is far from median center, ignore it
+  if (validEls.length > 2) {
+    const xs = validEls.map(e => e.x + (e.width || 0) / 2).sort((a,b) => a-b);
+    const ys = validEls.map(e => e.y + (e.height || 0) / 2).sort((a,b) => a-b);
+    const medX = xs[Math.floor(xs.length / 2)];
+    const medY = ys[Math.floor(ys.length / 2)];
+    validEls = validEls.filter(e => {
+      const ex = e.x + (e.width || 0) / 2;
+      const ey = e.y + (e.height || 0) / 2;
+      return Math.abs(ex - medX) < 350 && Math.abs(ey - medY) < 350;
+    });
+  }
+
+  // Calculate tight bounding box including rotations
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   validEls.forEach(el => {
-    minX = Math.min(minX, el.x);
-    minY = Math.min(minY, el.y);
-    maxX = Math.max(maxX, el.x + (el.width || 0));
-    maxY = Math.max(maxY, el.y + (el.height || 0));
-    if (el.points) {
-      el.points.forEach(pt => {
-        minX = Math.min(minX, el.x + pt[0]);
-        minY = Math.min(minY, el.y + pt[1]);
-        maxX = Math.max(maxX, el.x + pt[0]);
-        maxY = Math.max(maxY, el.y + pt[1]);
-      });
-    }
+    const b = getElementBounds(el);
+    minX = Math.min(minX, b.minX);
+    minY = Math.min(minY, b.minY);
+    maxX = Math.max(maxX, b.maxX);
+    maxY = Math.max(maxY, b.maxY);
   });
 
-  const pad = 10;
-  const w = Math.max(maxX - minX + pad * 2, 36);
-  const h = Math.max(maxY - minY + pad * 2, 36);
-  const vbX = (minX - pad).toFixed(1);
-  const vbY = (minY - pad).toFixed(1);
-  const vbW = w.toFixed(1);
-  const vbH = h.toFixed(1);
+  const contentW = maxX - minX;
+  const contentH = maxY - minY;
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
 
-  const inner = validEls.map(renderElementToSvg).filter(Boolean).join("");
-  return `<svg viewBox="${vbX} ${vbY} ${vbW} ${vbH}" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`;
+  // Make a uniform, centered square viewBox with 12% padding
+  const maxDim = Math.max(contentW, contentH);
+  const pad = Math.max(maxDim * 1.15, 36);
+  const vbX = (cx - pad / 2).toFixed(1);
+  const vbY = (cy - pad / 2).toFixed(1);
+  const vbDim = pad.toFixed(1);
+
+  const innerSvg = validEls.map(renderElement).filter(Boolean).join("");
+  return `<svg viewBox="${vbX} ${vbY} ${vbDim} ${vbDim}" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">${innerSvg}</svg>`;
 }
 
 const allItems = [];
@@ -89,24 +218,24 @@ const allItems = [];
 // 1. drwnio.excalidrawlib (18 items)
 const drwnioLib = JSON.parse(fs.readFileSync("public/drwnio.excalidrawlib", "utf8")).library;
 const drwnioMeta = [
-  { name: "Storage Bucket", type: "ObjectStorage", cat: "Draw.io" },
-  { name: "SQL Database", type: "Database", cat: "Draw.io" },
-  { name: "Server Cluster", type: "Server", cat: "Draw.io" },
-  { name: "JSON Data Service", type: "WorkerService", cat: "Draw.io" },
-  { name: "Kubernetes Cluster", type: "Kubernetes", cat: "Draw.io" },
-  { name: "Backend Engine", type: "Microservice", cat: "Draw.io" },
-  { name: "App Service", type: "Server", cat: "Draw.io" },
-  { name: "Cloud Compute", type: "Serverless", cat: "Draw.io" },
-  { name: "Microservice Mesh", type: "Microservice", cat: "Draw.io" },
-  { name: "Message Queue", type: "MessageQueue", cat: "Draw.io" },
-  { name: "Go Worker", type: "WorkerService", cat: "Draw.io" },
-  { name: "Docker Container", type: "Docker", cat: "Draw.io" },
-  { name: "Load Balancer", type: "LoadBalancer", cat: "Draw.io" },
-  { name: "Compute Instance", type: "Server", cat: "Draw.io" },
-  { name: "Event Bus", type: "EventStreaming", cat: "Draw.io" },
-  { name: "Python Engine", type: "StreamProcessing", cat: "Draw.io" },
-  { name: "Cloud CDN", type: "CDN", cat: "Draw.io" },
-  { name: "DNS Resolver", type: "DNS", cat: "Draw.io" }
+  { name: "Storage Bucket", type: "ObjectStorage", cat: "Storage" },
+  { name: "SQL Database", type: "Database", cat: "Database" },
+  { name: "Server Cluster", type: "Server", cat: "Compute" },
+  { name: "JSON Data Service", type: "WorkerService", cat: "Data" },
+  { name: "Kubernetes Cluster", type: "Kubernetes", cat: "Compute" },
+  { name: "Backend Engine", type: "Microservice", cat: "Compute" },
+  { name: "App Service", type: "Server", cat: "Compute" },
+  { name: "Cloud Compute", type: "Serverless", cat: "Compute" },
+  { name: "Microservice Mesh", type: "Microservice", cat: "Compute" },
+  { name: "Message Queue", type: "MessageQueue", cat: "Messaging" },
+  { name: "Go Worker", type: "WorkerService", cat: "Compute" },
+  { name: "Docker Container", type: "Docker", cat: "Compute" },
+  { name: "Load Balancer", type: "LoadBalancer", cat: "Networking" },
+  { name: "Compute Instance", type: "Server", cat: "Compute" },
+  { name: "Event Bus", type: "EventStreaming", cat: "Messaging" },
+  { name: "Python Engine", type: "StreamProcessing", cat: "Compute" },
+  { name: "Cloud CDN", type: "CDN", cat: "Networking" },
+  { name: "DNS Resolver", type: "DNS", cat: "Networking" }
 ];
 drwnioLib.forEach((item, idx) => {
   const meta = drwnioMeta[idx] || { name: `Draw.io Item ${idx + 1}`, type: "Server", cat: "Draw.io" };
@@ -245,15 +374,9 @@ sysLib.forEach((item, idx) => {
   });
 });
 
-console.log(`Generated ${allItems.length} total items.`);
+console.log(`Generated ${allItems.length} high-quality centered items.`);
 
-// Output TypeScript file
-const tsContent = `// Auto-generated from Excalidraw libraries:
-// 1. drwnio.excalidrawlib (18 items)
-// 2. aws-serverless.excalidrawlib (15 items)
-// 3. architecture-diagram-components.excalidrawlib (11 items)
-// 4. software-architecture (1).excalidrawlib (7 items)
-// 5. system-design.excalidrawlib (24 items)
+const tsContent = `// Auto-generated from Excalidraw libraries with high-precision centered SVGs
 import { SysComponent } from "@/types/canvas"
 
 export interface ExcalidrawLibraryItem {
@@ -289,4 +412,4 @@ ${allItems.map(it => `  {
 `;
 
 fs.writeFileSync("lib/excalidraw-library.ts", tsContent, "utf8");
-console.log("Successfully generated lib/excalidraw-library.ts!");
+console.log("Successfully updated lib/excalidraw-library.ts with high quality centered SVGs!");
