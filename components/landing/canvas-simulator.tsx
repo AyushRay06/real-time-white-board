@@ -25,13 +25,6 @@ import {
   Database,
   Box,
 } from "lucide-react"
-import {
-  AwsLambdaIcon,
-  AmazonS3Icon,
-  AmazonDynamoDBIcon,
-  AmazonApiGatewayIcon,
-  RedisIcon,
-} from "@/components/icons/tool-icons"
 
 export interface CanvasItem {
   id: string
@@ -49,7 +42,6 @@ export interface CanvasItem {
   height: number
   rotation: number
   icon?: any
-  isToolIcon?: boolean
   iconBg?: string
   iconColor?: string
 }
@@ -117,48 +109,51 @@ const INITIAL_ITEMS: CanvasItem[] = [
   {
     id: "item-2",
     type: "sys-component",
-    title: "Amazon API Gateway",
+    title: "API Gateway",
     author: "Gateway",
-    authorColor: "bg-purple-600",
+    authorColor: "bg-indigo-600",
     color: "bg-white",
-    borderColor: "border-purple-300",
-    textColor: "text-purple-950",
-    icon: AmazonApiGatewayIcon,
-    isToolIcon: true,
+    borderColor: "border-indigo-300",
+    textColor: "text-indigo-950",
+    icon: Network,
+    iconBg: "bg-indigo-100",
+    iconColor: "text-indigo-600",
     x: 245,
     y: 175,
-    width: 125,
+    width: 115,
     height: 95,
     rotation: 0,
   },
   {
     id: "item-3",
     type: "sys-component",
-    title: "AWS Lambda",
-    author: "Compute",
-    authorColor: "bg-amber-600",
+    title: "Auth Microservice",
+    author: "Auth",
+    authorColor: "bg-purple-600",
     color: "bg-white",
-    borderColor: "border-amber-300",
-    textColor: "text-amber-950",
-    icon: AwsLambdaIcon,
-    isToolIcon: true,
+    borderColor: "border-purple-300",
+    textColor: "text-purple-950",
+    icon: Shield,
+    iconBg: "bg-purple-100",
+    iconColor: "text-purple-600",
     x: 440,
     y: 75,
-    width: 125,
+    width: 135,
     height: 95,
     rotation: 0,
   },
   {
     id: "item-4",
     type: "sys-component",
-    title: "Amazon DynamoDB",
-    author: "Database",
-    authorColor: "bg-blue-600",
+    title: "Order Microservice",
+    author: "Orders",
+    authorColor: "bg-emerald-600",
     color: "bg-white",
-    borderColor: "border-blue-300",
-    textColor: "text-blue-950",
-    icon: AmazonDynamoDBIcon,
-    isToolIcon: true,
+    borderColor: "border-emerald-300",
+    textColor: "text-emerald-950",
+    icon: Cpu,
+    iconBg: "bg-emerald-100",
+    iconColor: "text-emerald-600",
     x: 440,
     y: 275,
     width: 135,
@@ -174,8 +169,9 @@ const INITIAL_ITEMS: CanvasItem[] = [
     color: "bg-white",
     borderColor: "border-rose-300",
     textColor: "text-rose-950",
-    icon: RedisIcon,
-    isToolIcon: true,
+    icon: Radio,
+    iconBg: "bg-rose-100",
+    iconColor: "text-rose-600",
     x: 655,
     y: 75,
     width: 115,
@@ -185,14 +181,15 @@ const INITIAL_ITEMS: CanvasItem[] = [
   {
     id: "item-6",
     type: "sys-component",
-    title: "Amazon S3",
-    author: "Storage",
-    authorColor: "bg-emerald-600",
+    title: "PostgreSQL DB",
+    author: "Database",
+    authorColor: "bg-sky-600",
     color: "bg-white",
-    borderColor: "border-emerald-300",
-    textColor: "text-emerald-950",
-    icon: AmazonS3Icon,
-    isToolIcon: true,
+    borderColor: "border-sky-300",
+    textColor: "text-sky-950",
+    icon: Database,
+    iconBg: "bg-sky-100",
+    iconColor: "text-sky-600",
     x: 655,
     y: 275,
     width: 115,
@@ -1075,19 +1072,13 @@ export function CanvasSimulator() {
                     </div>
 
                     {/* Icon Badge */}
-                    {item.isToolIcon && item.icon ? (
-                      <div className="mb-1.5 flex items-center justify-center">
-                        <item.icon size={36} showBadge={true} badgeClassName="rounded-none shadow-2xs" />
-                      </div>
-                    ) : (
-                      <div className={`w-9 h-9 rounded-none flex items-center justify-center mb-1.5 shadow-2xs ${item.iconBg || "bg-indigo-100"}`}>
-                        {item.icon ? (
-                          <item.icon className={`w-5 h-5 ${item.iconColor || "text-indigo-600"}`} strokeWidth={1.8} />
-                        ) : (
-                          <Box className="w-5 h-5 text-indigo-600" strokeWidth={1.8} />
-                        )}
-                      </div>
-                    )}
+                    <div className={`w-9 h-9 rounded-none flex items-center justify-center mb-1.5 shadow-2xs ${item.iconBg || "bg-indigo-100"}`}>
+                      {item.icon ? (
+                        <item.icon className={`w-5 h-5 ${item.iconColor || "text-indigo-600"}`} strokeWidth={1.8} />
+                      ) : (
+                        <Box className="w-5 h-5 text-indigo-600" strokeWidth={1.8} />
+                      )}
+                    </div>
 
                     {/* Clean Component Title (No descriptions) */}
                     <span className="text-[11px] font-bold text-slate-800 leading-tight tracking-tight">

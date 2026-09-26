@@ -10,18 +10,6 @@ import {
 import { ComponentLayer, SysComponent, AnchorSide, Point, Color } from "@/types/canvas"
 import { useSimulation } from "./simulation-context"
 import { useCanvasTheme } from "./canvas-theme-context"
-import {
-  AwsLambdaIcon,
-  AmazonS3Icon,
-  AmazonDynamoDBIcon,
-  AmazonApiGatewayIcon,
-  AmazonCloudWatchIcon,
-  AmazonCognitoIcon,
-  PostgresIcon,
-  RedisIcon,
-  KafkaIcon,
-  DockerIcon,
-} from "@/components/icons/tool-icons"
 
 // ─── Anchor point geometry ────────────────────────────────────────────────────
 export function getAnchorPoint(
@@ -276,26 +264,8 @@ export const ICON_MAP: Record<SysComponent, React.ElementType> = {
   [SysComponent.DistributedTracing]: Eye,
 }
 
-// ─── Cloud & Architecture Tool Icons (Eraser.io style) ────────────────────────
-export const TOOL_ICON_MAP: Partial<Record<SysComponent, React.ComponentType<any>>> = {
-  [SysComponent.Serverless]: AwsLambdaIcon,
-  [SysComponent.ObjectStorage]: AmazonS3Icon,
-  [SysComponent.NoSQLDB]: AmazonDynamoDBIcon,
-  [SysComponent.APIGateway]: AmazonApiGatewayIcon,
-  [SysComponent.Monitoring]: AmazonCloudWatchIcon,
-  [SysComponent.AuthService]: AmazonCognitoIcon,
-  [SysComponent.Database]: PostgresIcon,
-  [SysComponent.Cache]: RedisIcon,
-  [SysComponent.EventStreaming]: KafkaIcon,
-  [SysComponent.Docker]: DockerIcon,
-}
-
 // ─── Component icon re-exported for library panel ─────────────────────────────
 export function ComponentIcon({ type, color }: { type: SysComponent; color: string }) {
-  const ToolIcon = TOOL_ICON_MAP[type]
-  if (ToolIcon) {
-    return <ToolIcon size={24} showBadge={true} badgeClassName="rounded-md" />
-  }
   const Icon = ICON_MAP[type] || Box
   return <Icon size={24} color={color} strokeWidth={1.8} />
 }
@@ -399,9 +369,8 @@ export const SysComponentLayer = memo(function SysComponentLayer({
   const { theme: canvasTheme } = useCanvasTheme()
   const isDark = canvasTheme === "dark"
   const theme  = getComponentTheme(componentType, layer.customColor, isDark)
-  const label    = value || COMPONENT_LABELS[componentType] || componentType
-  const Icon     = ICON_MAP[componentType] || Box
-  const ToolIcon = TOOL_ICON_MAP[componentType]
+  const label  = value || COMPONENT_LABELS[componentType] || componentType
+  const Icon   = ICON_MAP[componentType] || Box
 
   // Decide border colour: connecting-from gets a vivid blue ring
   const strokeColor = isConnectingFrom
@@ -596,18 +565,14 @@ export const SysComponentLayer = memo(function SysComponentLayer({
               width: 44,
               height: 44,
               borderRadius: 10,
-              background: ToolIcon ? "transparent" : theme.badge,
+              background: theme.badge,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               flexShrink: 0,
             }}
           >
-            {ToolIcon ? (
-              <ToolIcon size={40} showBadge={true} badgeClassName="rounded-md shadow-xs" />
-            ) : (
-              <Icon size={24} color={theme.icon} strokeWidth={1.8} />
-            )}
+            <Icon size={24} color={theme.icon} strokeWidth={1.8} />
           </div>
 
           {/* Label */}

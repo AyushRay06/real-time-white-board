@@ -2275,6 +2275,27 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         onAuxClick={(e) => {
           if (e.button === 1) e.preventDefault()
         }}
+        onDragOver={(e) => {
+          e.preventDefault()
+          e.dataTransfer.dropEffect = "copy"
+        }}
+        onDrop={(e) => {
+          e.preventDefault()
+          try {
+            const rawData = e.dataTransfer.getData("application/json")
+            if (!rawData) return
+            const data = JSON.parse(rawData)
+            const point = pointerEventToCanvasPoint(e as any, camera)
+
+            if (data.type === "sys-component" && data.componentType) {
+              insertComponent(data.componentType, point)
+            } else if (data.type === "sys-doc" && data.docType) {
+              insertDoc(data.docType, point)
+            }
+          } catch (err) {
+            console.error("Drop component failed:", err)
+          }
+        }}
         style={{ cursor: cursorStyle }}
       >
         <defs>

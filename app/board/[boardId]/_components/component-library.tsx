@@ -365,11 +365,16 @@ export function ComponentLibrary({
                       return (
                         <button
                           key={item}
+                          draggable={true}
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData("application/json", JSON.stringify({ type: "sys-component", componentType: item }))
+                            e.dataTransfer.effectAllowed = "copy"
+                          }}
                           onClick={() => {
                             onSelect(item)
                             onClose()
                           }}
-                          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg border text-left transition-all group ${
+                          className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg border text-left transition-all cursor-grab active:cursor-grabbing group ${
                             isDark
                               ? "border-slate-800 bg-slate-800/40 hover:bg-slate-800 hover:border-slate-700 text-slate-200"
                               : "border-neutral-200 hover:border-indigo-300 hover:bg-indigo-50/50 bg-white"
@@ -391,7 +396,7 @@ export function ComponentLibrary({
           </div>
 
           <div className={`px-2.5 py-1.5 border-t text-[10px] text-center shrink-0 ${isDark ? "border-slate-800 text-slate-500 bg-slate-900/60" : "border-neutral-100 text-neutral-400 bg-neutral-50/50"}`}>
-            Click component, then click canvas to place
+            Drag or click to place component on canvas
           </div>
         </>
       )}
@@ -410,11 +415,16 @@ export function ComponentLibrary({
             return (
               <div
                 key={spec.id}
+                draggable={true}
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("application/json", JSON.stringify({ type: "sys-doc", docType: spec.id }))
+                  e.dataTransfer.effectAllowed = "copy"
+                }}
                 onClick={() => {
                   onSelectDoc?.(spec.id)
                   onClose()
                 }}
-                className={`p-2 rounded-xl border cursor-pointer transition-all group flex items-center justify-between gap-2 shadow-2xs ${cardBorder}`}
+                className={`p-2 rounded-xl border cursor-grab active:cursor-grabbing transition-all group flex items-center justify-between gap-2 shadow-2xs ${cardBorder}`}
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${badgeClasses}`}>
@@ -453,11 +463,16 @@ export function ComponentLibrary({
             return (
               <div
                 key={spec.id}
+                draggable={true}
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("application/json", JSON.stringify({ type: "sys-doc", docType: spec.id }))
+                  e.dataTransfer.effectAllowed = "copy"
+                }}
                 onClick={() => {
                   onSelectDoc?.(spec.id)
                   onClose()
                 }}
-                className={`p-2 rounded-xl border cursor-pointer transition-all group flex items-center justify-between gap-2 shadow-2xs ${cardBorder}`}
+                className={`p-2 rounded-xl border cursor-grab active:cursor-grabbing transition-all group flex items-center justify-between gap-2 shadow-2xs ${cardBorder}`}
               >
                 <div className="flex items-center gap-2 min-w-0">
                   <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 border ${badgeClasses}`}>
