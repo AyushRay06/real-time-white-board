@@ -679,17 +679,49 @@ function renderDiagramDirectToCanvas({
         const note = layer as any
         ctx.fillStyle = note.fill ? colorToCss(note.fill) : "#fef08a"
         ctx.beginPath()
-        ctx.roundRect(note.x, note.y, note.width, note.height, 8)
+        ctx.roundRect(note.x, note.y, note.width, note.height, 3)
         ctx.fill()
+
+        // Top adhesive strip band
+        ctx.fillStyle = "rgba(0, 0, 0, 0.04)"
+        ctx.fillRect(note.x, note.y, note.width, 18)
+        ctx.fillStyle = "rgba(0, 0, 0, 0.06)"
+        ctx.fillRect(note.x, note.y + 17, note.width, 1)
+
+        // Bottom-Right folded dog-ear corner
+        const fold = 16
+        // Under-fold shadow
+        ctx.fillStyle = "rgba(0, 0, 0, 0.16)"
+        ctx.beginPath()
+        ctx.moveTo(note.x + note.width - fold, note.y + note.height)
+        ctx.lineTo(note.x + note.width, note.y + note.height - fold)
+        ctx.lineTo(note.x + note.width, note.y + note.height)
+        ctx.closePath()
+        ctx.fill()
+
+        // Folded flap
+        ctx.fillStyle = "rgba(0, 0, 0, 0.09)"
+        ctx.beginPath()
+        ctx.moveTo(note.x + note.width - fold, note.y + note.height)
+        ctx.lineTo(note.x + note.width, note.y + note.height - fold)
+        ctx.lineTo(note.x + note.width - fold, note.y + note.height - fold)
+        ctx.closePath()
+        ctx.fill()
+
         if (note.value) {
           ctx.fillStyle = note.fill ? getContrastingTextColor(note.fill) : "#1c1917"
-          const fontSize = note.fontSize || 20
+          const fontSize = note.fontSize || 18
           const fontWeight = note.fontWeight === "bold" ? "bold " : ""
           ctx.font = `${fontWeight}${fontSize}px ${getFontFamilyCss(note.fontFamily || "handwriting")}`
-          ctx.textAlign = note.textAlign || "center"
-          ctx.textBaseline = "middle"
-          const tx = note.textAlign === "left" ? note.x + 12 : note.textAlign === "right" ? note.x + note.width - 12 : note.x + note.width / 2
-          ctx.fillText(note.value, tx, note.y + note.height / 2, note.width - 24)
+          ctx.textAlign = note.textAlign || "left"
+          ctx.textBaseline = "top"
+          const tx =
+            note.textAlign === "center"
+              ? note.x + note.width / 2
+              : note.textAlign === "right"
+              ? note.x + note.width - 14
+              : note.x + 14
+          ctx.fillText(note.value, tx, note.y + 24, note.width - 28)
         }
         break
       }
