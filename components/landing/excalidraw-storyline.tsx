@@ -37,90 +37,55 @@ export function ExcalidrawStoryline() {
   })
   const pathLength = useTransform(scrollYProgress, [0, 1], [0, 1])
 
-  // Completely organic, randomized curling ribbon with spontaneous loops, coils, and varied amplitudes
+  // Elegant, clean cursive scroll ribbon with graceful loops at chapter transitions
   const springLoopPath = useMemo(() => {
-    let seed = 42891
-    const random = () => {
-      let t = (seed += 0x6d2b79f5)
-      t = Math.imul(t ^ (t >>> 15), t | 1)
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-    }
-
-    const totalHeight = 6200
-    let curX = 45
-    let curY = 0
-    let d = `M ${curX} ${curY}`
-
-    while (curY < totalHeight) {
-      const remaining = totalHeight - curY
-      if (remaining < 180) {
-        // Final smooth finish to bottom
-        d += ` C ${curX + (random() - 0.5) * 20} ${curY + remaining * 0.5}, ${45 + (random() - 0.5) * 15} ${curY + remaining * 0.8}, 45 ${totalHeight}`
-        break
-      }
-
-      // Random segment height between 320px and 620px
-      const segH = Math.min(remaining, 320 + random() * 300)
-      const mode = Math.floor(random() * 5)
-      const nextX = 35 + random() * 25 // landing X around 35-60
-
-      if (mode === 0) {
-        // Wide Right-hand Spring Loop
-        const rightApex = 78 + random() * 16
-        const loopTop = curY + segH * (0.28 + random() * 0.1)
-        const loopBottom = curY + segH * (0.62 + random() * 0.12)
-        const loopLeft = 14 + random() * 16
-
-        d += ` C ${rightApex} ${curY + segH * 0.18}, ${rightApex} ${loopBottom * 0.85}, ${rightApex - 15} ${loopBottom}`
-        d += ` C ${loopLeft + 15} ${loopBottom + 30}, ${loopLeft} ${loopTop + 40}, ${loopLeft + 10} ${loopTop}`
-        d += ` C ${loopLeft + 30} ${loopTop - 25}, ${rightApex - 5} ${loopTop + 15}, ${rightApex - 25} ${curY + segH * 0.75}`
-        d += ` C ${rightApex - 45} ${curY + segH * 0.92}, ${nextX + (random() - 0.5) * 15} ${curY + segH * 0.96}, ${nextX} ${curY + segH}`
-      } else if (mode === 1) {
-        // Wide Left-hand Spring Loop (loops to the opposite side!)
-        const leftApex = 8 + random() * 16
-        const loopTop = curY + segH * (0.25 + random() * 0.1)
-        const loopBottom = curY + segH * (0.65 + random() * 0.12)
-        const loopRight = 72 + random() * 18
-
-        d += ` C ${leftApex} ${curY + segH * 0.18}, ${leftApex} ${loopBottom * 0.85}, ${leftApex + 15} ${loopBottom}`
-        d += ` C ${loopRight - 15} ${loopBottom + 30}, ${loopRight} ${loopTop + 40}, ${loopRight - 10} ${loopTop}`
-        d += ` C ${loopRight - 30} ${loopTop - 25}, ${leftApex + 5} ${loopTop + 15}, ${leftApex + 25} ${curY + segH * 0.75}`
-        d += ` C ${leftApex + 45} ${curY + segH * 0.92}, ${nextX + (random() - 0.5) * 15} ${curY + segH * 0.96}, ${nextX} ${curY + segH}`
-      } else if (mode === 2) {
-        // Tight energetic 3D corkscrew loop
-        const loopSide = random() > 0.5 ? 1 : -1
-        const apexX = loopSide === 1 ? 75 + random() * 15 : 15 + random() * 15
-        const crossX = loopSide === 1 ? 30 + random() * 15 : 60 + random() * 15
-        const loopCenterY = curY + segH * 0.45
-
-        d += ` C ${curX + loopSide * 35} ${curY + segH * 0.15}, ${apexX} ${loopCenterY - 40}, ${apexX} ${loopCenterY}`
-        d += ` C ${apexX} ${loopCenterY + 45}, ${crossX} ${loopCenterY + 50}, ${crossX} ${loopCenterY}`
-        d += ` C ${crossX} ${loopCenterY - 45}, ${apexX + (loopSide * -10)} ${loopCenterY - 30}, ${crossX + loopSide * 10} ${loopCenterY + 70}`
-        d += ` C ${crossX} ${curY + segH * 0.85}, ${nextX} ${curY + segH * 0.95}, ${nextX} ${curY + segH}`
-      } else if (mode === 3) {
-        // Spontaneous double-wave curl (lazy sweeping wave that loops into itself)
-        const swingRight = 75 + random() * 18
-        const swingLeft = 10 + random() * 18
-
-        d += ` C ${swingRight} ${curY + segH * 0.22}, ${swingRight - 10} ${curY + segH * 0.48}, ${45 + (random() - 0.5) * 20} ${curY + segH * 0.52}`
-        d += ` C ${swingLeft + 10} ${curY + segH * 0.56}, ${swingLeft} ${curY + segH * 0.78}, ${45 + (random() - 0.5) * 15} ${curY + segH * 0.84}`
-        d += ` C ${swingRight - 20} ${curY + segH * 0.88}, ${nextX} ${curY + segH * 0.96}, ${nextX} ${curY + segH}`
-      } else {
-        // Teardrop loop that loops around and crosses back down
-        const loopApexX = 20 + random() * 55
-        const loopApexY = curY + segH * (0.35 + random() * 0.2)
-
-        d += ` C ${curX + (random() - 0.5) * 40} ${curY + segH * 0.15}, ${loopApexX + 35} ${loopApexY - 30}, ${loopApexX} ${loopApexY}`
-        d += ` C ${loopApexX - 35} ${loopApexY + 30}, ${curX - 20} ${loopApexY + 40}, ${loopApexX + 15} ${loopApexY - 15}`
-        d += ` C ${loopApexX + 35} ${curY + segH * 0.75}, ${nextX + (random() - 0.5) * 20} ${curY + segH * 0.9}, ${nextX} ${curY + segH}`
-      }
-
-      curX = nextX
-      curY += segH
-    }
-
-    return d
+    return [
+      "M 30 0",
+      // Gentle glide to Create
+      "C 30 180, 26 380, 30 650",
+      // Loop 1 (Right cursive loop at Create transition)
+      "C 30 685, 48 690, 48 720",
+      "C 48 750, 14 755, 14 720",
+      "C 14 690, 44 695, 34 750",
+      "C 26 780, 30 800, 30 820",
+      // Smooth descent to Collaborate
+      "C 30 1080, 34 1350, 30 1620",
+      // Loop 2 (Left cursive loop at Collaborate transition)
+      "C 30 1655, 12 1660, 12 1690",
+      "C 12 1720, 46 1725, 46 1690",
+      "C 46 1660, 16 1665, 26 1720",
+      "C 34 1750, 30 1770, 30 1790",
+      // Smooth descent to System Architecture
+      "C 30 2050, 26 2350, 30 2620",
+      // Loop 3 (Right cursive loop at Architecture transition)
+      "C 30 2655, 48 2660, 48 2690",
+      "C 48 2720, 14 2725, 14 2690",
+      "C 14 2660, 44 2665, 34 2720",
+      "C 26 2750, 30 2770, 30 2790",
+      // Smooth descent to Database ERD
+      "C 30 3050, 34 3350, 30 3620",
+      // Loop 4 (Left cursive loop at Database ERD transition)
+      "C 30 3655, 12 3660, 12 3690",
+      "C 12 3720, 46 3725, 46 3690",
+      "C 46 3660, 16 3665, 26 3720",
+      "C 34 3750, 30 3770, 30 3790",
+      // Smooth descent to Sequence Flow
+      "C 30 4050, 26 4350, 30 4620",
+      // Loop 5 (Right cursive loop at Sequence Flow transition)
+      "C 30 4655, 48 4660, 48 4690",
+      "C 48 4720, 14 4725, 14 4690",
+      "C 14 4660, 44 4665, 34 4720",
+      "C 26 4750, 30 4770, 30 4790",
+      // Smooth descent to Capacity Estimator
+      "C 30 5050, 34 5350, 30 5620",
+      // Loop 6 (Left cursive loop at Capacity Estimator transition)
+      "C 30 5655, 12 5660, 12 5690",
+      "C 12 5720, 46 5725, 46 5690",
+      "C 46 5660, 16 5665, 26 5720",
+      "C 34 5750, 30 5770, 30 5790",
+      // Smooth finish to bottom features
+      "C 30 5920, 30 6080, 30 6200",
+    ].join(" ")
   }, [])
 
   // ─── SECTION 1: CREATE (UI Layout Design) ───
@@ -228,36 +193,47 @@ export function ExcalidrawStoryline() {
   return (
     <div ref={containerRef} className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 py-12">
       {/* ─── SCROLL PATH RIBBON CURLING DOWN THE LEFT-HAND SIDE ─── */}
-      <div className="hidden lg:block absolute left-0 xl:left-2 top-8 bottom-16 w-14 xl:w-16 pointer-events-none z-10 overflow-visible">
+      <div className="hidden lg:block absolute left-1 xl:left-3 top-8 bottom-16 w-11 xl:w-13 pointer-events-none z-10 overflow-visible">
         <svg
-          viewBox="0 0 100 6200"
+          viewBox="0 0 60 6200"
           fill="none"
           overflow="visible"
           xmlns="http://www.w3.org/2000/svg"
-          className="w-full h-full opacity-90"
+          className="w-full h-full"
           preserveAspectRatio="none"
         >
           <defs>
             <linearGradient id="featureLeftCurl" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#6366F1" />
-              <stop offset="18%" stopColor="#8B5CF6" />
-              <stop offset="36%" stopColor="#A855F7" />
-              <stop offset="54%" stopColor="#6366F1" />
-              <stop offset="72%" stopColor="#8B5CF6" />
-              <stop offset="90%" stopColor="#EC4899" />
+              <stop offset="25%" stopColor="#8B5CF6" />
+              <stop offset="50%" stopColor="#A855F7" />
+              <stop offset="75%" stopColor="#6366F1" />
               <stop offset="100%" stopColor="#8B5CF6" />
             </linearGradient>
-            <filter id="ribbonSoftGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="2" stdDeviation="3.5" floodColor="#8B5CF6" floodOpacity="0.4" />
+            <filter id="ribbonCleanGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="1" stdDeviation="1.5" floodColor="#8B5CF6" floodOpacity="0.25" />
             </filter>
           </defs>
+
+          {/* Architectural guide track */}
+          <path
+            d={springLoopPath}
+            stroke="#E2E8F0"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeDasharray="4 4"
+            className="opacity-75"
+          />
+
+          {/* Active progressive scroll stroke */}
           <motion.path
             d={springLoopPath}
             stroke="url(#featureLeftCurl)"
-            strokeWidth="5"
+            strokeWidth="3.2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            filter="url(#ribbonSoftGlow)"
+            filter="url(#ribbonCleanGlow)"
             style={{
               pathLength,
               strokeDashoffset: useTransform(pathLength, (value) => 1 - value),
@@ -269,7 +245,7 @@ export function ExcalidrawStoryline() {
       {/* =========================================================================
           FEATURE 1: CREATE (UI Layout Wireframe Design)
          ========================================================================= */}
-      <div id="create" className="relative mb-28 lg:pl-14 xl:pl-16 scroll-mt-24">
+      <div id="create" className="relative mb-28 lg:pl-16 xl:pl-20 scroll-mt-24">
         {/* Header Tag Badge */}
         <div className="mb-3">
           <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-emerald-100/90 text-emerald-800 border border-emerald-200/60 tracking-wide font-mono">
@@ -545,7 +521,7 @@ export function ExcalidrawStoryline() {
       {/* =========================================================================
           FEATURE 2: COLLABORATE (Multiplayer Session & Team Presence)
          ========================================================================= */}
-      <div id="collaborate" className="relative mb-28 lg:pl-14 xl:pl-16 scroll-mt-24">
+      <div id="collaborate" className="relative mb-28 lg:pl-16 xl:pl-20 scroll-mt-24">
         {/* Header Tag Badge */}
         <div className="mb-3">
           <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/60 tracking-wide font-mono">
@@ -756,7 +732,7 @@ export function ExcalidrawStoryline() {
       {/* =========================================================================
           COMMON USE CASES — STORYTELLING CHAPTER 1: SYSTEM ARCHITECTURE
          ========================================================================= */}
-      <div id="usecases" className="relative mb-28 lg:pl-14 xl:pl-16 scroll-mt-24">
+      <div id="usecases" className="relative mb-28 lg:pl-16 xl:pl-20 scroll-mt-24">
         {/* Header Tag Badge */}
         <div className="mb-3">
           <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-purple-100/90 text-purple-800 border border-purple-200/60 tracking-wide font-mono">
@@ -933,7 +909,7 @@ export function ExcalidrawStoryline() {
       {/* =========================================================================
           COMMON USE CASES — STORYTELLING CHAPTER 2: DATABASE & ERD SCHEMAS
          ========================================================================= */}
-      <div id="database-erd" className="relative mb-28 lg:pl-14 xl:pl-16 scroll-mt-24">
+      <div id="database-erd" className="relative mb-28 lg:pl-16 xl:pl-20 scroll-mt-24">
         {/* Header Tag Badge */}
         <div className="mb-3">
           <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-emerald-100/90 text-emerald-800 border border-emerald-200/60 tracking-wide font-mono">
@@ -1181,7 +1157,7 @@ export function ExcalidrawStoryline() {
       {/* =========================================================================
           COMMON USE CASES — STORYTELLING CHAPTER 3: SEQUENCE FLOW TRACE
          ========================================================================= */}
-      <div id="sequence-flow" className="relative mb-28 lg:pl-14 xl:pl-16 scroll-mt-24">
+      <div id="sequence-flow" className="relative mb-28 lg:pl-16 xl:pl-20 scroll-mt-24">
         {/* Header Tag Badge */}
         <div className="mb-3">
           <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-blue-100/90 text-blue-800 border border-blue-200/60 tracking-wide font-mono">
@@ -1386,7 +1362,7 @@ export function ExcalidrawStoryline() {
       {/* =========================================================================
           COMMON USE CASES — STORYTELLING CHAPTER 4: CAPACITY ESTIMATOR
          ========================================================================= */}
-      <div id="capacity-estimator" className="relative mb-28 lg:pl-14 xl:pl-16 scroll-mt-24">
+      <div id="capacity-estimator" className="relative mb-28 lg:pl-16 xl:pl-20 scroll-mt-24">
         {/* Header Tag Badge */}
         <div className="mb-3">
           <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-amber-100/90 text-amber-800 border border-amber-200/60 tracking-wide font-mono">
@@ -1600,7 +1576,7 @@ export function ExcalidrawStoryline() {
       {/* =========================================================================
           SECTION 4: THE EASIEST WAY TO GET YOUR THOUGHTS ON SCREEN (SUPERPOWERS GRID)
          ========================================================================= */}
-      <div id="features" className="relative mb-20 lg:pl-14 xl:pl-16 scroll-mt-24">
+      <div id="features" className="relative mb-20 lg:pl-16 xl:pl-20 scroll-mt-24">
         {/* Header Tag Badge */}
         <div className="mb-3">
           <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-emerald-100/90 text-emerald-800 border border-emerald-200/60 tracking-wide font-mono">
