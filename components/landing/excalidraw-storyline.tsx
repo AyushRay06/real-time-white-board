@@ -90,15 +90,8 @@ export function ExcalidrawStoryline() {
       "C 48 4720, 14 4725, 14 4690",
       "C 14 4660, 44 4665, 34 4720",
       "C 26 4750, 30 4770, 30 4790",
-      // Smooth descent to Capacity Estimator
-      "C 30 5050, 34 5350, 30 5620",
-      // Loop 6 (Left cursive loop at Capacity Estimator transition)
-      "C 30 5655, 12 5660, 12 5690",
-      "C 12 5720, 46 5725, 46 5690",
-      "C 46 5660, 16 5665, 26 5720",
-      "C 34 5750, 30 5770, 30 5790",
-      // Smooth finish to bottom features
-      "C 30 5920, 30 6080, 30 6200",
+      // Smooth finish
+      "C 30 4880, 30 4980, 30 5100",
     ].join(" ")
   }, [])
 
@@ -108,101 +101,57 @@ export function ExcalidrawStoryline() {
   // ─── SECTION 2: COLLABORATE (Multiplayer Team Sync) ───
   const [copiedLink, setCopiedLink] = useState(false)
 
-  // ─── SECTION 3A: SYSTEM ARCHITECTURE ───
-  type ArchTemplate = "microservices" | "three-tier" | "cdn-caching"
-  const [selectedArchTemplate, setSelectedArchTemplate] = useState<ArchTemplate>("microservices")
+  // ─── SECTION 3A: SYSTEM ARCHITECTURE (Interactive Nodes & Component Library) ───
   const [selectedCloudNode, setSelectedCloudNode] = useState<string>("orders")
-  const [selectedComponentTab, setSelectedComponentTab] = useState<"components" | "layouts">("components")
-  const [componentSearch, setComponentSearch] = useState<string>("")
-
-  const ARCH_TEMPLATES: Record<ArchTemplate, {
+  const [archNodes, setArchNodes] = useState<Array<{
+    id: string
     name: string
-    badge: string
-    desc: string
-    nodes: Array<{
-      id: string
-      name: string
-      type: string
-      icon: any
-      iconBg: string
-      iconColor: string
-      x: number
-      y: number
-    }>
-    arrows: Array<{
-      from: string
-      to: string
-      label: string
-      dashed?: boolean
-    }>
-  }> = {
-    microservices: {
-      name: "Event-Driven Microservices",
-      badge: "Kafka + gRPC",
-      desc: "Decoupled microservices architecture with asynchronous Kafka event streaming and read-replica caching.",
-      nodes: [
-        { id: "client", name: "Web Client", type: "React Ingress", icon: Monitor, iconBg: "bg-blue-100", iconColor: "text-blue-600", x: 20, y: 110 },
-        { id: "gateway", name: "API Gateway", type: "Envoy Proxy", icon: Network, iconBg: "bg-indigo-100", iconColor: "text-indigo-600", x: 155, y: 110 },
-        { id: "orders", name: "Order Service", type: "Golang RPC", icon: Box, iconBg: "bg-emerald-100", iconColor: "text-emerald-600", x: 295, y: 35 },
-        { id: "auth", name: "Auth Service", type: "Node.js JWT", icon: Shield, iconBg: "bg-purple-100", iconColor: "text-purple-600", x: 295, y: 185 },
-        { id: "kafka", name: "Kafka Stream", type: "Event Bus", icon: Layers, iconBg: "bg-amber-100", iconColor: "text-amber-600", x: 440, y: 35 },
-        { id: "redis", name: "Redis Cache", type: "In-Memory TTL", icon: Radio, iconBg: "bg-rose-100", iconColor: "text-rose-600", x: 440, y: 185 },
-        { id: "postgres", name: "PostgreSQL 16", type: "Primary Relational", icon: Database, iconBg: "bg-sky-100", iconColor: "text-sky-600", x: 585, y: 35 },
-      ],
-      arrows: [
-        { from: "client", to: "gateway", label: "HTTPS" },
-        { from: "gateway", to: "orders", label: "gRPC" },
-        { from: "gateway", to: "auth", label: "REST" },
-        { from: "orders", to: "kafka", label: "Produce" },
-        { from: "auth", to: "redis", label: "Session" },
-        { from: "kafka", to: "postgres", label: "Consume" },
-      ],
-    },
-    "three-tier": {
-      name: "Classic 3-Tier Web App",
-      badge: "High Availability",
-      desc: "Multi-AZ web architecture featuring redundant application servers, active/standby database, and cache tier.",
-      nodes: [
-        { id: "client", name: "Web Client", type: "Browser Ingress", icon: Monitor, iconBg: "bg-blue-100", iconColor: "text-blue-600", x: 20, y: 110 },
-        { id: "lb", name: "Load Balancer", type: "ALB / NGINX", icon: Shuffle, iconBg: "bg-amber-100", iconColor: "text-amber-600", x: 155, y: 110 },
-        { id: "app1", name: "App Node A", type: "Production Pod", icon: Server, iconBg: "bg-indigo-100", iconColor: "text-indigo-600", x: 295, y: 35 },
-        { id: "app2", name: "App Node B", type: "Production Pod", icon: Server, iconBg: "bg-indigo-100", iconColor: "text-indigo-600", x: 295, y: 185 },
-        { id: "primary", name: "Primary DB", type: "PostgreSQL 16", icon: Database, iconBg: "bg-sky-100", iconColor: "text-sky-600", x: 440, y: 35 },
-        { id: "replica", name: "Read Replica", type: "Async Multi-AZ", icon: Database, iconBg: "bg-purple-100", iconColor: "text-purple-600", x: 440, y: 185 },
-        { id: "redis", name: "Redis Cache", type: "LRU Cluster", icon: Radio, iconBg: "bg-rose-100", iconColor: "text-rose-600", x: 585, y: 110 },
-      ],
-      arrows: [
-        { from: "client", to: "lb", label: "TLS 443" },
-        { from: "lb", to: "app1", label: "Route" },
-        { from: "lb", to: "app2", label: "Route" },
-        { from: "app1", to: "primary", label: "Write" },
-        { from: "app2", to: "replica", label: "Read" },
-        { from: "primary", to: "replica", label: "Sync", dashed: true },
-        { from: "app1", to: "redis", label: "Cache" },
-      ],
-    },
-    "cdn-caching": {
-      name: "CDN Edge & Multi-Region",
-      badge: "Sub-10ms Global",
-      desc: "Global edge computing network with distributed cache invalidation and geo-routed data persistence.",
-      nodes: [
-        { id: "users", name: "Global Users", type: "Worldwide Traffic", icon: Globe, iconBg: "bg-blue-100", iconColor: "text-blue-600", x: 20, y: 110 },
-        { id: "cdn", name: "Cloudflare CDN", type: "Edge POPs", icon: Cloud, iconBg: "bg-purple-100", iconColor: "text-purple-600", x: 155, y: 110 },
-        { id: "worker", name: "Edge Worker", type: "V8 Isolate", icon: Zap, iconBg: "bg-amber-100", iconColor: "text-amber-600", x: 295, y: 35 },
-        { id: "origin", name: "Origin API", type: "Core Gateway", icon: Server, iconBg: "bg-indigo-100", iconColor: "text-indigo-600", x: 295, y: 185 },
-        { id: "cache", name: "Redis Cluster", type: "Geo-Replicated", icon: Radio, iconBg: "bg-rose-100", iconColor: "text-rose-600", x: 440, y: 35 },
-        { id: "globaldb", name: "Distributed DB", type: "CockroachDB", icon: Database, iconBg: "bg-emerald-100", iconColor: "text-emerald-600", x: 440, y: 185 },
-        { id: "storage", name: "S3 Object Store", type: "Media Blobs", icon: HardDrive, iconBg: "bg-sky-100", iconColor: "text-sky-600", x: 585, y: 110 },
-      ],
-      arrows: [
-        { from: "users", to: "cdn", label: "Anycast" },
-        { from: "cdn", to: "worker", label: "< 5ms" },
-        { from: "cdn", to: "origin", label: "Miss Route" },
-        { from: "worker", to: "cache", label: "Edge KV" },
-        { from: "origin", to: "globaldb", label: "ACID Sync" },
-        { from: "origin", to: "storage", label: "Assets" },
-      ],
-    },
+    type: string
+    icon: any
+    iconBg: string
+    iconColor: string
+    x: number
+    y: number
+  }>>([
+    { id: "client", name: "Web Client", type: "React Ingress", icon: Monitor, iconBg: "bg-blue-100", iconColor: "text-blue-600", x: 25, y: 110 },
+    { id: "gateway", name: "API Gateway", type: "Envoy Proxy", icon: Network, iconBg: "bg-indigo-100", iconColor: "text-indigo-600", x: 165, y: 110 },
+    { id: "orders", name: "Order Service", type: "Golang RPC", icon: Box, iconBg: "bg-emerald-100", iconColor: "text-emerald-600", x: 310, y: 35 },
+    { id: "auth", name: "Auth Service", type: "Node.js JWT", icon: Shield, iconBg: "bg-purple-100", iconColor: "text-purple-600", x: 310, y: 185 },
+    { id: "kafka", name: "Kafka Stream", type: "Event Bus", icon: Layers, iconBg: "bg-amber-100", iconColor: "text-amber-600", x: 460, y: 35 },
+    { id: "redis", name: "Redis Cache", type: "In-Memory TTL", icon: Radio, iconBg: "bg-rose-100", iconColor: "text-rose-600", x: 460, y: 185 },
+    { id: "postgres", name: "PostgreSQL 16", type: "Primary Relational", icon: Database, iconBg: "bg-sky-100", iconColor: "text-sky-600", x: 605, y: 110 },
+  ])
+
+  const [archArrows, setArchArrows] = useState<Array<{
+    from: string
+    to: string
+    label: string
+    dashed?: boolean
+  }>>([
+    { from: "client", to: "gateway", label: "HTTPS" },
+    { from: "gateway", to: "orders", label: "gRPC" },
+    { from: "gateway", to: "auth", label: "REST" },
+    { from: "orders", to: "kafka", label: "Produce" },
+    { from: "auth", to: "redis", label: "Session" },
+    { from: "kafka", to: "postgres", label: "Consume" },
+  ])
+
+  const handleAddArchComponent = (comp: { name: string; icon: any; iconBg: string; iconColor: string }) => {
+    const newId = `node-${Date.now()}`
+    const offsetX = 250 + ((archNodes.length % 5) * 55)
+    const offsetY = 70 + ((archNodes.length % 3) * 60)
+    const newNode = {
+      id: newId,
+      name: comp.name,
+      type: "Microservice Primitive",
+      icon: comp.icon,
+      iconBg: comp.iconBg,
+      iconColor: comp.iconColor,
+      x: Math.min(offsetX, 580),
+      y: Math.min(offsetY, 220),
+    }
+    setArchNodes((prev) => [...prev, newNode])
+    setSelectedCloudNode(newId)
   }
 
   // ─── SECTION 3B: DATABASE ERD ───
@@ -227,22 +176,15 @@ export function ExcalidrawStoryline() {
       } else {
         setFlowStep(s)
       }
-    }, 900)
+    }, 1100)
   }
-
-  // ─── SECTION 3D: CAPACITY ESTIMATOR ───
-  const [dau, setDau] = useState<number>(15) // 15M DAU
-  const readQps = Math.round((dau * 1_000_000 * 25) / 86400)
-  const writeQps = Math.round((dau * 1_000_000 * 3) / 86400)
-  const monthlyStorageGb = Math.round((dau * 1_000_000 * 3 * 1.8 * 30) / (1024 * 1024))
-  const bandwidthMbps = Math.round((readQps * 2.5 * 8) / 1000)
 
   return (
     <div ref={containerRef} className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 py-12">
       {/* ─── SCROLL PATH RIBBON CURLING DOWN THE LEFT-HAND SIDE ─── */}
       <div className="hidden lg:block absolute left-1 xl:left-3 top-8 bottom-16 w-11 xl:w-13 pointer-events-none z-10 overflow-visible">
         <svg
-          viewBox="0 0 60 6200"
+          viewBox="0 0 60 5100"
           fill="none"
           overflow="visible"
           xmlns="http://www.w3.org/2000/svg"
@@ -287,6 +229,21 @@ export function ExcalidrawStoryline() {
             }}
           />
         </svg>
+      </div>
+
+      {/* ─── MAIN FEATURES STORYLINE HEADER ─── */}
+      <div className="relative mb-20 text-center max-w-3xl mx-auto pt-6 lg:pl-16 xl:pl-20">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-200/80 text-xs font-semibold text-indigo-700 shadow-2xs mb-4">
+          <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+          <span>Interactive Feature Tour</span>
+        </div>
+        <h2 className="font-zodiak text-3xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-4">
+          Built for how engineering teams actually work
+        </h2>
+        <p className="text-slate-600 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
+          Explore the workspace: from rapid UI wireframing and multiplayer team sessions to real-time cloud architecture modeling and sequence trace simulation.
+        </p>
+        <div className="w-24 h-1 bg-gradient-to-r from-transparent via-indigo-300 to-transparent mx-auto mt-8 rounded-full" />
       </div>
 
       {/* =========================================================================
@@ -493,7 +450,7 @@ export function ExcalidrawStoryline() {
             </span>
             <div className="min-w-0">
               <h4 className="font-bold text-slate-800 text-xs">Rapid UI Wireframing</h4>
-              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Quick layout grids, navbars, and buttons in seconds.</p>
+              <p className="text-[11px] text-slate-500 leading-tight">Fluid responsive artboards.</p>
             </div>
           </div>
 
@@ -503,7 +460,7 @@ export function ExcalidrawStoryline() {
             </span>
             <div className="min-w-0">
               <h4 className="font-bold text-slate-800 text-xs">Smart Grid Alignment</h4>
-              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Auto-snaps to 8px/16px padding with zero jitter.</p>
+              <p className="text-[11px] text-slate-500 leading-tight">Auto-snaps to 8px grids.</p>
             </div>
           </div>
 
@@ -513,7 +470,7 @@ export function ExcalidrawStoryline() {
             </span>
             <div className="min-w-0">
               <h4 className="font-bold text-slate-800 text-xs">Tactile 3D Annotations</h4>
-              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Curled paper sticky notes for actionable peer reviews.</p>
+              <p className="text-[11px] text-slate-500 leading-tight">Curled notes for reviews.</p>
             </div>
           </div>
         </div>
@@ -666,14 +623,24 @@ export function ExcalidrawStoryline() {
         </div>
 
         {/* COMPACT COLLABORATE FEATURE CHIPS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+              ⚡️
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-bold text-slate-800 text-xs">Live Multiplayer</h4>
+              <p className="text-[11px] text-slate-500 leading-tight">Sub-15ms canvas state sync.</p>
+            </div>
+          </div>
+
           <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
             <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
               🔗
             </span>
             <div className="min-w-0">
-              <h4 className="font-bold text-slate-800 text-xs">One-Click Instant Sharing</h4>
-              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Share a room link; zero login hurdles for guests.</p>
+              <h4 className="font-bold text-slate-800 text-xs">Instant Room Link</h4>
+              <p className="text-[11px] text-slate-500 leading-tight">Zero login hurdles for guests.</p>
             </div>
           </div>
 
@@ -682,8 +649,8 @@ export function ExcalidrawStoryline() {
               💬
             </span>
             <div className="min-w-0">
-              <h4 className="font-bold text-slate-800 text-xs">Contextual Pinned Discussions</h4>
-              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Pin comment threads directly to services and tickets.</p>
+              <h4 className="font-bold text-slate-800 text-xs">Pinned Discussions</h4>
+              <p className="text-[11px] text-slate-500 leading-tight">Pin notes directly to nodes.</p>
             </div>
           </div>
         </div>
@@ -709,43 +676,12 @@ export function ExcalidrawStoryline() {
 
         {/* BROWSER WINDOW MOCKUP: SYSTEM ARCHITECTURE */}
         <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-5">
-          {/* Chrome top bar with Prebuilt Layout Switcher */}
-          <div className="h-12 bg-slate-50 border-b border-slate-200 flex items-center px-4 justify-between select-none flex-wrap gap-2">
+          {/* Chrome top bar */}
+          <div className="h-9 bg-slate-50 border-b border-slate-200 flex items-center px-4 select-none">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-red-400/90" />
               <span className="w-3 h-3 rounded-full bg-amber-400/90" />
               <span className="w-3 h-3 rounded-full bg-emerald-400/90" />
-              <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-2xs ml-1">
-                <Network className="w-3.5 h-3.5 text-purple-600" />
-                <span>System Architecture & Cloud Topology</span>
-              </div>
-            </div>
-
-            {/* Prebuilt Layouts Switcher */}
-            <div className="flex items-center gap-1.5">
-              {(["microservices", "three-tier", "cdn-caching"] as const).map((tKey) => {
-                const tmpl = ARCH_TEMPLATES[tKey]
-                const isActive = selectedArchTemplate === tKey
-                return (
-                  <button
-                    key={tKey}
-                    onClick={() => {
-                      setSelectedArchTemplate(tKey)
-                      setSelectedCloudNode(tmpl.nodes[1].id)
-                    }}
-                    className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 ${
-                      isActive
-                        ? "bg-slate-900 text-white shadow-xs"
-                        : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-100"
-                    }`}
-                  >
-                    <span>{tmpl.name}</span>
-                    <span className={`text-[9px] px-1 rounded font-mono ${isActive ? "bg-indigo-500 text-white" : "bg-slate-100 text-slate-500"}`}>
-                      {tmpl.badge}
-                    </span>
-                  </button>
-                )
-              })}
             </div>
           </div>
 
@@ -783,7 +719,7 @@ export function ExcalidrawStoryline() {
               {/* Library Header & Tabs */}
               <div className="p-2.5 border-b border-slate-100 flex items-center justify-between">
                 <span className="text-xs font-bold text-slate-800">Component Tab</span>
-                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold">30+ Primitives</span>
+                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold">Click to Add</span>
               </div>
 
               {/* Search Bar */}
@@ -809,12 +745,17 @@ export function ExcalidrawStoryline() {
                     ].map((comp) => (
                       <div
                         key={comp.name}
-                        className="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200/60 bg-white hover:border-slate-300 hover:shadow-2xs transition-all cursor-grab select-none"
+                        onClick={() => handleAddArchComponent(comp)}
+                        title="Click to drop on canvas"
+                        className="flex items-center justify-between p-1.5 rounded-lg border border-slate-200/60 bg-white hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-2xs transition-all cursor-pointer select-none group"
                       >
-                        <span className={`w-6 h-6 rounded-md flex items-center justify-center ${comp.iconBg}`}>
-                          <comp.icon className={`w-3.5 h-3.5 ${comp.iconColor}`} strokeWidth={1.8} />
-                        </span>
-                        <span className="text-[11px] font-semibold text-slate-700">{comp.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className={`w-6 h-6 rounded-md flex items-center justify-center ${comp.iconBg}`}>
+                            <comp.icon className={`w-3.5 h-3.5 ${comp.iconColor}`} strokeWidth={1.8} />
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-700">{comp.name}</span>
+                        </div>
+                        <span className="text-[10px] text-indigo-600 opacity-0 group-hover:opacity-100 font-bold pr-1">+</span>
                       </div>
                     ))}
                   </div>
@@ -832,12 +773,17 @@ export function ExcalidrawStoryline() {
                     ].map((comp) => (
                       <div
                         key={comp.name}
-                        className="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200/60 bg-white hover:border-slate-300 hover:shadow-2xs transition-all cursor-grab select-none"
+                        onClick={() => handleAddArchComponent(comp)}
+                        title="Click to drop on canvas"
+                        className="flex items-center justify-between p-1.5 rounded-lg border border-slate-200/60 bg-white hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-2xs transition-all cursor-pointer select-none group"
                       >
-                        <span className={`w-6 h-6 rounded-md flex items-center justify-center ${comp.iconBg}`}>
-                          <comp.icon className={`w-3.5 h-3.5 ${comp.iconColor}`} strokeWidth={1.8} />
-                        </span>
-                        <span className="text-[11px] font-semibold text-slate-700">{comp.name}</span>
+                        <div className="flex items-center gap-2">
+                          <span className={`w-6 h-6 rounded-md flex items-center justify-center ${comp.iconBg}`}>
+                            <comp.icon className={`w-3.5 h-3.5 ${comp.iconColor}`} strokeWidth={1.8} />
+                          </span>
+                          <span className="text-[11px] font-semibold text-slate-700">{comp.name}</span>
+                        </div>
+                        <span className="text-[10px] text-indigo-600 opacity-0 group-hover:opacity-100 font-bold pr-1">+</span>
                       </div>
                     ))}
                   </div>
@@ -845,13 +791,13 @@ export function ExcalidrawStoryline() {
               </div>
             </div>
 
-            {/* 3. INFINITE CANVAS VIEWPORT WITH PREBUILT LAYOUT */}
+            {/* 3. INFINITE CANVAS VIEWPORT WITH INTERACTIVE NODES */}
             <div className="flex-1 relative overflow-hidden bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px]">
-              {/* Active Layout Badge */}
+              {/* Interaction Hint Badge */}
               <div className="absolute top-3 left-4 z-10 flex items-center gap-2 px-3 py-1 rounded-full bg-white/95 border border-slate-200 shadow-2xs backdrop-blur-md">
-                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
-                <span className="text-[11px] font-mono font-bold text-slate-700">
-                  Active Layout: {ARCH_TEMPLATES[selectedArchTemplate].name}
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-mono font-semibold text-slate-600">
+                  Click sidebar to add • Drag components to move
                 </span>
               </div>
 
@@ -872,9 +818,9 @@ export function ExcalidrawStoryline() {
                         <path d="M 0 1 L 7 4 L 0 7 z" fill="#6366F1" />
                       </marker>
                     </defs>
-                    {ARCH_TEMPLATES[selectedArchTemplate].arrows.map((arr, i) => {
-                      const fromNode = ARCH_TEMPLATES[selectedArchTemplate].nodes.find((n) => n.id === arr.from)
-                      const toNode = ARCH_TEMPLATES[selectedArchTemplate].nodes.find((n) => n.id === arr.to)
+                    {archArrows.map((arr, i) => {
+                      const fromNode = archNodes.find((n) => n.id === arr.from)
+                      const toNode = archNodes.find((n) => n.id === arr.to)
                       if (!fromNode || !toNode) return null
 
                       const x1 = fromNode.x + 105
@@ -897,8 +843,8 @@ export function ExcalidrawStoryline() {
                             strokeLinecap="round"
                           />
                           <g transform={`translate(${midX}, ${midY})`}>
-                            <rect x="-28" y="-9" width="56" height="18" rx="9" fill="white" stroke="#CBD5E1" strokeWidth="1" className="shadow-2xs" />
-                            <text x="0" y="2" fill="#475569" fontSize="8" fontWeight="bold" textAnchor="middle" dominantBaseline="middle" className="font-mono">
+                            <rect x="-26" y="-8" width="52" height="16" rx="8" fill="white" stroke="#CBD5E1" strokeWidth="1" className="shadow-2xs" />
+                            <text x="0" y="1.5" fill="#475569" fontSize="7.5" fontWeight="bold" textAnchor="middle" dominantBaseline="middle" className="font-mono">
                               {arr.label}
                             </text>
                           </g>
@@ -907,13 +853,25 @@ export function ExcalidrawStoryline() {
                     })}
                   </svg>
 
-                  {/* Actual Canvas Component Nodes */}
-                  {ARCH_TEMPLATES[selectedArchTemplate].nodes.map((node) => {
+                  {/* Actual Canvas Component Nodes (Draggable) */}
+                  {archNodes.map((node) => {
                     const Icon = node.icon
                     const isSelected = selectedCloudNode === node.id
                     return (
-                      <div
+                      <motion.div
                         key={node.id}
+                        drag
+                        dragMomentum={false}
+                        dragElastic={0}
+                        onDrag={(_event, info) => {
+                          setArchNodes((prev) =>
+                            prev.map((n) =>
+                              n.id === node.id
+                                ? { ...n, x: n.x + info.delta.x, y: n.y + info.delta.y }
+                                : n
+                            )
+                          )
+                        }}
                         onClick={() => setSelectedCloudNode(node.id)}
                         style={{
                           position: "absolute",
@@ -922,9 +880,9 @@ export function ExcalidrawStoryline() {
                           width: "105px",
                           height: "82px",
                         }}
-                        className={`rounded-xl bg-white border p-2 flex flex-col items-center justify-center text-center cursor-pointer select-none transition-all z-20 ${
+                        className={`rounded-xl bg-white border p-2 flex flex-col items-center justify-center text-center cursor-grab active:cursor-grabbing select-none transition-shadow z-20 ${
                           isSelected
-                            ? "border-indigo-600 ring-2 ring-indigo-400 shadow-md scale-105"
+                            ? "border-indigo-600 ring-2 ring-indigo-400 shadow-md"
                             : "border-slate-200/90 hover:border-slate-300 shadow-2xs hover:shadow-xs"
                         }`}
                       >
@@ -943,7 +901,7 @@ export function ExcalidrawStoryline() {
                         <span className="text-[10px] font-bold text-slate-800 leading-tight tracking-tight">
                           {node.name}
                         </span>
-                      </div>
+                      </motion.div>
                     )
                   })}
                 </div>
@@ -960,7 +918,7 @@ export function ExcalidrawStoryline() {
             </span>
             <div className="min-w-0">
               <h4 className="font-bold text-slate-800 text-xs">Ready-Made Primitives</h4>
-              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Gateways, Kafka queues, and DBs ready to drop.</p>
+              <p className="text-[11px] text-slate-500 leading-tight">Gateways, queues & DBs.</p>
             </div>
           </div>
 
@@ -970,7 +928,7 @@ export function ExcalidrawStoryline() {
             </span>
             <div className="min-w-0">
               <h4 className="font-bold text-slate-800 text-xs">1-Click System Templates</h4>
-              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Instant architectures for Microservices, Chat & RAG.</p>
+              <p className="text-[11px] text-slate-500 leading-tight">Instant cloud architectures.</p>
             </div>
           </div>
 
@@ -980,7 +938,7 @@ export function ExcalidrawStoryline() {
             </span>
             <div className="min-w-0">
               <h4 className="font-bold text-slate-800 text-xs">VPC Auto-Containment</h4>
-              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Dragging the subnet boundary moves all child nodes.</p>
+              <p className="text-[11px] text-slate-500 leading-tight">Subnets move child nodes.</p>
             </div>
           </div>
         </div>
@@ -1203,7 +1161,7 @@ export function ExcalidrawStoryline() {
             </span>
             <div className="min-w-0">
               <h4 className="font-bold text-slate-800 text-xs">Visual Table Builder</h4>
-              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Define PK/FK constraints and PostgreSQL data types.</p>
+              <p className="text-[11px] text-slate-500 leading-tight">Define PK and FK schemas.</p>
             </div>
           </div>
 
@@ -1213,7 +1171,7 @@ export function ExcalidrawStoryline() {
             </span>
             <div className="min-w-0">
               <h4 className="font-bold text-slate-800 text-xs">Smart Foreign Key Routing</h4>
-              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">1:N connectors anchored to specific foreign key rows.</p>
+              <p className="text-[11px] text-slate-500 leading-tight">Visual relation connectors.</p>
             </div>
           </div>
 
@@ -1223,7 +1181,7 @@ export function ExcalidrawStoryline() {
             </span>
             <div className="min-w-0">
               <h4 className="font-bold text-slate-800 text-xs">SQL Migration Export</h4>
-              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Export ERD tables to executable PostgreSQL DDL.</p>
+              <p className="text-[11px] text-slate-500 leading-tight">1-click DDL script export.</p>
             </div>
           </div>
         </div>
@@ -1264,9 +1222,9 @@ export function ExcalidrawStoryline() {
           </div>
 
           {/* Whiteboard Canvas Area */}
-          <div className="relative min-h-[440px] sm:min-h-[480px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 sm:p-8 flex flex-col justify-between overflow-hidden">
+          <div className="relative min-h-[420px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 flex flex-col justify-between overflow-hidden select-none">
             {/* Top Trace Controls & Interactive Simulation Trigger */}
-            <div className="flex items-center justify-between mb-3 z-20 flex-wrap gap-2">
+            <div className="flex items-center justify-between mb-4 z-20 flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleSimulateTrace}
@@ -1294,98 +1252,227 @@ export function ExcalidrawStoryline() {
                 </div>
               </div>
 
-              <div className="text-xs font-mono text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-2xs">
-                Active Step: <strong className="text-blue-600">Step {flowStep} of 4</strong>
+              {/* Step info pill */}
+              <div className="text-xs font-mono text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-2xs flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+                <span>
+                  {flowStep === 1 && "Step 1: Client → API Gateway (14.2ms)"}
+                  {flowStep === 2 && "Step 2: Gateway → Auth Server (1.8ms)"}
+                  {flowStep === 3 && "Step 3: Gateway → Order Server (28.5ms)"}
+                  {flowStep === 4 && "Step 4: Order Server → Database (23.9ms)"}
+                </span>
               </div>
             </div>
 
-            {/* SEQUENCE FLOW LIFELINES & ANIMATED PACKET PULSE */}
-            <div className="relative my-auto w-full max-w-4xl mx-auto py-4">
-              {/* Actors Top Lifeline Headers */}
-              <div className="grid grid-cols-4 gap-4 text-center mb-6">
-                {[
-                  { id: "client", name: "Client Browser", sub: "HTTPS / TLS", icon: MousePointer2, color: "text-slate-700 bg-slate-100" },
-                  { id: "gateway", name: "API Gateway", sub: "Rate Limiting", icon: Server, color: "text-indigo-700 bg-indigo-50" },
-                  { id: "orders", name: "Order Service", sub: "Go / gRPC", icon: Cpu, color: "text-blue-700 bg-blue-50" },
-                  { id: "postgres", name: "PostgreSQL", sub: "ACID Storage", icon: Database, color: "text-emerald-700 bg-emerald-50" },
-                ].map((actor) => (
-                  <div key={actor.id} className="flex flex-col items-center">
-                    <div className={`p-2 rounded-2xl border border-slate-200 shadow-xs mb-1 ${actor.color}`}>
-                      <actor.icon className="w-4 h-4" />
-                    </div>
-                    <span className="font-bold text-slate-800 text-xs sm:text-sm">{actor.name}</span>
-                    <span className="text-[10px] text-slate-400 font-mono">{actor.sub}</span>
-                  </div>
-                ))}
-              </div>
+            {/* VISUAL ARCHITECTURE FLOW DIAGRAM (Client -> Gateway -> 2 Servers -> DB) */}
+            <div className="relative my-auto w-full max-w-3xl mx-auto py-2">
+              <div className="relative w-[680px] h-[280px] mx-auto shrink-0">
+                {/* SVG Connecting Flow Lines with Animated Pulse */}
+                <svg className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible">
+                  <defs>
+                    <marker
+                      id="flowArrowHead"
+                      markerWidth="8"
+                      markerHeight="8"
+                      refX="7"
+                      refY="4"
+                      orient="auto"
+                    >
+                      <path d="M 0 1 L 7 4 L 0 7 z" fill="#3B82F6" />
+                    </marker>
+                    <marker
+                      id="flowArrowMuted"
+                      markerWidth="8"
+                      markerHeight="8"
+                      refX="7"
+                      refY="4"
+                      orient="auto"
+                    >
+                      <path d="M 0 1 L 7 4 L 0 7 z" fill="#94A3B8" />
+                    </marker>
+                    <filter id="packetGlow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feDropShadow dx="0" dy="0" stdDeviation="2.5" floodColor="#3B82F6" floodOpacity="0.8" />
+                    </filter>
+                  </defs>
 
-              {/* 4 Sequential Flow Step Bars */}
-              <div className="space-y-3">
+                  {/* 1. Client -> Gateway */}
+                  <g>
+                    <path
+                      d="M 125 149 L 180 149"
+                      fill="none"
+                      stroke={flowStep === 1 ? "#3B82F6" : "#CBD5E1"}
+                      strokeWidth={flowStep === 1 ? "2.5" : "1.5"}
+                      markerEnd={flowStep === 1 ? "url(#flowArrowHead)" : "url(#flowArrowMuted)"}
+                      strokeLinecap="round"
+                    />
+                    <g transform="translate(152, 137)">
+                      <rect x="-24" y="-8" width="48" height="16" rx="8" fill="white" stroke={flowStep === 1 ? "#93C5FD" : "#E2E8F0"} strokeWidth="1" className="shadow-2xs" />
+                      <text x="0" y="1" fill={flowStep === 1 ? "#1D4ED8" : "#64748B"} fontSize="7.5" fontWeight="bold" textAnchor="middle" dominantBaseline="middle" className="font-mono">
+                        POST
+                      </text>
+                    </g>
+                    {flowStep === 1 && (
+                      <circle cx="152" cy="149" r="4.5" fill="#3B82F6" filter="url(#packetGlow)" className="animate-pulse" />
+                    )}
+                  </g>
+
+                  {/* 2. Gateway -> Auth Server */}
+                  <g>
+                    <path
+                      d="M 290 135 C 325 135, 325 74, 360 74"
+                      fill="none"
+                      stroke={flowStep === 2 ? "#3B82F6" : "#CBD5E1"}
+                      strokeWidth={flowStep === 2 ? "2.5" : "1.5"}
+                      markerEnd={flowStep === 2 ? "url(#flowArrowHead)" : "url(#flowArrowMuted)"}
+                      strokeLinecap="round"
+                    />
+                    <g transform="translate(325, 95)">
+                      <rect x="-26" y="-8" width="52" height="16" rx="8" fill="white" stroke={flowStep === 2 ? "#93C5FD" : "#E2E8F0"} strokeWidth="1" className="shadow-2xs" />
+                      <text x="0" y="1" fill={flowStep === 2 ? "#1D4ED8" : "#64748B"} fontSize="7.5" fontWeight="bold" textAnchor="middle" dominantBaseline="middle" className="font-mono">
+                        Auth JWT
+                      </text>
+                    </g>
+                    {flowStep === 2 && (
+                      <circle cx="325" cy="95" r="4.5" fill="#3B82F6" filter="url(#packetGlow)" className="animate-pulse" />
+                    )}
+                  </g>
+
+                  {/* 3. Gateway -> Order Server */}
+                  <g>
+                    <path
+                      d="M 290 163 C 325 163, 325 224, 360 224"
+                      fill="none"
+                      stroke={flowStep === 3 ? "#3B82F6" : "#CBD5E1"}
+                      strokeWidth={flowStep === 3 ? "2.5" : "1.5"}
+                      markerEnd={flowStep === 3 ? "url(#flowArrowHead)" : "url(#flowArrowMuted)"}
+                      strokeLinecap="round"
+                    />
+                    <g transform="translate(325, 203)">
+                      <rect x="-24" y="-8" width="48" height="16" rx="8" fill="white" stroke={flowStep === 3 ? "#93C5FD" : "#E2E8F0"} strokeWidth="1" className="shadow-2xs" />
+                      <text x="0" y="1" fill={flowStep === 3 ? "#1D4ED8" : "#64748B"} fontSize="7.5" fontWeight="bold" textAnchor="middle" dominantBaseline="middle" className="font-mono">
+                        gRPC
+                      </text>
+                    </g>
+                    {flowStep === 3 && (
+                      <circle cx="325" cy="203" r="4.5" fill="#3B82F6" filter="url(#packetGlow)" className="animate-pulse" />
+                    )}
+                  </g>
+
+                  {/* 4. Order Server -> Database */}
+                  <g>
+                    <path
+                      d="M 475 224 C 510 224, 510 149, 550 149"
+                      fill="none"
+                      stroke={flowStep === 4 ? "#3B82F6" : "#CBD5E1"}
+                      strokeWidth={flowStep === 4 ? "2.5" : "1.5"}
+                      markerEnd={flowStep === 4 ? "url(#flowArrowHead)" : "url(#flowArrowMuted)"}
+                      strokeLinecap="round"
+                    />
+                    <g transform="translate(512, 192)">
+                      <rect x="-26" y="-8" width="52" height="16" rx="8" fill="white" stroke={flowStep === 4 ? "#93C5FD" : "#E2E8F0"} strokeWidth="1" className="shadow-2xs" />
+                      <text x="0" y="1" fill={flowStep === 4 ? "#1D4ED8" : "#64748B"} fontSize="7.5" fontWeight="bold" textAnchor="middle" dominantBaseline="middle" className="font-mono">
+                        Commit
+                      </text>
+                    </g>
+                    {flowStep === 4 && (
+                      <circle cx="512" cy="192" r="4.5" fill="#3B82F6" filter="url(#packetGlow)" className="animate-pulse" />
+                    )}
+                  </g>
+                </svg>
+
+                {/* 5 Diagram Nodes */}
                 {[
                   {
-                    step: 1,
-                    title: "Step 1: POST /v1/checkout",
-                    desc: "Client transmits JSON payload over TLS 1.3 to Edge API Gateway",
-                    latency: "14.2ms",
-                    status: "200 Ingested",
-                    activeColor: "border-indigo-500 bg-indigo-50/70 text-indigo-950",
+                    id: "client",
+                    name: "Web Client",
+                    sub: "Browser Ingress",
+                    icon: Monitor,
+                    iconBg: "bg-blue-100",
+                    iconColor: "text-blue-600",
+                    x: 20,
+                    y: 110,
+                    isActive: flowStep === 1,
                   },
                   {
-                    step: 2,
-                    title: "Step 2: Token Validation & Rate Check",
-                    desc: "API Gateway verifies JWT cryptographic signature & Redis token bucket",
-                    latency: "1.8ms",
-                    status: "Redis Cache HIT",
-                    activeColor: "border-blue-500 bg-blue-50/70 text-blue-950",
+                    id: "gateway",
+                    name: "API Gateway",
+                    sub: "Rate Limiter",
+                    icon: Network,
+                    iconBg: "bg-indigo-100",
+                    iconColor: "text-indigo-600",
+                    x: 180,
+                    y: 110,
+                    isActive: flowStep === 1 || flowStep === 2 || flowStep === 3,
                   },
                   {
-                    step: 3,
-                    title: "Step 3: gRPC Order Allocation",
-                    desc: "Order microservice allocates inventory and constructs invoice schema",
-                    latency: "28.5ms",
-                    status: "RPC OrderAllocated",
-                    activeColor: "border-purple-500 bg-purple-50/70 text-purple-950",
+                    id: "auth",
+                    name: "Auth Server",
+                    sub: "JWT Validation",
+                    icon: Shield,
+                    iconBg: "bg-purple-100",
+                    iconColor: "text-purple-600",
+                    x: 360,
+                    y: 35,
+                    isActive: flowStep === 2,
                   },
                   {
-                    step: 4,
-                    title: "Step 4: Commit PostgreSQL ACID Transaction",
-                    desc: "Orders table writes row to WAL log with foreign key integrity. Returns 201 Created",
-                    latency: "23.9ms",
-                    status: "201 Created Committed",
-                    activeColor: "border-emerald-500 bg-emerald-50/70 text-emerald-950",
+                    id: "orders",
+                    name: "Order Server",
+                    sub: "RPC Execution",
+                    icon: Server,
+                    iconBg: "bg-emerald-100",
+                    iconColor: "text-emerald-600",
+                    x: 360,
+                    y: 185,
+                    isActive: flowStep === 3 || flowStep === 4,
                   },
-                ].map((item) => {
-                  const isCurrent = flowStep === item.step
+                  {
+                    id: "database",
+                    name: "Database",
+                    sub: "PostgreSQL 16",
+                    icon: Database,
+                    iconBg: "bg-sky-100",
+                    iconColor: "text-sky-600",
+                    x: 550,
+                    y: 110,
+                    isActive: flowStep === 4,
+                  },
+                ].map((node) => {
+                  const Icon = node.icon
                   return (
                     <div
-                      key={item.step}
-                      onClick={() => setFlowStep(item.step)}
-                      className={`p-3 rounded-xl border transition-all cursor-pointer relative flex items-center justify-between ${
-                        isCurrent
-                          ? `${item.activeColor} ring-2 ring-blue-500 shadow-md scale-101`
-                          : "border-slate-200 bg-white hover:bg-slate-50/70 opacity-75"
+                      key={node.id}
+                      style={{
+                        position: "absolute",
+                        left: `${node.x}px`,
+                        top: `${node.y}px`,
+                        width: "110px",
+                        height: "78px",
+                      }}
+                      className={`rounded-xl bg-white border p-2 flex flex-col items-center justify-center text-center select-none transition-all z-20 ${
+                        node.isActive
+                          ? "border-blue-500 ring-2 ring-blue-400/80 shadow-md scale-103 bg-blue-50/20"
+                          : "border-slate-200/90 shadow-2xs hover:border-slate-300"
                       }`}
                     >
-                      <div className="flex items-center gap-3">
-                        <span className={`w-6 h-6 rounded-lg font-mono text-xs font-bold flex items-center justify-center ${
-                          isCurrent ? "bg-slate-900 text-white shadow-xs" : "bg-slate-100 text-slate-600"
-                        }`}>
-                          {item.step}
-                        </span>
-                        <div>
-                          <h4 className="font-bold text-xs sm:text-sm leading-tight mb-0.5">
-                            {item.title}
-                          </h4>
-                          <p className="text-[11px] text-slate-500 leading-snug">
-                            {item.desc}
-                          </p>
+                      {/* Active beacon */}
+                      {node.isActive && (
+                        <div className="absolute top-1.5 right-1.5 flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-ping" />
+                          <span className="text-[7px] font-mono font-bold text-blue-600">LIVE</span>
                         </div>
+                      )}
+
+                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center mb-1 shadow-2xs ${node.iconBg}`}>
+                        <Icon className={`w-3.5 h-3.5 ${node.iconColor}`} strokeWidth={1.8} />
                       </div>
 
-                      <div className="text-right shrink-0 ml-4 font-mono">
-                        <span className="block font-bold text-xs text-slate-800">{item.latency}</span>
-                        <span className="text-[10px] text-emerald-600 font-semibold">{item.status}</span>
-                      </div>
+                      <span className="text-[10px] font-bold text-slate-800 leading-tight">
+                        {node.name}
+                      </span>
+                      <span className="text-[8.5px] font-mono text-slate-400 mt-0.5">
+                        {node.sub}
+                      </span>
                     </div>
                   )
                 })}
@@ -1403,7 +1490,7 @@ export function ExcalidrawStoryline() {
             </span>
             <div className="min-w-0">
               <h4 className="font-bold text-slate-800 text-xs">Live Request Simulation</h4>
-              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Animated packet journeys through gateways and caches.</p>
+              <p className="text-[11px] text-slate-500 leading-tight">Step-by-step packet journeys.</p>
             </div>
           </div>
 
@@ -1413,7 +1500,7 @@ export function ExcalidrawStoryline() {
             </span>
             <div className="min-w-0">
               <h4 className="font-bold text-slate-800 text-xs">Latency Budgeting</h4>
-              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Inspect P95/P99 latency breakdowns at each hop.</p>
+              <p className="text-[11px] text-slate-500 leading-tight">P95 and P99 hop timings.</p>
             </div>
           </div>
 
@@ -1423,216 +1510,7 @@ export function ExcalidrawStoryline() {
             </span>
             <div className="min-w-0">
               <h4 className="font-bold text-slate-800 text-xs">Circuit Breaker Modeling</h4>
-              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Model fallback paths and DB exponential retries.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* =========================================================================
-          COMMON USE CASES — STORYTELLING CHAPTER 4: CAPACITY ESTIMATOR
-         ========================================================================= */}
-      <div id="capacity-estimator" className="relative mb-28 lg:pl-16 xl:pl-20 scroll-mt-24">
-        {/* Header Tag Badge */}
-        <div className="mb-3">
-          <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-amber-100/90 text-amber-800 border border-amber-200/60 tracking-wide font-mono">
-            storytelling chapter 4 • capacity & scale math
-          </span>
-        </div>
-
-        <h2 className="font-zodiak text-3xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-3">
-          Capacity Estimator
-        </h2>
-        <p className="text-slate-600 text-base sm:text-lg max-w-3xl mb-8 leading-relaxed">
-          Perform real-time back-of-the-envelope system design calculations on a tactile 3D sticky note. Slide the DAU range to calculate QPS, storage growth, and bandwidth dynamically.
-        </p>
-
-        {/* BROWSER WINDOW MOCKUP: CAPACITY ESTIMATOR */}
-        <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-5">
-          {/* Chrome top bar */}
-          <div className="h-10 bg-slate-50 border-b border-slate-200 flex items-center px-4 justify-between select-none">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-red-400/90" />
-              <span className="w-3 h-3 rounded-full bg-amber-400/90" />
-              <span className="w-3 h-3 rounded-full bg-emerald-400/90" />
-            </div>
-            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-2xs">
-              <Calculator className="w-3.5 h-3.5 text-amber-600" />
-              <span>Capacity & Scale Estimator</span>
-            </div>
-            <div className="text-[11px] font-mono text-amber-600 font-bold">Live Calculator</div>
-          </div>
-
-          {/* Whiteboard Canvas Area */}
-          <div className="relative min-h-[440px] sm:min-h-[480px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 sm:p-8 flex flex-col justify-between overflow-hidden">
-            {/* Presets Header */}
-            <div className="flex items-center justify-between mb-4 z-20 flex-wrap gap-2">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-mono font-bold text-slate-500 uppercase mr-1">Scale Presets:</span>
-                {[
-                  { name: "SaaS Starter (2M)", val: 2 },
-                  { name: "FinTech Scale (15M)", val: 15 },
-                  { name: "Social Feed (50M)", val: 50 },
-                  { name: "Hyperscale (100M)", val: 100 },
-                ].map((preset) => (
-                  <button
-                    key={preset.name}
-                    onClick={() => setDau(preset.val)}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
-                      dau === preset.val
-                        ? "bg-slate-900 text-white shadow-xs"
-                        : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
-                    }`}
-                  >
-                    {preset.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* INTERACTIVE CAPACITY CANVAS WITH 3D CURLED STICKY NOTE */}
-            <div className="relative my-auto flex flex-col md:flex-row items-center justify-center gap-8 py-3">
-              {/* Left Column: Interactive Range Slider & Presets */}
-              <div className="w-full max-w-md bg-white p-5 rounded-3xl border border-slate-200 shadow-md">
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xs font-mono font-bold text-slate-400 uppercase">
-                    Daily Active Users (DAU)
-                  </span>
-                  <span className="px-3 py-1 rounded-full bg-amber-50 border border-amber-200 text-amber-800 text-sm font-mono font-bold">
-                    {dau} Million DAU
-                  </span>
-                </div>
-
-                <input
-                  type="range"
-                  min="1"
-                  max="100"
-                  value={dau}
-                  onChange={(e) => setDau(Number(e.target.value))}
-                  className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-500 mb-5"
-                />
-
-                <div className="grid grid-cols-2 gap-3 text-left">
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-[10px] font-mono text-slate-400 block mb-1">Read Ratio</span>
-                    <span className="font-bold text-sm text-slate-800">25 queries / user</span>
-                  </div>
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100">
-                    <span className="text-[10px] font-mono text-slate-400 block mb-1">Write Ratio</span>
-                    <span className="font-bold text-sm text-slate-800">3 writes / user</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column: 3D Hand-drawn sticky note with real-time math & flying curled corner */}
-              <div className="w-72 select-none rotate-[2deg] relative">
-                {/* 3D Lifted Corner Shadow */}
-                <div
-                  className="absolute -bottom-2 -right-1 w-3/4 h-8 pointer-events-none rounded-full"
-                  style={{
-                    background: "radial-gradient(ellipse at center, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.12) 55%, transparent 75%)",
-                    transform: "rotate(6deg) skewX(8deg)",
-                    filter: "blur(4px)",
-                  }}
-                />
-
-                {/* Main Paper Body with clipped corner */}
-                <div
-                  className="relative p-5 pt-3 pb-6 pr-6 bg-amber-100 border border-amber-300/80 rounded-[2px]"
-                  style={{
-                    backgroundImage: "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.08) 25%, rgba(0,0,0,0.02) 75%, rgba(0,0,0,0.08) 100%)",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 6px 14px -2px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.6)",
-                    clipPath: "polygon(0% 0%, 100% 0%, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0% 100%)",
-                  }}
-                >
-                  {/* Top adhesive band */}
-                  <div className="w-full h-3.5 -mt-3 -mx-5 mb-2.5 px-5 bg-black/[0.04] border-b border-black/[0.06] flex items-center">
-                    <div className="w-full h-[1px] bg-white/30 rounded-full" />
-                  </div>
-
-                  <span className="block font-bold text-xs text-amber-800 mb-2">
-                    🧮 Capacity Calculations
-                  </span>
-
-                  <div className="space-y-2 text-xs font-mono">
-                    <div className="flex items-center justify-between pb-1.5 border-b border-amber-200/80">
-                      <span className="text-amber-900 font-medium">Read QPS:</span>
-                      <strong className="text-amber-950 font-bold">{readQps.toLocaleString()} req/s</strong>
-                    </div>
-
-                    <div className="flex items-center justify-between pb-1.5 border-b border-amber-200/80">
-                      <span className="text-amber-900 font-medium">Write QPS:</span>
-                      <strong className="text-amber-950 font-bold">{writeQps.toLocaleString()} req/s</strong>
-                    </div>
-
-                    <div className="flex items-center justify-between pb-1.5 border-b border-amber-200/80">
-                      <span className="text-amber-900 font-medium">DB Growth:</span>
-                      <strong className="text-amber-950 font-bold">~{monthlyStorageGb.toLocaleString()} GB / mo</strong>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <span className="text-amber-900 font-medium">Bandwidth:</span>
-                      <strong className="text-amber-950 font-bold">~{bandwidthMbps.toLocaleString()} Mbps</strong>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 3D Flying / Curled Corner Flap */}
-                <div className="absolute bottom-0 right-0 w-6 h-6 pointer-events-none select-none overflow-visible">
-                  <svg viewBox="0 0 24 24" className="w-full h-full overflow-visible" style={{ filter: "drop-shadow(-2px -2px 2.5px rgba(0,0,0,0.22))" }}>
-                    <defs>
-                      <linearGradient id="cap-curl" x1="0%" y1="100%" x2="100%" y2="0%">
-                        <stop offset="0%" stopColor="#fef08a" />
-                        <stop offset="30%" stopColor="#ffffff" stopOpacity="0.6" />
-                        <stop offset="60%" stopColor="#fef08a" />
-                        <stop offset="100%" stopColor="#000000" stopOpacity="0.2" />
-                      </linearGradient>
-                      <radialGradient id="cap-shadow" cx="20%" cy="20%" r="80%">
-                        <stop offset="0%" stopColor="#000000" stopOpacity="0.45" />
-                        <stop offset="100%" stopColor="#000000" stopOpacity="0.8" />
-                      </radialGradient>
-                    </defs>
-                    <path d="M 0 24 Q 12 20 24 0 L 24 24 Z" fill="url(#cap-shadow)" />
-                    <path d="M 0 24 Q 9 9 24 0 C 19 9 12 18 0 24 Z" fill="#fef08a" />
-                    <path d="M 0 24 Q 9 9 24 0 C 19 9 12 18 0 24 Z" fill="url(#cap-curl)" />
-                    <path d="M 24 0 C 19 9 12 18 0 24" stroke="rgba(255, 255, 255, 0.75)" strokeWidth="0.8" fill="none" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        {/* COMPACT CAPACITY FEATURE CHIPS */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
-              🧮
-            </span>
-            <div className="min-w-0">
-              <h4 className="font-bold text-slate-800 text-xs">Dynamic QPS Slider</h4>
-              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Real-time read/write calculations based on custom DAU.</p>
-            </div>
-          </div>
-
-          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
-              📐
-            </span>
-            <div className="min-w-0">
-              <h4 className="font-bold text-slate-800 text-xs">Interview Equations</h4>
-              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Back-of-the-envelope equations on 3D paper stickies.</p>
-            </div>
-          </div>
-
-          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
-              💾
-            </span>
-            <div className="min-w-0">
-              <h4 className="font-bold text-slate-800 text-xs">Storage Growth Math</h4>
-              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Monthly and yearly database volume projections.</p>
+              <p className="text-[11px] text-slate-500 leading-tight">Circuit breaker fallbacks.</p>
             </div>
           </div>
         </div>
