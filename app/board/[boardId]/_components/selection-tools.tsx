@@ -256,7 +256,7 @@ export const SelectionTools = memo(
     }, [selection])
 
     // Arrow specific mutations
-    const setArrowStyle = useMutation(({ storage }, style: "curvy" | "sharp") => {
+    const setArrowStyle = useMutation(({ storage }, style: "curvy" | "sharp" | "straight") => {
       if (!soleLayerId) return
       const layer = storage.get("layers").get(soleLayerId)
       if (layer && layer.get("type") === LayerType.Arrow) {
@@ -1248,10 +1248,20 @@ export const SelectionTools = memo(
                 <button
                   onClick={() => setArrowStyle("sharp")}
                   className={`p-1 rounded ${
-                    currentArrowStyle === "sharp" ? "bg-cyan-500 text-white" : buttonPillInactive
+                    currentArrowStyle === "sharp" || currentArrowStyle === "orthogonal" ? "bg-cyan-500 text-white" : buttonPillInactive
                   }`}
                 >
                   <CornerDownRight className="w-3.5 h-3.5" />
+                </button>
+              </Hint>
+              <Hint label="Straight Line">
+                <button
+                  onClick={() => setArrowStyle("straight")}
+                  className={`p-1 rounded ${
+                    currentArrowStyle === "straight" ? "bg-cyan-500 text-white" : buttonPillInactive
+                  }`}
+                >
+                  <Minus className="w-3.5 h-3.5" />
                 </button>
               </Hint>
             </div>

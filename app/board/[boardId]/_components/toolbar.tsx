@@ -10,6 +10,7 @@ import {
   Undo2,
   Spline,
   CornerDownRight,
+  Minus,
   Layers,
   Move,
   Eraser,
@@ -29,7 +30,7 @@ interface ToolbarProps {
   redo: () => void
   canUndo: boolean
   canRedo: boolean
-  arrowStyle?: "curvy" | "sharp"
+  arrowStyle?: "curvy" | "sharp" | "straight"
   onToggleArrowStyle?: () => void
   onSelectAllArchitecture?: () => void
   onInsertLayerDirectly?: (layerType: LayerType) => void
@@ -158,9 +159,9 @@ export const Toolbar = ({
       {/* ── Group 3: Architecture Lines & Section Zones ── */}
       <div className={groupClass}>
         <ToolButton
-          label={`Connect Arrow (${arrowStyle === "sharp" ? "Sharp 90°" : "Curvy"})`}
+          label={`Connect Arrow (${arrowStyle === "sharp" ? "Sharp 90°" : arrowStyle === "straight" ? "Straight" : "Curvy"})`}
           shortcut="C"
-          icon={arrowStyle === "sharp" ? CornerDownRight : Spline}
+          icon={arrowStyle === "sharp" ? CornerDownRight : arrowStyle === "straight" ? Minus : Spline}
           onClick={() => {
             if (canvasState.mode === CanvasMode.Connecting && onToggleArrowStyle) {
               onToggleArrowStyle()

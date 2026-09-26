@@ -287,7 +287,7 @@ export type ComponentLayer = {
   iconSvg?: string
 }
 
-export type ArrowStyle = "curvy" | "sharp" | "orthogonal"
+export type ArrowStyle = "curvy" | "sharp" | "orthogonal" | "straight"
 
 export type ArrowLayer = {
   type: LayerType.Arrow

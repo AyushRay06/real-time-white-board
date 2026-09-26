@@ -13,6 +13,7 @@ import {
   Network,
   Spline,
   CornerDownRight,
+  Minus,
 } from "lucide-react"
 
 interface ContextMenuProps {
@@ -31,7 +32,7 @@ interface ContextMenuProps {
   onSelectConnected?: () => void
   onToggleArrowStyle?: () => void
   isArrow?: boolean
-  currentArrowStyle?: "curvy" | "sharp"
+  currentArrowStyle?: "curvy" | "sharp" | "straight"
   onSelectAll: () => void
   onFitToScreen: () => void
   onOpenLibrary: () => void
@@ -173,12 +174,18 @@ export function CanvasContextMenu({
               className="w-full px-3 py-1.5 text-left hover:bg-indigo-50 hover:text-indigo-600 flex items-center justify-between font-medium"
             >
               <span className="flex items-center gap-2">
-                {currentArrowStyle === "sharp" ? (
-                  <Spline className="w-3.5 h-3.5 text-neutral-500" />
-                ) : (
+                {currentArrowStyle === "curvy" ? (
                   <CornerDownRight className="w-3.5 h-3.5 text-neutral-500" />
+                ) : currentArrowStyle === "sharp" ? (
+                  <Minus className="w-3.5 h-3.5 text-neutral-500" />
+                ) : (
+                  <Spline className="w-3.5 h-3.5 text-neutral-500" />
                 )}
-                {currentArrowStyle === "sharp" ? "Switch to Curvy" : "Switch to Sharp"}
+                {currentArrowStyle === "curvy"
+                  ? "Switch to Sharp 90°"
+                  : currentArrowStyle === "sharp"
+                  ? "Switch to Straight"
+                  : "Switch to Curvy"}
               </span>
             </button>
           )}

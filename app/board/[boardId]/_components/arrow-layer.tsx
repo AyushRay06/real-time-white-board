@@ -29,117 +29,196 @@ function getCanvasPointFromClient(clientX: number, clientY: number, element: SVG
   return { x: transformed.x, y: transformed.y }
 }
 
+export type HandleType = "vertical-segment" | "horizontal-segment" | "point"
+
+export interface PathResult {
+  d: string
+  handlePt: Point
+  handleType: HandleType
+  labelPt: Point
+}
+
+function buildStraightPath(
+  from: Point,
+  to: Point,
+  controlOffset?: Point
+): PathResult {
+  const ox = controlOffset?.x ?? 0
+  const oy = controlOffset?.y ?? 0
+  const midX = (from.x + to.x) / 2
+  const midY = (from.y + to.y) / 2
+
+  if (Math.abs(ox) < 2 && Math.abs(oy) < 2) {
+    return {
+      d: `M ${from.x} ${from.y} L ${to.x} ${to.y}`,
+      handlePt: { x: midX, y: midY },
+      handleType: "point",
+      labelPt: { x: midX, y: midY },
+    }
+  }
+
+  const elbow = { x: Math.round(midX + ox), y: Math.round(midY + oy) }
+  return {
+    d: `M ${from.x} ${from.y} L ${elbow.x} ${elbow.y} L ${to.x} ${to.y}`,
+    handlePt: elbow,
+    handleType: "point",
+    labelPt: elbow,
+  }
+}
+
 function buildCubicPath(
   from: Point,
   to: Point,
   fromAnchor: AnchorSide,
   toAnchor: AnchorSide,
   controlOffset?: Point
-): { d: string; cp1: Point; cp2: Point; mid: Point; defaultMid: Point } {
-  const dx = Math.abs(to.x - from.x)
-  const dy = Math.abs(to.y - from.y)
-  const tension = Math.max(60, Math.max(dx, dy) * 0.45)
+): PathResult {
+  const dx = to.x - from.x
+  const dy = to.y - from.y
+  const dist = Math.hypot(dx, dy)
+  const tension = Math.min(Math.max(50, dist * 0.45), 260)
 
-  let cp1_0: Point
+  let v1 = { x: 0, y: 0 }
   switch (fromAnchor) {
-    case "right":  cp1_0 = { x: from.x + tension, y: from.y }; break
-    case "left":   cp1_0 = { x: from.x - tension, y: from.y }; break
-    case "bottom": cp1_0 = { x: from.x,           y: from.y + tension }; break
-    default:       cp1_0 = { x: from.x,           y: from.y - tension }; break
+    case "right":  v1 = { x: 1,  y: 0  }; break
+    case "left":   v1 = { x: -1, y: 0  }; break
+    case "bottom": v1 = { x: 0,  y: 1  }; break
+    case "top":    v1 = { x: 0,  y: -1 }; break
   }
 
-  let cp2_0: Point
+  let v2 = { x: 0, y: 0 }
   switch (toAnchor) {
-    case "left":   cp2_0 = { x: to.x - tension, y: to.y }; break
-    case "right":  cp2_0 = { x: to.x + tension, y: to.y }; break
-    case "top":    cp2_0 = { x: to.x,           y: to.y - tension }; break
-    default:       cp2_0 = { x: to.x,           y: to.y + tension }; break
+    case "right":  v2 = { x: 1,  y: 0  }; break
+    case "left":   v2 = { x: -1, y: 0  }; break
+    case "bottom": v2 = { x: 0,  y: 1  }; break
+    case "top":    v2 = { x: 0,  y: -1 }; break
   }
+
+  const cp1_0 = { x: from.x + v1.x * tension, y: from.y + v1.y * tension }
+  const cp2_0 = { x: to.x + v2.x * tension,   y: to.y + v2.y * tension }
 
   const defaultMid = bezierMidpoint(from, cp1_0, cp2_0, to)
 
   const ox = controlOffset?.x ?? 0
   const oy = controlOffset?.y ?? 0
 
-  // 4/3 factor ensures that the cubic curve's midpoint at t=0.5 matches defaultMid + (ox, oy) with mathematical precision
+  // 4/3 shift factor ensures that the cubic curve's midpoint at t=0.5 exactly matches defaultMid + (ox, oy)
   const shiftX = ox * (4 / 3)
   const shiftY = oy * (4 / 3)
 
   const cp1 = { x: cp1_0.x + shiftX, y: cp1_0.y + shiftY }
   const cp2 = { x: cp2_0.x + shiftX, y: cp2_0.y + shiftY }
 
-  const mid = { x: defaultMid.x + ox, y: defaultMid.y + oy }
+  const apex = { x: defaultMid.x + ox, y: defaultMid.y + oy }
 
   return {
     d: `M ${from.x} ${from.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${to.x} ${to.y}`,
-    cp1,
-    cp2,
-    mid,
-    defaultMid,
+    handlePt: apex,
+    handleType: "point",
+    labelPt: apex,
   }
 }
 
-/** Crisp orthogonal / sharp right-angle routing with flow bend offset */
-function buildSharpPath(
+/** Crisp orthogonal right-angle routing with adjustable segment / elbow bus */
+function buildOrthogonalPath(
   from: Point,
   to: Point,
   fromAnchor: AnchorSide,
   toAnchor: AnchorSide,
   controlOffset?: Point
-): { d: string; mid: Point; defaultMid: Point } {
+): PathResult {
   const ox = controlOffset?.x ?? 0
   const oy = controlOffset?.y ?? 0
 
   const isFromHorizontal = fromAnchor === "left" || fromAnchor === "right"
-  const isToHorizontal = toAnchor === "left" || toAnchor === "right"
+  const isToHorizontal   = toAnchor === "left" || toAnchor === "right"
 
-  let defaultMid: Point
   if (isFromHorizontal && isToHorizontal) {
-    defaultMid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 }
-  } else if (!isFromHorizontal && !isToHorizontal) {
-    defaultMid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 }
-  } else {
-    // Corner turn
-    defaultMid = isFromHorizontal
-      ? { x: to.x, y: from.y }
-      : { x: from.x, y: to.y }
-  }
-
-  const mid = { x: defaultMid.x + ox, y: defaultMid.y + oy }
-
-  let d: string
-  if (isFromHorizontal && isToHorizontal) {
-    // Horizontal connection (left/right)
-    if (Math.abs(oy) > 3) {
-      // User created a vertical detour step!
-      const stepX1 = from.x + (mid.x - from.x) * 0.5
-      const stepX2 = mid.x + (to.x - mid.x) * 0.5
-      d = `M ${from.x} ${from.y} L ${stepX1} ${from.y} L ${stepX1} ${mid.y} L ${stepX2} ${mid.y} L ${stepX2} ${to.y} L ${to.x} ${to.y}`
+    let defaultSplitX: number
+    if (fromAnchor === "right" && toAnchor === "left") {
+      defaultSplitX = (from.x + to.x) / 2
+    } else if (fromAnchor === "left" && toAnchor === "right") {
+      defaultSplitX = (from.x + to.x) / 2
+    } else if (fromAnchor === "right" && toAnchor === "right") {
+      defaultSplitX = Math.max(from.x, to.x) + 40
     } else {
-      // Standard 3-segment orthogonal
-      d = `M ${from.x} ${from.y} L ${mid.x} ${from.y} L ${mid.x} ${to.y} L ${to.x} ${to.y}`
+      defaultSplitX = Math.min(from.x, to.x) - 40
     }
-  } else if (!isFromHorizontal && !isToHorizontal) {
-    // Vertical connection (top/bottom)
-    if (Math.abs(ox) > 3) {
-      // User created a horizontal detour step!
-      const stepY1 = from.y + (mid.y - from.y) * 0.5
-      const stepY2 = mid.y + (to.y - mid.y) * 0.5
-      d = `M ${from.x} ${from.y} L ${from.x} ${stepY1} L ${mid.x} ${stepY1} L ${mid.x} ${stepY2} L ${to.x} ${stepY2} L ${to.x} ${to.y}`
-    } else {
-      // Standard 3-segment orthogonal
-      d = `M ${from.x} ${from.y} L ${from.x} ${mid.y} L ${to.x} ${mid.y} L ${to.x} ${to.y}`
-    }
-  } else {
-    // L-shaped / corner connection
-    if (isFromHorizontal) {
-      d = `M ${from.x} ${from.y} L ${mid.x} ${from.y} L ${mid.x} ${mid.y} L ${to.x} ${mid.y} L ${to.x} ${to.y}`
-    } else {
-      d = `M ${from.x} ${from.y} L ${from.x} ${mid.y} L ${mid.x} ${mid.y} L ${mid.x} ${to.y} L ${to.x} ${to.y}`
+
+    const splitX = Math.round(defaultSplitX + ox)
+    const midY = (from.y + to.y) / 2
+
+    return {
+      d: `M ${from.x} ${from.y} L ${splitX} ${from.y} L ${splitX} ${to.y} L ${to.x} ${to.y}`,
+      handlePt: { x: splitX, y: midY },
+      handleType: "vertical-segment",
+      labelPt: { x: splitX, y: midY },
     }
   }
 
-  return { d, mid, defaultMid }
+  if (!isFromHorizontal && !isToHorizontal) {
+    let defaultSplitY: number
+    if (fromAnchor === "bottom" && toAnchor === "top") {
+      defaultSplitY = (from.y + to.y) / 2
+    } else if (fromAnchor === "top" && toAnchor === "bottom") {
+      defaultSplitY = (from.y + to.y) / 2
+    } else if (fromAnchor === "bottom" && toAnchor === "bottom") {
+      defaultSplitY = Math.max(from.y, to.y) + 40
+    } else {
+      defaultSplitY = Math.min(from.y, to.y) - 40
+    }
+
+    const splitY = Math.round(defaultSplitY + oy)
+    const midX = (from.x + to.x) / 2
+
+    return {
+      d: `M ${from.x} ${from.y} L ${from.x} ${splitY} L ${to.x} ${splitY} L ${to.x} ${to.y}`,
+      handlePt: { x: midX, y: splitY },
+      handleType: "horizontal-segment",
+      labelPt: { x: midX, y: splitY },
+    }
+  }
+
+  // Mixed: One horizontal, one vertical
+  if (isFromHorizontal && !isToHorizontal) {
+    const defaultCornerX = to.x
+    const splitX = Math.round(defaultCornerX + ox)
+
+    if (Math.abs(ox) < 2) {
+      return {
+        d: `M ${from.x} ${from.y} L ${to.x} ${from.y} L ${to.x} ${to.y}`,
+        handlePt: { x: to.x, y: from.y },
+        handleType: "point",
+        labelPt: { x: (from.x + to.x) / 2, y: from.y },
+      }
+    } else {
+      return {
+        d: `M ${from.x} ${from.y} L ${splitX} ${from.y} L ${splitX} ${to.y} L ${to.x} ${to.y}`,
+        handlePt: { x: splitX, y: (from.y + to.y) / 2 },
+        handleType: "vertical-segment",
+        labelPt: { x: splitX, y: (from.y + to.y) / 2 },
+      }
+    }
+  } else {
+    const defaultCornerY = to.y
+    const splitY = Math.round(defaultCornerY + oy)
+
+    if (Math.abs(oy) < 2) {
+      return {
+        d: `M ${from.x} ${from.y} L ${from.x} ${to.y} L ${to.x} ${to.y}`,
+        handlePt: { x: from.x, y: to.y },
+        handleType: "point",
+        labelPt: { x: from.x, y: (from.y + to.y) / 2 },
+      }
+    } else {
+      return {
+        d: `M ${from.x} ${from.y} L ${from.x} ${splitY} L ${to.x} ${splitY} L ${to.x} ${to.y}`,
+        handlePt: { x: (from.x + to.x) / 2, y: splitY },
+        handleType: "horizontal-segment",
+        labelPt: { x: (from.x + to.x) / 2, y: splitY },
+      }
+    }
+  }
 }
 
 /** Cubic bezier point at t=0.5 — true visual midpoint of the curve */
@@ -252,7 +331,7 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
   const [isHovered, setIsHovered] = useState(false)
 
   // Drag the arrow bend / flow controller handle
-  const handleBendPointerDown = useCallback((e: React.PointerEvent) => {
+  const handleBendPointerDown = useCallback((e: React.PointerEvent, axis: "x" | "y" | "both" = "both") => {
     e.stopPropagation()
     e.preventDefault()
 
@@ -266,8 +345,8 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
       const dy = curPt.y - startPt.y
 
       updateControlOffset({
-        x: Math.round(startOffset.x + dx),
-        y: Math.round(startOffset.y + dy),
+        x: axis === "y" ? 0 : Math.round(startOffset.x + dx),
+        y: axis === "x" ? 0 : Math.round(startOffset.y + dy),
       })
     }
 
@@ -327,23 +406,21 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
   const toPt   = getAnchorPoint(toLayer.x,   toLayer.y,   toLayer.width,   toLayer.height,   layer.toAnchor)
 
   const isSharp = layer.arrowStyle === "sharp" || layer.arrowStyle === "orthogonal"
+  const isStraight = layer.arrowStyle === "straight"
   const controlOffset = layer.controlOffset
 
-  let pathD: string
-  let mid: Point
-  let defaultMid: Point
-
+  let pathResult: PathResult
   if (isSharp) {
-    const sharp = buildSharpPath(fromPt, toPt, layer.fromAnchor, layer.toAnchor, controlOffset)
-    pathD = sharp.d
-    mid = sharp.mid
-    defaultMid = sharp.defaultMid
+    pathResult = buildOrthogonalPath(fromPt, toPt, layer.fromAnchor, layer.toAnchor, controlOffset)
+  } else if (isStraight) {
+    pathResult = buildStraightPath(fromPt, toPt, controlOffset)
   } else {
-    const cubic = buildCubicPath(fromPt, toPt, layer.fromAnchor, layer.toAnchor, controlOffset)
-    pathD = cubic.d
-    mid = cubic.mid
-    defaultMid = cubic.defaultMid
+    pathResult = buildCubicPath(fromPt, toPt, layer.fromAnchor, layer.toAnchor, controlOffset)
   }
+
+  const pathD = pathResult.d
+  const handlePt = pathResult.handlePt
+  const mid = pathResult.labelPt
 
   const arrowPts = arrowheadPoints(toPt, layer.toAnchor)
   const stroke   = selectionColor || (layer.fill ? colorToCss(layer.fill) : "#6366f1")
@@ -475,66 +552,6 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
         </g>
       )}
 
-      {/* ── ARROW PATH EDITING POINTER HANDLE (Visible when selected or hovered) ── */}
-      {(selectionColor || isHovered) && (
-        <g
-          className="cursor-grab active:cursor-grabbing pointer-events-auto"
-          onPointerDown={handleBendPointerDown}
-          onDoubleClick={(e) => {
-            e.stopPropagation()
-            updateControlOffset({ x: 0, y: 0 })
-          }}
-        >
-          {/* Subtle guide line if bent from default */}
-          {(layer.controlOffset?.x || layer.controlOffset?.y) ? (
-            <line
-              x1={defaultMid.x}
-              y1={defaultMid.y}
-              x2={mid.x}
-              y2={mid.y}
-              stroke={selectionColor || stroke}
-              strokeWidth={1}
-              strokeDasharray="2 3"
-              strokeOpacity={0.6}
-              className="pointer-events-none"
-            />
-          ) : null}
-
-          {/* Wide touch/click target area */}
-          <circle cx={mid.x} cy={mid.y} r={18} fill="transparent" />
-
-          {/* Outer glowing aura */}
-          <circle
-            cx={mid.x}
-            cy={mid.y}
-            r={10}
-            fill={selectionColor ? `${selectionColor}25` : "rgba(99, 102, 241, 0.2)"}
-            stroke="none"
-            className="animate-pulse pointer-events-none"
-          />
-
-          {/* Outer ring badge */}
-          <circle
-            cx={mid.x}
-            cy={mid.y}
-            r={7.5}
-            fill="#ffffff"
-            stroke={selectionColor || stroke}
-            strokeWidth={2.5}
-            style={{ filter: "drop-shadow(0 2px 5px rgba(0,0,0,0.3))" }}
-          />
-
-          {/* Center pointer dot */}
-          <circle
-            cx={mid.x}
-            cy={mid.y}
-            r={3}
-            fill={selectionColor || stroke}
-          />
-
-          <title>Drag pointer to reshape arrow path · Double-click to reset</title>
-        </g>
-      )}
 
       {/* Visible line / curve */}
       <path
@@ -817,6 +834,159 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
             />
           </div>
         </foreignObject>
+      )}
+
+      {/* ── ARROW PATH EDITING CONTROLLER HANDLE (Visible when selected or hovered) ── */}
+      {(selectionColor || isHovered) && (
+        <g className="pointer-events-auto">
+          {pathResult.handleType === "vertical-segment" ? (
+            <g
+              className="cursor-col-resize group"
+              onPointerDown={(e) => handleBendPointerDown(e, "x")}
+              onDoubleClick={(e) => {
+                e.stopPropagation()
+                updateControlOffset({ x: 0, y: 0 })
+              }}
+            >
+              {/* Wide touch/click target area */}
+              <rect
+                x={handlePt.x - 16}
+                y={handlePt.y - 20}
+                width={32}
+                height={40}
+                fill="transparent"
+              />
+              {/* Glow aura */}
+              <rect
+                x={handlePt.x - 5.5}
+                y={handlePt.y - 14}
+                width={11}
+                height={28}
+                rx={5.5}
+                fill={selectionColor ? `${selectionColor}35` : "rgba(99, 102, 241, 0.25)"}
+                className="pointer-events-none"
+              />
+              {/* Vertical pill bar */}
+              <rect
+                x={handlePt.x - 3.5}
+                y={handlePt.y - 12}
+                width={7}
+                height={24}
+                rx={3.5}
+                fill="#ffffff"
+                stroke={selectionColor || stroke}
+                strokeWidth={2}
+                style={{ filter: "drop-shadow(0 2px 5px rgba(0,0,0,0.25))" }}
+              />
+              {/* Grip notches inside pill */}
+              <line
+                x1={handlePt.x}
+                y1={handlePt.y - 5}
+                x2={handlePt.x}
+                y2={handlePt.y + 5}
+                stroke={selectionColor || stroke}
+                strokeWidth={1.5}
+                strokeLinecap="round"
+              />
+              <title>Drag left/right to move segment · Double-click to center</title>
+            </g>
+          ) : pathResult.handleType === "horizontal-segment" ? (
+            <g
+              className="cursor-row-resize group"
+              onPointerDown={(e) => handleBendPointerDown(e, "y")}
+              onDoubleClick={(e) => {
+                e.stopPropagation()
+                updateControlOffset({ x: 0, y: 0 })
+              }}
+            >
+              {/* Wide touch/click target area */}
+              <rect
+                x={handlePt.x - 20}
+                y={handlePt.y - 16}
+                width={40}
+                height={32}
+                fill="transparent"
+              />
+              {/* Glow aura */}
+              <rect
+                x={handlePt.x - 14}
+                y={handlePt.y - 5.5}
+                width={28}
+                height={11}
+                rx={5.5}
+                fill={selectionColor ? `${selectionColor}35` : "rgba(99, 102, 241, 0.25)"}
+                className="pointer-events-none"
+              />
+              {/* Horizontal pill bar */}
+              <rect
+                x={handlePt.x - 12}
+                y={handlePt.y - 3.5}
+                width={24}
+                height={7}
+                rx={3.5}
+                fill="#ffffff"
+                stroke={selectionColor || stroke}
+                strokeWidth={2}
+                style={{ filter: "drop-shadow(0 2px 5px rgba(0,0,0,0.25))" }}
+              />
+              {/* Grip notches inside pill */}
+              <line
+                x1={handlePt.x - 5}
+                y1={handlePt.y}
+                x2={handlePt.x + 5}
+                y2={handlePt.y}
+                stroke={selectionColor || stroke}
+                strokeWidth={1.5}
+                strokeLinecap="round"
+              />
+              <title>Drag up/down to move segment · Double-click to center</title>
+            </g>
+          ) : (
+            <g
+              className="cursor-grab active:cursor-grabbing group"
+              onPointerDown={(e) => handleBendPointerDown(e, "both")}
+              onDoubleClick={(e) => {
+                e.stopPropagation()
+                updateControlOffset({ x: 0, y: 0 })
+              }}
+            >
+              {/* Wide touch/click target area */}
+              <circle cx={handlePt.x} cy={handlePt.y} r={18} fill="transparent" />
+              {/* Glow aura */}
+              <circle
+                cx={handlePt.x}
+                cy={handlePt.y}
+                r={11}
+                fill={selectionColor ? `${selectionColor}35` : "rgba(99, 102, 241, 0.25)"}
+                className="pointer-events-none"
+              />
+              {/* Sleek round node badge directly on the curve or joint */}
+              <circle
+                cx={handlePt.x}
+                cy={handlePt.y}
+                r={7.5}
+                fill="#ffffff"
+                stroke={selectionColor || stroke}
+                strokeWidth={2.5}
+                style={{ filter: "drop-shadow(0 2px 5px rgba(0,0,0,0.25))" }}
+              />
+              {/* Center pointer dot */}
+              <circle
+                cx={handlePt.x}
+                cy={handlePt.y}
+                r={3}
+                fill={selectionColor || stroke}
+              />
+              <title>
+                {isStraight
+                  ? "Drag to bend arrow · Double-click to straighten"
+                  : isSharp
+                  ? "Drag to adjust corner · Double-click to reset"
+                  : "Drag to adjust curve · Double-click to reset"}
+              </title>
+            </g>
+          )}
+        </g>
       )}
     </g>
   )

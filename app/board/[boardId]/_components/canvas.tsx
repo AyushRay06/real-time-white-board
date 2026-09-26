@@ -119,7 +119,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   }, [])
   const [isShortcutsOpen, setIsShortcutsOpen] = useState(false)
   const [renamingLayerId, setRenamingLayerId] = useState<string | null>(null)
-  const [arrowStyle, setArrowStyle] = useState<"curvy" | "sharp">("curvy")
+  const [arrowStyle, setArrowStyle] = useState<"curvy" | "sharp" | "straight">("curvy")
   const [isMinimapOpen, setIsMinimapOpen] = useState(true)
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false)
   const [isNotesOpen, setIsNotesOpen] = useState(false)
@@ -178,7 +178,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
   }, [layers])
 
   const toggleDefaultArrowStyle = useCallback(() => {
-    setArrowStyle((s) => s === "sharp" ? "curvy" : "sharp")
+    setArrowStyle((s) => (s === "curvy" ? "sharp" : s === "sharp" ? "straight" : "curvy"))
   }, [])
 
   // Track spacebar for pan/grab
@@ -611,7 +611,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
 
   // ─── INSERT ARROW ────────────────────────────────────────────────────────
   const insertArrow = useMutation(
-    ({ storage, setMyPresence }, fromLayerId: string, toLayerId: string, label?: string, styleParam?: "curvy" | "sharp") => {
+    ({ storage, setMyPresence }, fromLayerId: string, toLayerId: string, label?: string, styleParam?: "curvy" | "sharp" | "straight") => {
       const liveLayers = storage.get("layers")
       if (liveLayers.size >= MAX_LAYERS) return
 
@@ -2041,14 +2041,14 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
     : "default"
 
   const isSelectedArrow = soleLayer?.type === LayerType.Arrow
-  const selectedArrowStyle = (isSelectedArrow && "arrowStyle" in soleLayer ? (soleLayer.arrowStyle || "curvy") : "curvy") as "curvy" | "sharp"
+  const selectedArrowStyle = (isSelectedArrow && "arrowStyle" in soleLayer ? (soleLayer.arrowStyle || "curvy") : "curvy") as "curvy" | "sharp" | "straight"
 
   const toggleSelectedArrowStyle = useMutation(({ storage }) => {
     if (!soleLayerId) return
     const layer = storage.get("layers").get(soleLayerId)
     if (layer && layer.get("type") === LayerType.Arrow) {
       const cur = ((layer as any).get("arrowStyle") as any) || "curvy"
-      const next = cur === "sharp" ? "curvy" : "sharp"
+      const next = cur === "curvy" ? "sharp" : cur === "sharp" ? "straight" : "curvy"
       ;(layer as any).set("arrowStyle", next)
     }
   }, [soleLayerId])
