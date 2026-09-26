@@ -43,6 +43,16 @@ import {
   Monitor,
   History,
 } from "lucide-react"
+import {
+  AwsLambdaIcon,
+  AmazonS3Icon,
+  AmazonDynamoDBIcon,
+  AmazonApiGatewayIcon,
+  AmazonCloudWatchIcon,
+  AmazonCognitoIcon,
+  PostgresIcon,
+  RedisIcon,
+} from "@/components/icons/tool-icons"
 
 export function ExcalidrawStoryline() {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -103,24 +113,25 @@ export function ExcalidrawStoryline() {
   const [copiedLink, setCopiedLink] = useState(false)
 
   // ─── SECTION 3A: SYSTEM ARCHITECTURE (Interactive Nodes & Component Library) ───
-  const [selectedCloudNode, setSelectedCloudNode] = useState<string>("orders")
+  const [selectedCloudNode, setSelectedCloudNode] = useState<string>("lambda")
   const [archNodes, setArchNodes] = useState<Array<{
     id: string
     name: string
     type: string
     icon: any
-    iconBg: string
-    iconColor: string
+    isToolIcon?: boolean
+    iconBg?: string
+    iconColor?: string
     x: number
     y: number
   }>>([
     { id: "client", name: "Web Client", type: "React Ingress", icon: Monitor, iconBg: "bg-blue-100", iconColor: "text-blue-600", x: 25, y: 110 },
-    { id: "gateway", name: "API Gateway", type: "Envoy Proxy", icon: Network, iconBg: "bg-indigo-100", iconColor: "text-indigo-600", x: 165, y: 110 },
-    { id: "orders", name: "Order Service", type: "Golang RPC", icon: Box, iconBg: "bg-emerald-100", iconColor: "text-emerald-600", x: 310, y: 35 },
-    { id: "auth", name: "Auth Service", type: "Node.js JWT", icon: Shield, iconBg: "bg-purple-100", iconColor: "text-purple-600", x: 310, y: 185 },
-    { id: "kafka", name: "Kafka Stream", type: "Event Bus", icon: Layers, iconBg: "bg-amber-100", iconColor: "text-amber-600", x: 460, y: 35 },
-    { id: "redis", name: "Redis Cache", type: "In-Memory TTL", icon: Radio, iconBg: "bg-rose-100", iconColor: "text-rose-600", x: 460, y: 185 },
-    { id: "postgres", name: "PostgreSQL 16", type: "Primary Relational", icon: Database, iconBg: "bg-sky-100", iconColor: "text-sky-600", x: 605, y: 110 },
+    { id: "gateway", name: "Amazon API Gateway", type: "API Ingress", icon: AmazonApiGatewayIcon, isToolIcon: true, x: 165, y: 110 },
+    { id: "lambda", name: "AWS Lambda", type: "Serverless", icon: AwsLambdaIcon, isToolIcon: true, x: 310, y: 35 },
+    { id: "cognito", name: "Amazon Cognito", type: "Auth / IAM", icon: AmazonCognitoIcon, isToolIcon: true, x: 310, y: 185 },
+    { id: "dynamo", name: "Amazon DynamoDB", type: "NoSQL DB", icon: AmazonDynamoDBIcon, isToolIcon: true, x: 460, y: 35 },
+    { id: "s3", name: "Amazon S3", type: "Object Store", icon: AmazonS3Icon, isToolIcon: true, x: 460, y: 185 },
+    { id: "cloudwatch", name: "CloudWatch", type: "Telemetry", icon: AmazonCloudWatchIcon, isToolIcon: true, x: 605, y: 110 },
   ])
 
   const [archArrows, setArchArrows] = useState<Array<{
@@ -130,22 +141,23 @@ export function ExcalidrawStoryline() {
     dashed?: boolean
   }>>([
     { from: "client", to: "gateway", label: "HTTPS" },
-    { from: "gateway", to: "orders", label: "gRPC" },
-    { from: "gateway", to: "auth", label: "REST" },
-    { from: "orders", to: "kafka", label: "Produce" },
-    { from: "auth", to: "redis", label: "Session" },
-    { from: "kafka", to: "postgres", label: "Consume" },
+    { from: "gateway", to: "lambda", label: "Invoke" },
+    { from: "gateway", to: "cognito", label: "Auth" },
+    { from: "lambda", to: "dynamo", label: "PutItem" },
+    { from: "lambda", to: "s3", label: "Upload" },
+    { from: "cognito", to: "cloudwatch", label: "Logs" },
   ])
 
-  const handleAddArchComponent = (comp: { name: string; icon: any; iconBg: string; iconColor: string }) => {
+  const handleAddArchComponent = (comp: { name: string; icon: any; isToolIcon?: boolean; iconBg?: string; iconColor?: string }) => {
     const newId = `node-${Date.now()}`
     const offsetX = 250 + ((archNodes.length % 5) * 55)
     const offsetY = 70 + ((archNodes.length % 3) * 60)
     const newNode = {
       id: newId,
       name: comp.name,
-      type: "Microservice Primitive",
+      type: "Cloud Tool Primitive",
       icon: comp.icon,
+      isToolIcon: comp.isToolIcon,
       iconBg: comp.iconBg,
       iconColor: comp.iconColor,
       x: Math.min(offsetX, 580),
@@ -704,27 +716,37 @@ export function ExcalidrawStoryline() {
               {/* Clean Component List - No scrollbars */}
               <div className="p-2 space-y-1.5 overflow-hidden">
                 {[
-                  { name: "API Gateway", icon: Network, iconBg: "bg-indigo-100", iconColor: "text-indigo-600" },
-                  { name: "Microservice", icon: Box, iconBg: "bg-emerald-100", iconColor: "text-emerald-600" },
-                  { name: "Worker Service", icon: Cpu, iconBg: "bg-blue-100", iconColor: "text-blue-600" },
-                  { name: "PostgreSQL 16", icon: Database, iconBg: "bg-sky-100", iconColor: "text-sky-600" },
-                  { name: "Redis Cache", icon: Radio, iconBg: "bg-rose-100", iconColor: "text-rose-600" },
-                ].map((comp) => (
-                  <div
-                    key={comp.name}
-                    onClick={() => handleAddArchComponent(comp)}
-                    title="Click to drop on canvas"
-                    className="flex items-center justify-between p-1.5 rounded-none border border-slate-200/60 bg-white hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-2xs transition-all cursor-pointer select-none group"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className={`w-6 h-6 rounded-none flex items-center justify-center ${comp.iconBg}`}>
-                        <comp.icon className={`w-3.5 h-3.5 ${comp.iconColor}`} strokeWidth={1.8} />
-                      </span>
-                      <span className="text-[11px] font-semibold text-slate-700">{comp.name}</span>
+                  { name: "AWS Lambda", icon: AwsLambdaIcon, isToolIcon: true },
+                  { name: "Amazon S3", icon: AmazonS3Icon, isToolIcon: true },
+                  { name: "Amazon DynamoDB", icon: AmazonDynamoDBIcon, isToolIcon: true },
+                  { name: "API Gateway", icon: AmazonApiGatewayIcon, isToolIcon: true },
+                  { name: "CloudWatch", icon: AmazonCloudWatchIcon, isToolIcon: true },
+                  { name: "Amazon Cognito", icon: AmazonCognitoIcon, isToolIcon: true },
+                  { name: "PostgreSQL 16", icon: PostgresIcon, isToolIcon: true },
+                  { name: "Redis Cache", icon: RedisIcon, isToolIcon: true },
+                ].map((comp) => {
+                  const CompIcon = comp.icon
+                  return (
+                    <div
+                      key={comp.name}
+                      onClick={() => handleAddArchComponent(comp)}
+                      title="Click to drop on canvas"
+                      className="flex items-center justify-between p-1.5 rounded-none border border-slate-200/60 bg-white hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-2xs transition-all cursor-pointer select-none group"
+                    >
+                      <div className="flex items-center gap-2">
+                        {comp.isToolIcon ? (
+                          <CompIcon size={22} showBadge={true} badgeClassName="rounded-none shadow-2xs" />
+                        ) : (
+                          <span className="w-5.5 h-5.5 rounded-none flex items-center justify-center bg-slate-100">
+                            <CompIcon className="w-3.5 h-3.5 text-slate-700" strokeWidth={1.8} />
+                          </span>
+                        )}
+                        <span className="text-[11px] font-semibold text-slate-700">{comp.name}</span>
+                      </div>
+                      <span className="text-[10px] text-indigo-600 opacity-0 group-hover:opacity-100 font-bold pr-1">+</span>
                     </div>
-                    <span className="text-[10px] text-indigo-600 opacity-0 group-hover:opacity-100 font-bold pr-1">+</span>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
 
@@ -806,8 +828,8 @@ export function ExcalidrawStoryline() {
                           position: "absolute",
                           left: `${node.x}px`,
                           top: `${node.y}px`,
-                          width: "105px",
-                          height: "82px",
+                          width: "110px",
+                          height: "86px",
                         }}
                         className={`rounded-none bg-white border p-2 flex flex-col items-center justify-center text-center cursor-grab active:cursor-grabbing select-none transition-shadow z-20 ${
                           isSelected
@@ -821,13 +843,19 @@ export function ExcalidrawStoryline() {
                           <span>ONLINE</span>
                         </div>
 
-                        {/* Icon container */}
-                        <div className={`w-8 h-8 rounded-none flex items-center justify-center mb-1 shadow-2xs ${node.iconBg}`}>
-                          <Icon className={`w-4 h-4 ${node.iconColor}`} strokeWidth={1.8} />
+                        {/* Tool Icon / Icon container */}
+                        <div className="mb-1 flex items-center justify-center">
+                          {node.isToolIcon ? (
+                            <Icon size={32} showBadge={true} badgeClassName="rounded-none shadow-2xs" />
+                          ) : (
+                            <div className={`w-8 h-8 rounded-none flex items-center justify-center shadow-2xs ${node.iconBg || "bg-blue-100"}`}>
+                              <Icon className={`w-4 h-4 ${node.iconColor || "text-blue-600"}`} strokeWidth={1.8} />
+                            </div>
+                          )}
                         </div>
 
                         {/* Label */}
-                        <span className="text-[10px] font-bold text-slate-800 leading-tight tracking-tight">
+                        <span className="text-[10px] font-bold text-slate-800 leading-tight tracking-tight line-clamp-1">
                           {node.name}
                         </span>
                       </motion.div>
