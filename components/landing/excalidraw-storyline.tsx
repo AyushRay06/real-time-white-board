@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useRef } from "react"
+import React, { useState, useRef, useMemo } from "react"
 import { motion, useScroll, useTransform } from "framer-motion"
 import {
   MousePointer2,
@@ -36,6 +36,27 @@ export function ExcalidrawStoryline() {
     offset: ["start 75%", "end 90%"],
   })
   const pathLength = useTransform(scrollYProgress, [0, 1], [0, 1])
+
+  // Spring coil path with self-intersecting loops on the left-hand side
+  const springLoopPath = useMemo(() => {
+    const totalHeight = 6200
+    const numLoops = 11
+    const coilH = totalHeight / numLoops
+    let d = "M 45 0"
+
+    for (let i = 0; i < numLoops; i++) {
+      const yBase = i * coilH
+      // 1. Descend & sweep right
+      // 2. Loop around bottom & curve up
+      // 3. Loop in itself (crossing over descending branch like a spring)
+      // 4. Exit downward into next spring coil
+      d += ` C 82 ${yBase + coilH * 0.22}, 95 ${yBase + coilH * 0.42}, 78 ${yBase + coilH * 0.58}`
+      d += ` C 62 ${yBase + coilH * 0.72}, 12 ${yBase + coilH * 0.68}, 16 ${yBase + coilH * 0.48}`
+      d += ` C 20 ${yBase + coilH * 0.32}, 88 ${yBase + coilH * 0.34}, 54 ${yBase + coilH * 0.68}`
+      d += ` C 32 ${yBase + coilH * 0.88}, 38 ${yBase + coilH * 0.94}, 45 ${yBase + coilH}`
+    }
+    return d
+  }, [])
 
   // ─── SECTION 1: CREATE (UI Layout Design) ───
   const [selectedWireframeEl, setSelectedWireframeEl] = useState<string>("hero-cta")
@@ -166,22 +187,9 @@ export function ExcalidrawStoryline() {
             </filter>
           </defs>
           <motion.path
-            d="M 50 0
-               C 90 140, 100 300, 45 440
-               C -10 580, 5 760, 60 900
-               C 115 1040, 90 1220, 35 1360
-               C -20 1500, 15 1680, 70 1820
-               C 120 1960, 85 2140, 30 2280
-               C -25 2420, 20 2600, 75 2740
-               C 125 2880, 80 3060, 25 3200
-               C -30 3340, 25 3520, 80 3660
-               C 130 3800, 75 3980, 20 4120
-               C -35 4260, 30 4440, 85 4580
-               C 135 4720, 70 4900, 15 5040
-               C -40 5180, 35 5360, 90 5500
-               C 140 5640, 65 5820, 50 6200"
+            d={springLoopPath}
             stroke="url(#featureLeftCurl)"
-            strokeWidth="6"
+            strokeWidth="5"
             strokeLinecap="round"
             strokeLinejoin="round"
             filter="url(#ribbonSoftGlow)"
