@@ -6,58 +6,58 @@ import { TestimonialsColumn, Testimonial } from "@/components/ui/testimonials-co
 
 const testimonials: Testimonial[] = [
   {
-    text: "Planning Portal replaced three different diagramming tools for us. Our distributed team maps out Kubernetes microservices with live multi-player cursors and zero latency.",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
-    name: "Briana Patton",
-    role: "VP of Engineering, FinScale",
-  },
-  {
-    text: "The dynamic connecting arrows and infinite canvas make system architecture reviews a breeze. Engineers love sketching out distributed schemas on the fly.",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
-    name: "Bilal Ahmed",
-    role: "Staff Systems Architect, CloudNative",
-  },
-  {
-    text: "Running sprint retrospectives on color-coded sticky notes has completely energized our team standups. The live presence indicators make remote feel in-person.",
-    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
-    name: "Saman Malik",
-    role: "Head of Product, Horizon",
-  },
-  {
-    text: "The keyboard shortcuts, shape transforms, and freehand drawing are so snappy. It's the only whiteboard tool that doesn't lag when dozens of team members edit at once.",
+    text: "We replaced our bloated Miro subscription last week. Being able to sketch microservices and immediately export Mermaid markdown straight into GitHub PRs made our entire backend team happy.",
     image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
-    name: "Omar Raza",
-    role: "Founding Engineer, ShipFast",
+    name: "Marcus Vance",
+    role: "Founding Engineer @ Pulse",
   },
   {
-    text: "Our sprint planning sessions dropped from 2 hours to 45 minutes. The team drops user stories directly onto the canvas and links them with dependencies visually.",
+    text: "I use it daily for low-fidelity wireframing before touching Figma. The hotkeys feel so instinctive that I can map out user journeys in 30 seconds during live calls.",
     image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
-    name: "Zainab Hussain",
-    role: "Lead Agile Coach, SprintWorks",
+    name: "Elena Rostova",
+    role: "Product Design Lead @ North",
   },
   {
-    text: "The canvas feels alive. Being able to sketch wireframes, attach sticky notes, and connect workflows seamlessly in real-time has transformed our design sprints.",
-    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
-    name: "Aliza Khan",
-    role: "Senior Product Designer, CraftUI",
+    text: "Most collaborative canvas tools choke when you have 40+ microservice nodes and arrows. This stays silky smooth at 60fps even with multiple engineers editing simultaneously.",
+    image: "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150&auto=format&fit=crop&q=80",
+    name: "Tariq Mansoor",
+    role: "Staff Cloud Architect @ StackOps",
   },
   {
-    text: "Instant cloud sync is bulletproof. We never worry about lost work or branch conflicts during cross-functional roadmap planning sessions.",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
-    name: "Farhan Siddiqui",
-    role: "CTO, ScaleOps",
+    text: "The real-time sync is genuinely impressive. We ran a 35-person incident postmortem with everyone adding sticky notes, logs, and timelines all at once—zero lag or desync.",
+    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+    name: "Sarah Chen",
+    role: "Staff Engineer @ Hyperline",
   },
   {
-    text: "The personal dashboard makes managing multiple project boards effortless. Searching, starring favourites, and link sharing are clean, fast, and simple.",
-    image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80",
-    name: "Sana Sheikh",
-    role: "Technical Program Manager, DevMatrix",
-  },
-  {
-    text: "Sub-40ms sync latency with live cursor tracking is unmatched. It feels as responsive and fluid as an offline native desktop app.",
+    text: "Version history and cloud auto-save saved our RFC review when someone accidentally deleted a full VPC subnet container. One-click rollback and we were back in business.",
     image: "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150&auto=format&fit=crop&q=80",
-    name: "Hassan Ali",
-    role: "Principal Frontend Engineer, NextVibe",
+    name: "Alex Rivera",
+    role: "Tech Lead @ Lattice",
+  },
+  {
+    text: "Mapping out relational database schemas and visualizing foreign key constraints directly on the whiteboard cut down our API onboarding time from days to hours.",
+    image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80",
+    name: "Amina Diallo",
+    role: "Senior Backend Dev @ FinScale",
+  },
+  {
+    text: "Sprint retrospectives actually feel collaborative now. Engineers drop quick sticky notes, draw sequence traces, and connect blockers without fighting clumsy menus.",
+    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&auto=format&fit=crop&q=80",
+    name: "Chloe Nguyen",
+    role: "Engineering Manager @ Velo",
+  },
+  {
+    text: "The sequence flow simulation is brilliant for team RFC walkthroughs. Walking through request hops visually before writing code prevents countless production bugs.",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+    name: "David Park",
+    role: "Principal Systems Architect",
+  },
+  {
+    text: "Minimalist design done right. Zero distracting toolbars or AI clutter—just an infinite, tactile canvas that stays completely out of your way.",
+    image: "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150&auto=format&fit=crop&q=80",
+    name: "Priya Sharma",
+    role: "Frontend Systems Engineer",
   },
 ]
 
@@ -80,7 +80,7 @@ export function TestimonialsSection() {
             Loved by modern teams
           </h2>
           <p className="text-slate-600 text-base sm:text-lg mt-4 leading-relaxed font-normal">
-            See how engineering, product, and design teams move from brainstorms to production architectures on Planning Portal.
+            How engineering, product, and design teams move from messy brainstorms to production architectures.
           </p>
         </motion.div>
 

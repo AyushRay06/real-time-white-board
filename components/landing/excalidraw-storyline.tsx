@@ -234,7 +234,7 @@ export function ExcalidrawStoryline() {
 
       {/* ─── MAIN FEATURES STORYLINE HEADER ─── */}
       <div className="relative mb-20 text-center max-w-3xl mx-auto pt-6 lg:pl-16 xl:pl-20">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-200/80 text-xs font-semibold text-indigo-700 shadow-2xs mb-4">
+        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-none bg-indigo-50 border border-indigo-200/80 text-xs font-semibold text-indigo-700 shadow-2xs mb-4">
           <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
           <span>Interactive Feature Tour</span>
         </div>
@@ -244,7 +244,7 @@ export function ExcalidrawStoryline() {
         <p className="text-slate-600 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
           Explore the workspace: from rapid UI wireframing and multiplayer team sessions to real-time cloud architecture modeling and sequence trace simulation.
         </p>
-        <div className="w-24 h-1 bg-gradient-to-r from-transparent via-indigo-300 to-transparent mx-auto mt-8 rounded-full" />
+        <div className="w-24 h-1 bg-gradient-to-r from-transparent via-indigo-300 to-transparent mx-auto mt-8 rounded-none" />
       </div>
 
       {/* =========================================================================
@@ -259,7 +259,7 @@ export function ExcalidrawStoryline() {
         </p>
 
         {/* BROWSER WINDOW MOCKUP: UI LAYOUT WIREFRAME */}
-        <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-5">
+        <div className="rounded-none border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-5">
           {/* Chrome top bar */}
           <div className="h-10 bg-slate-50 border-b border-slate-200 flex items-center px-4 justify-between select-none">
             <div className="flex items-center gap-2">
@@ -267,7 +267,7 @@ export function ExcalidrawStoryline() {
               <span className="w-3 h-3 rounded-full bg-amber-400/90" />
               <span className="w-3 h-3 rounded-full bg-emerald-400/90" />
             </div>
-            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-2xs">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-none bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-2xs">
               <LayoutGrid className="w-3.5 h-3.5 text-indigo-600" />
               <span>UI Layout Wireframe</span>
             </div>
@@ -279,9 +279,9 @@ export function ExcalidrawStoryline() {
             {/* LIVE WEBSITE WIREFRAME BEING DESIGNED BY 2 PEOPLE */}
             <div className="relative my-auto flex items-center justify-center py-3">
               {/* Outer Website Canvas Artboard */}
-              <div className="w-full max-w-2xl bg-white rounded-2xl border-2 border-dashed border-slate-300 shadow-lg p-5 relative transition-all">
+              <div className="w-full max-w-2xl bg-white rounded-none border-2 border-dashed border-slate-300 shadow-lg p-5 relative transition-all">
                 {/* Artboard Header Label */}
-                <div className="absolute -top-3 left-4 px-2.5 py-0.5 rounded bg-slate-800 text-white font-mono text-[10px] font-bold flex items-center gap-1.5 shadow-xs">
+                <div className="absolute -top-3 left-4 px-2.5 py-0.5 rounded-none bg-slate-800 text-white font-mono text-[10px] font-bold flex items-center gap-1.5 shadow-xs">
                   <span>Layout Wireframe</span>
                   <span className="opacity-60">• Desktop 1200px Grid</span>
                 </div>
@@ -289,25 +289,25 @@ export function ExcalidrawStoryline() {
                 {/* 1. Wireframe Navbar */}
                 <div className="w-full pb-3 border-b border-slate-100 flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-md bg-indigo-600" />
-                    <div className="w-20 h-3 rounded bg-slate-200" />
+                    <div className="w-5 h-5 rounded-none bg-indigo-600" />
+                    <div className="w-20 h-3 rounded-none bg-slate-200" />
                   </div>
                   <div className="hidden sm:flex items-center gap-3">
-                    <div className="w-12 h-2.5 rounded bg-slate-100" />
-                    <div className="w-14 h-2.5 rounded bg-slate-100" />
-                    <div className="w-12 h-2.5 rounded bg-slate-100" />
+                    <div className="w-12 h-2.5 rounded-none bg-slate-100" />
+                    <div className="w-14 h-2.5 rounded-none bg-slate-100" />
+                    <div className="w-12 h-2.5 rounded-none bg-slate-100" />
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-12 h-5 rounded bg-slate-100" />
-                    <div className="px-2.5 py-1 rounded text-[10px] font-bold text-white bg-indigo-600">
+                    <div className="w-12 h-5 rounded-none bg-slate-100" />
+                    <div className="px-2.5 py-1 rounded-none text-[10px] font-bold text-white bg-indigo-600">
                       Get Started
                     </div>
                   </div>
                 </div>
 
                 {/* 2. Wireframe Hero Section */}
-                <div className="text-center py-3.5 px-2 mb-3 bg-slate-50/70 rounded-xl border border-slate-100 relative">
-                  <span className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold bg-white text-slate-600 border border-slate-200 mb-2">
+                <div className="text-center py-3.5 px-2 mb-3 bg-slate-50/70 rounded-none border border-slate-100 relative">
+                  <span className="inline-block px-2.5 py-0.5 rounded-none text-[9px] font-mono font-bold bg-white text-slate-600 border border-slate-200 mb-2">
                     Sprint 14 • Prototype
                   </span>
                   <h3 className="font-comico font-bold text-slate-800 text-sm sm:text-base mb-1">
@@ -319,16 +319,16 @@ export function ExcalidrawStoryline() {
                   <div className="flex items-center justify-center gap-2">
                     <button
                       onClick={() => setSelectedWireframeEl("hero-cta")}
-                      className={`px-4 py-1.5 rounded-lg text-xs font-bold text-white shadow-sm transition-all cursor-pointer relative bg-indigo-600 ${
+                      className={`px-4 py-1.5 rounded-none text-xs font-bold text-white shadow-sm transition-all cursor-pointer relative bg-indigo-600 ${
                         selectedWireframeEl === "hero-cta" ? "ring-2 ring-indigo-400 ring-offset-2 scale-105" : ""
                       }`}
                     >
                       <span>Explore Whiteboard</span>
                       {selectedWireframeEl === "hero-cta" && (
-                        <span className="absolute -top-2.5 -right-2 w-2 h-2 bg-indigo-500 rounded-full animate-ping" />
+                        <span className="absolute -top-2.5 -right-2 w-2 h-2 bg-indigo-500 rounded-none animate-ping" />
                       )}
                     </button>
-                    <button className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 bg-white border border-slate-200">
+                    <button className="px-3 py-1.5 rounded-none text-xs font-medium text-slate-600 bg-white border border-slate-200">
                       Live Preview
                     </button>
                   </div>
@@ -344,7 +344,7 @@ export function ExcalidrawStoryline() {
                     <div
                       key={i}
                       onClick={() => setSelectedWireframeEl(`card-${i}`)}
-                      className={`p-2.5 rounded-xl border transition-all cursor-pointer text-left ${
+                      className={`p-2.5 rounded-none border transition-all cursor-pointer text-left ${
                         selectedWireframeEl === `card-${i}`
                           ? "bg-white border-indigo-500 shadow-md ring-1 ring-indigo-500"
                           : "bg-white border-slate-200 hover:border-slate-300"
@@ -364,7 +364,7 @@ export function ExcalidrawStoryline() {
                   className="absolute top-28 right-24 pointer-events-none flex items-center gap-1 z-20"
                 >
                   <MousePointer2 className="w-4 h-4 text-purple-600 fill-purple-600 -rotate-45" />
-                  <span className="bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs font-mono">
+                  <span className="bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-none shadow-xs font-mono">
                     Sarah (UI Lead)
                   </span>
                 </motion.div>
@@ -376,7 +376,7 @@ export function ExcalidrawStoryline() {
                   className="absolute bottom-12 left-28 pointer-events-none flex items-center gap-1 z-20"
                 >
                   <MousePointer2 className="w-4 h-4 text-emerald-600 fill-emerald-600 -rotate-45" />
-                  <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs font-mono">
+                  <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-none shadow-xs font-mono">
                     Alex (Frontend)
                   </span>
                 </motion.div>
@@ -385,7 +385,7 @@ export function ExcalidrawStoryline() {
               {/* 3D Sticky Note from Designer Sarah with authentic flying corner */}
               <div className="absolute right-0 sm:-right-4 top-2 sm:top-6 w-44 select-none hidden md:block rotate-[3deg] z-20">
                 <div
-                  className="absolute -bottom-2 -right-1 w-3/4 h-8 pointer-events-none rounded-full"
+                  className="absolute -bottom-2 -right-1 w-3/4 h-8 pointer-events-none rounded-none"
                   style={{
                     background: "radial-gradient(ellipse at center, rgba(0,0,0,0.32) 0%, rgba(0,0,0,0.1) 55%, transparent 75%)",
                     transform: "rotate(6deg) skewX(8deg)",
@@ -393,7 +393,7 @@ export function ExcalidrawStoryline() {
                   }}
                 />
                 <div
-                  className="relative p-3.5 pt-2 pb-5 pr-5 bg-amber-100 border border-amber-300/80 rounded-[2px]"
+                  className="relative p-3.5 pt-2 pb-5 pr-5 bg-amber-100 border border-amber-300/80 rounded-none"
                   style={{
                     backgroundImage: "linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.08) 25%, rgba(0,0,0,0.02) 75%, rgba(0,0,0,0.08) 100%)",
                     boxShadow: "0 1px 3px rgba(0,0,0,0.08), 0 6px 14px -2px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.6)",
@@ -401,7 +401,7 @@ export function ExcalidrawStoryline() {
                   }}
                 >
                   <div className="w-full h-3 -mt-2 -mx-3.5 mb-2 px-3.5 bg-black/[0.04] border-b border-black/[0.06] flex items-center">
-                    <div className="w-full h-[1px] bg-white/30 rounded-full" />
+                    <div className="w-full h-[1px] bg-white/30 rounded-none" />
                   </div>
                   <span className="block font-bold mb-1 text-[10px] text-amber-800">💡 Sarah's Note</span>
                   <p className="text-[11px] font-medium text-amber-950 leading-snug">
@@ -435,8 +435,8 @@ export function ExcalidrawStoryline() {
 
         {/* COMPACT CREATE FEATURE CHIPS */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+          <div className="p-3 sm:p-3.5 rounded-none bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-none bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
               🎨
             </span>
             <div className="min-w-0">
@@ -445,8 +445,8 @@ export function ExcalidrawStoryline() {
             </div>
           </div>
 
-          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+          <div className="p-3 sm:p-3.5 rounded-none bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-none bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
               🧲
             </span>
             <div className="min-w-0">
@@ -455,8 +455,8 @@ export function ExcalidrawStoryline() {
             </div>
           </div>
 
-          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+          <div className="p-3 sm:p-3.5 rounded-none bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-none bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
               📝
             </span>
             <div className="min-w-0">
@@ -479,7 +479,7 @@ export function ExcalidrawStoryline() {
         </p>
 
         {/* BROWSER WINDOW MOCKUP: MULTIPLAYER COLLABORATION */}
-        <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-5">
+        <div className="rounded-none border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-5">
           {/* Chrome top bar */}
           <div className="h-10 bg-slate-50 border-b border-slate-200 flex items-center px-4 justify-between select-none">
             <div className="flex items-center gap-2">
@@ -487,7 +487,7 @@ export function ExcalidrawStoryline() {
               <span className="w-3 h-3 rounded-full bg-amber-400/90" />
               <span className="w-3 h-3 rounded-full bg-emerald-400/90" />
             </div>
-            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-2xs">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-none bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-2xs">
               <Users className="w-3.5 h-3.5 text-indigo-600" />
               <span>Sprint 14 Retrospective</span>
             </div>
@@ -503,7 +503,7 @@ export function ExcalidrawStoryline() {
                   setCopiedLink(true)
                   setTimeout(() => setCopiedLink(false), 2000)
                 }}
-                className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                className="px-3 py-1.5 rounded-none bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
               >
                 {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
                 <span>{copiedLink ? "Link Copied!" : "Share Link"}</span>
@@ -513,9 +513,9 @@ export function ExcalidrawStoryline() {
             {/* Collaborative Session Cards on Canvas */}
             <div className="relative my-auto flex flex-col sm:flex-row items-center justify-center gap-6 py-3">
               {/* Card 1: Sprint Retrospective Column */}
-              <div className="w-64 p-4 rounded-2xl bg-white border-2 border-indigo-400 shadow-lg relative">
+              <div className="w-64 p-4 rounded-none bg-white border-2 border-indigo-400 shadow-lg relative">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono text-[10px] font-bold">
+                  <span className="px-2 py-0.5 rounded-none bg-indigo-50 text-indigo-700 font-mono text-[10px] font-bold">
                     Sprint Goals
                   </span>
                   <span className="text-[10px] font-mono text-emerald-600 font-bold">● 4 of 5 Done</span>
@@ -533,7 +533,7 @@ export function ExcalidrawStoryline() {
               </div>
 
               {/* Card 2: Interactive Comment Thread Pinned to Element */}
-              <div className="w-72 rounded-2xl bg-white border border-slate-200 shadow-xl overflow-hidden relative">
+              <div className="w-72 rounded-none bg-white border border-slate-200 shadow-xl overflow-hidden relative">
                 <div className="bg-slate-50 px-3.5 py-2 border-b border-slate-200 flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-xs font-bold text-slate-700">
                     <MessageSquare className="w-3.5 h-3.5 text-indigo-600" />
@@ -543,7 +543,7 @@ export function ExcalidrawStoryline() {
                 </div>
                 <div className="p-3.5 space-y-2.5">
                   <div className="flex items-start gap-2">
-                    <span className="w-5 h-5 rounded-full bg-purple-500 text-white text-[9px] font-bold flex items-center justify-center shrink-0">
+                    <span className="w-5 h-5 rounded-none bg-purple-500 text-white text-[9px] font-bold flex items-center justify-center shrink-0">
                       M
                     </span>
                     <div>
@@ -557,8 +557,8 @@ export function ExcalidrawStoryline() {
                     </div>
                   </div>
 
-                  <div className="flex items-start gap-2 bg-indigo-50/60 p-2 rounded-xl border border-indigo-100/60">
-                    <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[9px] font-bold flex items-center justify-center shrink-0">
+                  <div className="flex items-start gap-2 bg-indigo-50/60 p-2 rounded-none border border-indigo-100/60">
+                    <span className="w-5 h-5 rounded-none bg-indigo-600 text-white text-[9px] font-bold flex items-center justify-center shrink-0">
                       A
                     </span>
                     <div>
@@ -581,7 +581,7 @@ export function ExcalidrawStoryline() {
                 className="absolute -top-4 left-16 pointer-events-none flex items-center gap-1 z-20"
               >
                 <MousePointer2 className="w-4 h-4 text-pink-600 fill-pink-600 -rotate-45" />
-                <span className="bg-pink-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs font-mono">
+                <span className="bg-pink-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-none shadow-xs font-mono">
                   Elena (Product)
                 </span>
               </motion.div>
@@ -593,7 +593,7 @@ export function ExcalidrawStoryline() {
                 className="absolute bottom-2 right-12 pointer-events-none flex items-center gap-1 z-20"
               >
                 <MousePointer2 className="w-4 h-4 text-purple-600 fill-purple-600 -rotate-45" />
-                <span className="bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-xs font-mono">
+                <span className="bg-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-none shadow-xs font-mono">
                   Marcus (Security)
                 </span>
               </motion.div>
@@ -603,8 +603,8 @@ export function ExcalidrawStoryline() {
 
         {/* COMPACT COLLABORATE FEATURE CHIPS */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+          <div className="p-3 sm:p-3.5 rounded-none bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-none bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
               ⚡️
             </span>
             <div className="min-w-0">
@@ -613,8 +613,8 @@ export function ExcalidrawStoryline() {
             </div>
           </div>
 
-          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+          <div className="p-3 sm:p-3.5 rounded-none bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-none bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
               🔗
             </span>
             <div className="min-w-0">
@@ -623,8 +623,8 @@ export function ExcalidrawStoryline() {
             </div>
           </div>
 
-          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+          <div className="p-3 sm:p-3.5 rounded-none bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-none bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
               💬
             </span>
             <div className="min-w-0">
@@ -647,7 +647,7 @@ export function ExcalidrawStoryline() {
         </p>
 
         {/* BROWSER WINDOW MOCKUP: SYSTEM ARCHITECTURE */}
-        <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-5">
+        <div className="rounded-none border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-5">
           {/* Chrome top bar */}
           <div className="h-9 bg-slate-50 border-b border-slate-200 flex items-center px-4 select-none">
             <div className="flex items-center gap-2">
@@ -661,27 +661,27 @@ export function ExcalidrawStoryline() {
           <div className="flex h-[420px] bg-[#FAFBFD] overflow-hidden relative select-none">
             {/* 1. ACTUAL CANVAS TOOLBAR (Left vertical dock) */}
             <div className="w-11 bg-white border-r border-slate-200/80 p-1 flex flex-col items-center gap-1 shrink-0 z-20">
-              <button className="p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Select Tool">
+              <button className="p-2 rounded-none text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Select Tool">
                 <MousePointer2 className="w-4 h-4" />
               </button>
-              <button className="p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Text Tool">
+              <button className="p-2 rounded-none text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Text Tool">
                 <Type className="w-4 h-4" />
               </button>
-              <button className="p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Sticky Note">
+              <button className="p-2 rounded-none text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Sticky Note">
                 <StickyNote className="w-4 h-4" />
               </button>
-              <button className="p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Container Box">
+              <button className="p-2 rounded-none text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Container Box">
                 <Square className="w-4 h-4" />
               </button>
-              <button className="p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Directional Arrow">
+              <button className="p-2 rounded-none text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Directional Arrow">
                 <ArrowRight className="w-4 h-4" />
               </button>
               {/* Active Component Library Tool Icon */}
-              <button className="p-2 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-200 shadow-2xs relative" title="Component Library (Active)">
+              <button className="p-2 rounded-none bg-indigo-50 text-indigo-600 border border-indigo-200 shadow-2xs relative" title="Component Library (Active)">
                 <Box className="w-4 h-4" />
-                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-indigo-600" />
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-none bg-indigo-600" />
               </button>
-              <button className="p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Prebuilt Layouts">
+              <button className="p-2 rounded-none text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Prebuilt Layouts">
                 <LayoutTemplate className="w-4 h-4" />
               </button>
             </div>
@@ -695,7 +695,7 @@ export function ExcalidrawStoryline() {
 
               {/* Search Bar */}
               <div className="p-2 border-b border-slate-100">
-                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-50 border border-slate-200/80 text-[11px] text-slate-400">
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-none bg-slate-50 border border-slate-200/80 text-[11px] text-slate-400">
                   <Search className="w-3 h-3 text-slate-400" />
                   <span className="truncate">Search components...</span>
                 </div>
@@ -714,10 +714,10 @@ export function ExcalidrawStoryline() {
                     key={comp.name}
                     onClick={() => handleAddArchComponent(comp)}
                     title="Click to drop on canvas"
-                    className="flex items-center justify-between p-1.5 rounded-lg border border-slate-200/60 bg-white hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-2xs transition-all cursor-pointer select-none group"
+                    className="flex items-center justify-between p-1.5 rounded-none border border-slate-200/60 bg-white hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-2xs transition-all cursor-pointer select-none group"
                   >
                     <div className="flex items-center gap-2">
-                      <span className={`w-6 h-6 rounded-md flex items-center justify-center ${comp.iconBg}`}>
+                      <span className={`w-6 h-6 rounded-none flex items-center justify-center ${comp.iconBg}`}>
                         <comp.icon className={`w-3.5 h-3.5 ${comp.iconColor}`} strokeWidth={1.8} />
                       </span>
                       <span className="text-[11px] font-semibold text-slate-700">{comp.name}</span>
@@ -772,7 +772,7 @@ export function ExcalidrawStoryline() {
                             strokeLinecap="round"
                           />
                           <g transform={`translate(${midX}, ${midY})`}>
-                            <rect x="-26" y="-8" width="52" height="16" rx="8" fill="white" stroke="#CBD5E1" strokeWidth="1" className="shadow-2xs" />
+                            <rect x="-26" y="-8" width="52" height="16" rx="0" fill="white" stroke="#CBD5E1" strokeWidth="1" className="shadow-2xs" />
                             <text x="0" y="1.5" fill="#475569" fontSize="7.5" fontWeight="bold" textAnchor="middle" dominantBaseline="middle" className="font-mono">
                               {arr.label}
                             </text>
@@ -809,20 +809,20 @@ export function ExcalidrawStoryline() {
                           width: "105px",
                           height: "82px",
                         }}
-                        className={`rounded-xl bg-white border p-2 flex flex-col items-center justify-center text-center cursor-grab active:cursor-grabbing select-none transition-shadow z-20 ${
+                        className={`rounded-none bg-white border p-2 flex flex-col items-center justify-center text-center cursor-grab active:cursor-grabbing select-none transition-shadow z-20 ${
                           isSelected
                             ? "border-indigo-600 ring-2 ring-indigo-400 shadow-md"
                             : "border-slate-200/90 hover:border-slate-300 shadow-2xs hover:shadow-xs"
                         }`}
                       >
                         {/* Online Status Pill */}
-                        <div className="absolute top-1.5 right-1.5 flex items-center gap-1 px-1 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[7px] font-bold text-emerald-700 font-mono">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <div className="absolute top-1.5 right-1.5 flex items-center gap-1 px-1 py-0.5 rounded-none bg-emerald-50 border border-emerald-200/80 text-[7px] font-bold text-emerald-700 font-mono">
+                          <span className="w-1.5 h-1.5 rounded-none bg-emerald-500 animate-pulse" />
                           <span>ONLINE</span>
                         </div>
 
                         {/* Icon container */}
-                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-1 shadow-2xs ${node.iconBg}`}>
+                        <div className={`w-8 h-8 rounded-none flex items-center justify-center mb-1 shadow-2xs ${node.iconBg}`}>
                           <Icon className={`w-4 h-4 ${node.iconColor}`} strokeWidth={1.8} />
                         </div>
 
@@ -841,8 +841,8 @@ export function ExcalidrawStoryline() {
 
         {/* COMPACT SYSTEM DESIGN CHIPS */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+          <div className="p-3 sm:p-3.5 rounded-none bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-none bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
               🏛️
             </span>
             <div className="min-w-0">
@@ -851,8 +851,8 @@ export function ExcalidrawStoryline() {
             </div>
           </div>
 
-          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+          <div className="p-3 sm:p-3.5 rounded-none bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-none bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
               ⚡️
             </span>
             <div className="min-w-0">
@@ -861,8 +861,8 @@ export function ExcalidrawStoryline() {
             </div>
           </div>
 
-          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+          <div className="p-3 sm:p-3.5 rounded-none bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-none bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
               🛡️
             </span>
             <div className="min-w-0">
@@ -885,7 +885,7 @@ export function ExcalidrawStoryline() {
         </p>
 
         {/* BROWSER WINDOW MOCKUP: DATABASE ERD */}
-        <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-5">
+        <div className="rounded-none border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-5">
           {/* Chrome top bar */}
           <div className="h-10 bg-slate-50 border-b border-slate-200 flex items-center px-4 justify-between select-none">
             <div className="flex items-center gap-2">
@@ -893,7 +893,7 @@ export function ExcalidrawStoryline() {
               <span className="w-3 h-3 rounded-full bg-amber-400/90" />
               <span className="w-3 h-3 rounded-full bg-emerald-400/90" />
             </div>
-            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-2xs">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-none bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-2xs">
               <Database className="w-3.5 h-3.5 text-emerald-600" />
               <span>Database Schema & ERD</span>
             </div>
@@ -915,7 +915,7 @@ export function ExcalidrawStoryline() {
                       else if (tab === "payments") setActiveForeignKey("order_id")
                       else setActiveForeignKey(null)
                     }}
-                    className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
+                    className={`px-3 py-1 rounded-none text-xs font-mono font-bold transition-all cursor-pointer ${
                       selectedTable === tab
                         ? "bg-emerald-600 text-white shadow-xs"
                         : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
@@ -932,7 +932,7 @@ export function ExcalidrawStoryline() {
               {/* Table 1: USERS */}
               <div
                 onClick={() => setSelectedTable("users")}
-                className={`w-60 rounded-2xl bg-white border shadow-md overflow-hidden transition-all cursor-pointer ${
+                className={`w-60 rounded-none bg-white border shadow-md overflow-hidden transition-all cursor-pointer ${
                   selectedTable === "users" ? "border-emerald-600 ring-2 ring-emerald-500/80 shadow-lg scale-102" : "border-slate-200"
                 }`}
               >
@@ -944,7 +944,7 @@ export function ExcalidrawStoryline() {
                   <span className="text-[10px] opacity-80">PK: id</span>
                 </div>
                 <div className="p-3 text-xs font-mono space-y-1.5">
-                  <div className="flex items-center justify-between text-slate-800 font-bold bg-emerald-50/80 px-2 py-1 rounded">
+                  <div className="flex items-center justify-between text-slate-800 font-bold bg-emerald-50/80 px-2 py-1 rounded-none">
                     <span className="flex items-center gap-1 text-emerald-700">
                       <Key className="w-3 h-3" /> id
                     </span>
@@ -967,7 +967,7 @@ export function ExcalidrawStoryline() {
 
               {/* Relational Link 1 */}
               <div className="hidden lg:flex flex-col items-center">
-                <span className="text-[9px] font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 mb-1">
+                <span className="text-[9px] font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-none border border-emerald-200 mb-1">
                   1 : N
                 </span>
                 <div className="w-8 h-[2px] bg-emerald-500 relative flex items-center justify-end" />
@@ -979,7 +979,7 @@ export function ExcalidrawStoryline() {
                   setSelectedTable("orders")
                   setActiveForeignKey("user_id")
                 }}
-                className={`w-60 rounded-2xl bg-white border shadow-md overflow-hidden transition-all cursor-pointer ${
+                className={`w-60 rounded-none bg-white border shadow-md overflow-hidden transition-all cursor-pointer ${
                   selectedTable === "orders" ? "border-emerald-600 ring-2 ring-emerald-500/80 shadow-lg scale-102" : "border-slate-200"
                 }`}
               >
@@ -991,13 +991,13 @@ export function ExcalidrawStoryline() {
                   <span className="text-[10px] text-slate-300">PK: id</span>
                 </div>
                 <div className="p-3 text-xs font-mono space-y-1.5">
-                  <div className="flex items-center justify-between text-slate-800 font-bold px-2 py-1 rounded bg-slate-50">
+                  <div className="flex items-center justify-between text-slate-800 font-bold px-2 py-1 rounded-none bg-slate-50">
                     <span className="flex items-center gap-1 text-slate-700">
                       <Key className="w-3 h-3 text-amber-500" /> id
                     </span>
                     <span className="text-[10px] text-slate-500">UUID [PK]</span>
                   </div>
-                  <div className={`flex items-center justify-between px-2 py-1 rounded transition-colors ${
+                  <div className={`flex items-center justify-between px-2 py-1 rounded-none transition-colors ${
                     activeForeignKey === "user_id" ? "bg-emerald-100 text-emerald-900 font-bold" : "text-slate-600"
                   }`}>
                     <span className="flex items-center gap-1">
@@ -1018,7 +1018,7 @@ export function ExcalidrawStoryline() {
 
               {/* Relational Link 2 */}
               <div className="hidden lg:flex flex-col items-center">
-                <span className="text-[9px] font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 mb-1">
+                <span className="text-[9px] font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-none border border-emerald-200 mb-1">
                   1 : 1
                 </span>
                 <div className="w-8 h-[2px] bg-emerald-500 relative flex items-center justify-end" />
@@ -1030,7 +1030,7 @@ export function ExcalidrawStoryline() {
                   setSelectedTable("payments")
                   setActiveForeignKey("order_id")
                 }}
-                className={`w-60 rounded-2xl bg-white border shadow-md overflow-hidden transition-all cursor-pointer ${
+                className={`w-60 rounded-none bg-white border shadow-md overflow-hidden transition-all cursor-pointer ${
                   selectedTable === "payments" ? "border-emerald-600 ring-2 ring-emerald-500/80 shadow-lg scale-102" : "border-slate-200"
                 }`}
               >
@@ -1042,13 +1042,13 @@ export function ExcalidrawStoryline() {
                   <span className="text-[10px] text-slate-300">PK: id</span>
                 </div>
                 <div className="p-3 text-xs font-mono space-y-1.5">
-                  <div className="flex items-center justify-between text-slate-800 font-bold px-2 py-1 rounded bg-slate-50">
+                  <div className="flex items-center justify-between text-slate-800 font-bold px-2 py-1 rounded-none bg-slate-50">
                     <span className="flex items-center gap-1 text-slate-700">
                       <Key className="w-3 h-3 text-amber-500" /> id
                     </span>
                     <span className="text-[10px] text-slate-500">UUID [PK]</span>
                   </div>
-                  <div className={`flex items-center justify-between px-2 py-1 rounded transition-colors ${
+                  <div className={`flex items-center justify-between px-2 py-1 rounded-none transition-colors ${
                     activeForeignKey === "order_id" ? "bg-emerald-100 text-emerald-900 font-bold" : "text-slate-600"
                   }`}>
                     <span className="flex items-center gap-1">
@@ -1073,8 +1073,8 @@ export function ExcalidrawStoryline() {
 
         {/* COMPACT DATABASE FEATURE CHIPS */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+          <div className="p-3 sm:p-3.5 rounded-none bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-none bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
               📋
             </span>
             <div className="min-w-0">
@@ -1083,8 +1083,8 @@ export function ExcalidrawStoryline() {
             </div>
           </div>
 
-          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+          <div className="p-3 sm:p-3.5 rounded-none bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-none bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
               🔗
             </span>
             <div className="min-w-0">
@@ -1093,8 +1093,8 @@ export function ExcalidrawStoryline() {
             </div>
           </div>
 
-          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+          <div className="p-3 sm:p-3.5 rounded-none bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-none bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
               💾
             </span>
             <div className="min-w-0">
@@ -1117,7 +1117,7 @@ export function ExcalidrawStoryline() {
         </p>
 
         {/* BROWSER WINDOW MOCKUP: SEQUENCE FLOW TRACE */}
-        <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-5">
+        <div className="rounded-none border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-5">
           {/* Chrome top bar */}
           <div className="h-10 bg-slate-50 border-b border-slate-200 flex items-center px-4 justify-between select-none">
             <div className="flex items-center gap-2">
@@ -1125,7 +1125,7 @@ export function ExcalidrawStoryline() {
               <span className="w-3 h-3 rounded-full bg-amber-400/90" />
               <span className="w-3 h-3 rounded-full bg-emerald-400/90" />
             </div>
-            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-2xs">
+            <div className="flex items-center gap-2 px-3 py-1 rounded-none bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-2xs">
               <Activity className="w-3.5 h-3.5 text-blue-600" />
               <span>Sequence Flow & Trace</span>
             </div>
@@ -1140,18 +1140,18 @@ export function ExcalidrawStoryline() {
                 <button
                   onClick={handleSimulateTrace}
                   disabled={isTracingFlow}
-                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 shadow-md transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-none bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold flex items-center gap-2 shadow-md transition-all cursor-pointer"
                 >
                   <Play className={`w-3.5 h-3.5 fill-current ${isTracingFlow ? "animate-pulse" : ""}`} />
                   <span>{isTracingFlow ? "Simulating Request..." : "Simulate Flow Trace"}</span>
                 </button>
 
-                <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-xl p-1">
+                <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-none p-1">
                   {[1, 2, 3, 4].map((step) => (
                     <button
                       key={step}
                       onClick={() => setFlowStep(step)}
-                      className={`w-7 h-7 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
+                      className={`w-7 h-7 rounded-none text-xs font-mono font-bold transition-all cursor-pointer ${
                         flowStep === step
                           ? "bg-slate-900 text-white shadow-xs"
                           : "text-slate-600 hover:bg-slate-100"
@@ -1164,7 +1164,7 @@ export function ExcalidrawStoryline() {
               </div>
 
               {/* Step info pill */}
-              <div className="text-xs font-mono text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-2xs flex items-center gap-2">
+              <div className="text-xs font-mono text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-none shadow-2xs flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                 <span>
                   {flowStep === 1 && "Step 1: Client → API Gateway"}
@@ -1217,7 +1217,7 @@ export function ExcalidrawStoryline() {
                       strokeLinecap="round"
                     />
                     <g transform="translate(152, 137)">
-                      <rect x="-24" y="-8" width="48" height="16" rx="8" fill="white" stroke={flowStep === 1 ? "#93C5FD" : "#E2E8F0"} strokeWidth="1" className="shadow-2xs" />
+                      <rect x="-24" y="-8" width="48" height="16" rx="0" fill="white" stroke={flowStep === 1 ? "#93C5FD" : "#E2E8F0"} strokeWidth="1" className="shadow-2xs" />
                       <text x="0" y="1" fill={flowStep === 1 ? "#1D4ED8" : "#64748B"} fontSize="7.5" fontWeight="bold" textAnchor="middle" dominantBaseline="middle" className="font-mono">
                         POST
                       </text>
@@ -1238,7 +1238,7 @@ export function ExcalidrawStoryline() {
                       strokeLinecap="round"
                     />
                     <g transform="translate(325, 95)">
-                      <rect x="-26" y="-8" width="52" height="16" rx="8" fill="white" stroke={flowStep === 2 ? "#93C5FD" : "#E2E8F0"} strokeWidth="1" className="shadow-2xs" />
+                      <rect x="-26" y="-8" width="52" height="16" rx="0" fill="white" stroke={flowStep === 2 ? "#93C5FD" : "#E2E8F0"} strokeWidth="1" className="shadow-2xs" />
                       <text x="0" y="1" fill={flowStep === 2 ? "#1D4ED8" : "#64748B"} fontSize="7.5" fontWeight="bold" textAnchor="middle" dominantBaseline="middle" className="font-mono">
                         Auth JWT
                       </text>
@@ -1259,7 +1259,7 @@ export function ExcalidrawStoryline() {
                       strokeLinecap="round"
                     />
                     <g transform="translate(325, 203)">
-                      <rect x="-24" y="-8" width="48" height="16" rx="8" fill="white" stroke={flowStep === 3 ? "#93C5FD" : "#E2E8F0"} strokeWidth="1" className="shadow-2xs" />
+                      <rect x="-24" y="-8" width="48" height="16" rx="0" fill="white" stroke={flowStep === 3 ? "#93C5FD" : "#E2E8F0"} strokeWidth="1" className="shadow-2xs" />
                       <text x="0" y="1" fill={flowStep === 3 ? "#1D4ED8" : "#64748B"} fontSize="7.5" fontWeight="bold" textAnchor="middle" dominantBaseline="middle" className="font-mono">
                         gRPC
                       </text>
@@ -1280,7 +1280,7 @@ export function ExcalidrawStoryline() {
                       strokeLinecap="round"
                     />
                     <g transform="translate(512, 192)">
-                      <rect x="-26" y="-8" width="52" height="16" rx="8" fill="white" stroke={flowStep === 4 ? "#93C5FD" : "#E2E8F0"} strokeWidth="1" className="shadow-2xs" />
+                      <rect x="-26" y="-8" width="52" height="16" rx="0" fill="white" stroke={flowStep === 4 ? "#93C5FD" : "#E2E8F0"} strokeWidth="1" className="shadow-2xs" />
                       <text x="0" y="1" fill={flowStep === 4 ? "#1D4ED8" : "#64748B"} fontSize="7.5" fontWeight="bold" textAnchor="middle" dominantBaseline="middle" className="font-mono">
                         Commit
                       </text>
@@ -1360,7 +1360,7 @@ export function ExcalidrawStoryline() {
                         width: "110px",
                         height: "78px",
                       }}
-                      className={`rounded-xl bg-white border p-2 flex flex-col items-center justify-center text-center select-none transition-all z-20 ${
+                      className={`rounded-none bg-white border p-2 flex flex-col items-center justify-center text-center select-none transition-all z-20 ${
                         node.isActive
                           ? "border-blue-500 ring-2 ring-blue-400/80 shadow-md scale-103 bg-blue-50/20"
                           : "border-slate-200/90 shadow-2xs hover:border-slate-300"
@@ -1374,7 +1374,7 @@ export function ExcalidrawStoryline() {
                         </div>
                       )}
 
-                      <div className={`w-7 h-7 rounded-lg flex items-center justify-center mb-1 shadow-2xs ${node.iconBg}`}>
+                      <div className={`w-7 h-7 rounded-none flex items-center justify-center mb-1 shadow-2xs ${node.iconBg}`}>
                         <Icon className={`w-3.5 h-3.5 ${node.iconColor}`} strokeWidth={1.8} />
                       </div>
 
@@ -1395,8 +1395,8 @@ export function ExcalidrawStoryline() {
 
         {/* COMPACT SEQUENCE FLOW CHIPS */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+          <div className="p-3 sm:p-3.5 rounded-none bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-none bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
               🚦
             </span>
             <div className="min-w-0">
@@ -1405,8 +1405,8 @@ export function ExcalidrawStoryline() {
             </div>
           </div>
 
-          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+          <div className="p-3 sm:p-3.5 rounded-none bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-none bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
               ⏱️
             </span>
             <div className="min-w-0">
@@ -1415,8 +1415,8 @@ export function ExcalidrawStoryline() {
             </div>
           </div>
 
-          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
-            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+          <div className="p-3 sm:p-3.5 rounded-none bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-none bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
               🛡️
             </span>
             <div className="min-w-0">
@@ -1429,7 +1429,7 @@ export function ExcalidrawStoryline() {
 
       {/* =========================================================================
           SECTION 4: THE EASIEST WAY TO GET YOUR THOUGHTS ON SCREEN (MINIMALIST CORE FEATURES)
-         ========================================================================= */}
+          ========================================================================= */}
       <div id="features" className="relative mb-20 lg:pl-16 xl:pl-20 scroll-mt-24">
         <h2 className="font-zodiak text-3xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-3">
           The easiest way to get your thoughts on screen
@@ -1441,9 +1441,9 @@ export function ExcalidrawStoryline() {
         {/* 4-CARD MINIMALIST GRID */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {/* Card 1: Cloud Auto-Save & Version History */}
-          <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="p-5 rounded-none bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
             <div>
-              <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-3 font-bold">
+              <div className="w-9 h-9 rounded-none bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-3 font-bold">
                 <History className="w-4 h-4 text-blue-600" />
               </div>
               <h3 className="font-bold text-slate-900 text-base mb-1.5">
@@ -1453,16 +1453,16 @@ export function ExcalidrawStoryline() {
                 Every stroke and layout change automatically syncs to the cloud in real time. Switch back to any previous version or snapshot of your whiteboard whenever you need.
               </p>
             </div>
-            <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs font-mono">
+            <div className="p-2.5 bg-white rounded-none border border-slate-200 flex items-center justify-between text-xs font-mono">
               <span className="font-bold text-blue-700">Real-time Cloud Sync</span>
               <span className="font-bold text-slate-600">Version History Rollback</span>
             </div>
           </div>
 
           {/* Card 2: Download as PNG, Mermaid & SVG */}
-          <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="p-5 rounded-none bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
             <div>
-              <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mb-3 font-bold">
+              <div className="w-9 h-9 rounded-none bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mb-3 font-bold">
                 <Download className="w-4 h-4" />
               </div>
               <h3 className="font-bold text-slate-900 text-base mb-1.5">
@@ -1472,7 +1472,7 @@ export function ExcalidrawStoryline() {
                 Download your diagrams as high-resolution PNGs, standard Mermaid code, or crisp SVGs ready for documentation, RFCs, and READMEs.
               </p>
             </div>
-            <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-around text-xs font-mono">
+            <div className="p-2.5 bg-white rounded-none border border-slate-200 flex items-center justify-around text-xs font-mono">
               <span className="font-bold text-emerald-700">PNG</span>
               <span className="text-slate-300">•</span>
               <span className="font-bold text-indigo-700">Mermaid</span>
@@ -1482,9 +1482,9 @@ export function ExcalidrawStoryline() {
           </div>
 
           {/* Card 3: Smart Alignment & Snapping */}
-          <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="p-5 rounded-none bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
             <div>
-              <div className="w-9 h-9 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 mb-3 font-bold">
+              <div className="w-9 h-9 rounded-none bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 mb-3 font-bold">
                 <Magnet className="w-4 h-4" />
               </div>
               <h3 className="font-bold text-slate-900 text-base mb-1.5">
@@ -1494,16 +1494,16 @@ export function ExcalidrawStoryline() {
                 Zero-jitter magnetic snapping with dynamic guidelines keeps system architectures, wireframes, and tables cleanly aligned.
               </p>
             </div>
-            <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs font-mono text-purple-700 font-bold">
+            <div className="p-2.5 bg-white rounded-none border border-slate-200 flex items-center justify-between text-xs font-mono text-purple-700 font-bold">
               <span>Smart Guidelines</span>
               <span className="text-[10px] text-slate-400">Auto-align</span>
             </div>
           </div>
 
           {/* Card 4: Diagonal Shortcuts */}
-          <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="p-5 rounded-none bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
             <div>
-              <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 mb-3 font-bold text-base">
+              <div className="w-9 h-9 rounded-none bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 mb-3 font-bold text-base">
                 ⌨️
               </div>
               <h3 className="font-bold text-slate-900 text-base mb-1.5">
@@ -1513,12 +1513,12 @@ export function ExcalidrawStoryline() {
                 Ergonomic keyboard shortcuts for rapid tool switching: V (Select), S (Sticky), T (Text), R (Rectangle), and D (Database).
               </p>
             </div>
-            <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-around font-mono text-xs font-bold text-slate-700">
-              <span className="px-2 py-0.5 bg-slate-100 rounded">V</span>
-              <span className="px-2 py-0.5 bg-slate-100 rounded">S</span>
-              <span className="px-2 py-0.5 bg-slate-100 rounded">T</span>
-              <span className="px-2 py-0.5 bg-slate-100 rounded">R</span>
-              <span className="px-2 py-0.5 bg-slate-100 rounded">D</span>
+            <div className="p-2.5 bg-white rounded-none border border-slate-200 flex items-center justify-around font-mono text-xs font-bold text-slate-700">
+              <span className="px-2 py-0.5 bg-slate-100 rounded-none">V</span>
+              <span className="px-2 py-0.5 bg-slate-100 rounded-none">S</span>
+              <span className="px-2 py-0.5 bg-slate-100 rounded-none">T</span>
+              <span className="px-2 py-0.5 bg-slate-100 rounded-none">R</span>
+              <span className="px-2 py-0.5 bg-slate-100 rounded-none">D</span>
             </div>
           </div>
         </div>

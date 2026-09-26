@@ -37,7 +37,7 @@ export function LandingPage() {
       {/* Navbar */}
       <header className="sticky top-0 z-50 px-4 sm:px-8 h-20 flex items-center justify-between border-b border-slate-200/80 bg-white/80 backdrop-blur-xl transition-all">
         <Link className="flex items-center gap-3 transition-opacity hover:opacity-90" href="/">
-          <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 p-0.5 shadow-md shadow-indigo-500/20 flex items-center justify-center">
+          <div className="relative w-10 h-10 rounded-none bg-gradient-to-tr from-indigo-600 via-indigo-500 to-purple-500 p-0.5 shadow-md shadow-indigo-500/20 flex items-center justify-center">
             <Image src="/logo.svg" alt="Planning Portal logo" width={28} height={28} className="brightness-0 invert" />
           </div>
           <span className="font-comico text-xl font-bold tracking-tight text-slate-900">
@@ -75,14 +75,14 @@ export function LandingPage() {
           <SignInButton mode="modal">
             <Button
               variant="ghost"
-              className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-semibold cursor-pointer text-sm"
+              className="text-slate-700 hover:text-slate-900 hover:bg-slate-100 font-semibold cursor-pointer text-sm rounded-none"
             >
               Sign In
             </Button>
           </SignInButton>
 
           <SignInButton mode="modal">
-            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-full px-5 shadow-lg shadow-indigo-600/25 transition-all hover:scale-105 border-none cursor-pointer text-sm">
+            <Button className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-none px-5 shadow-lg shadow-indigo-600/25 transition-all hover:scale-105 border-none cursor-pointer text-sm">
               Start Free
             </Button>
           </SignInButton>
@@ -124,7 +124,7 @@ export function LandingPage() {
               <SignInButton mode="modal">
                 <Button
                   size="lg"
-                  className="w-full sm:w-auto h-14 px-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full text-base font-semibold shadow-xl shadow-indigo-600/30 transition-all hover:scale-105 border-none cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto h-14 px-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-none text-base font-semibold shadow-xl shadow-indigo-600/30 transition-all hover:scale-105 border-none cursor-pointer flex items-center justify-center gap-2"
                 >
                   <span>Start Whiteboarding Free</span>
                   <ArrowRight className="w-5 h-5" />
@@ -133,7 +133,7 @@ export function LandingPage() {
 
               <a
                 href="#demo"
-                className="w-full sm:w-auto h-14 px-8 rounded-full border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-base font-semibold transition-all shadow-sm hover:border-slate-400 flex items-center justify-center gap-2 cursor-pointer"
+                className="w-full sm:w-auto h-14 px-8 rounded-none border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-base font-semibold transition-all shadow-sm hover:border-slate-400 flex items-center justify-center gap-2 cursor-pointer"
               >
                 <span>Try Live Demo</span>
                 <Move className="w-4 h-4 text-indigo-600" />
@@ -168,7 +168,7 @@ export function LandingPage() {
             <Accordion type="single" collapsible className="w-full space-y-4">
               <AccordionItem
                 value="item-1"
-                className="border border-slate-200/90 rounded-2xl px-6 bg-white shadow-xs overflow-hidden transition-colors data-[state=open]:border-indigo-200 data-[state=open]:bg-indigo-50/20"
+                className="border border-slate-200/90 rounded-none px-6 bg-white shadow-xs overflow-hidden transition-colors data-[state=open]:border-indigo-200 data-[state=open]:bg-indigo-50/20"
               >
                 <AccordionTrigger className="font-comico text-base sm:text-lg font-bold text-slate-900 hover:text-indigo-600 hover:no-underline transition-colors py-5 text-left">
                   Can multiple team members collaborate on the same board in real time?
@@ -180,7 +180,7 @@ export function LandingPage() {
 
               <AccordionItem
                 value="item-2"
-                className="border border-slate-200/90 rounded-2xl px-6 bg-white shadow-xs overflow-hidden transition-colors data-[state=open]:border-indigo-200 data-[state=open]:bg-indigo-50/20"
+                className="border border-slate-200/90 rounded-none px-6 bg-white shadow-xs overflow-hidden transition-colors data-[state=open]:border-indigo-200 data-[state=open]:bg-indigo-50/20"
               >
                 <AccordionTrigger className="font-comico text-base sm:text-lg font-bold text-slate-900 hover:text-indigo-600 hover:no-underline transition-colors py-5 text-left">
                   How do I manage my canvases and boards?
@@ -192,7 +192,7 @@ export function LandingPage() {
 
               <AccordionItem
                 value="item-3"
-                className="border border-slate-200/90 rounded-2xl px-6 bg-white shadow-xs overflow-hidden transition-colors data-[state=open]:border-indigo-200 data-[state=open]:bg-indigo-50/20"
+                className="border border-slate-200/90 rounded-none px-6 bg-white shadow-xs overflow-hidden transition-colors data-[state=open]:border-indigo-200 data-[state=open]:bg-indigo-50/20"
               >
                 <AccordionTrigger className="font-comico text-base sm:text-lg font-bold text-slate-900 hover:text-indigo-600 hover:no-underline transition-colors py-5 text-left">
                   What drawing and planning tools are included on the canvas?
@@ -204,7 +204,7 @@ export function LandingPage() {
 
               <AccordionItem
                 value="item-4"
-                className="border border-slate-200/90 rounded-2xl px-6 bg-white shadow-xs overflow-hidden transition-colors data-[state=open]:border-indigo-200 data-[state=open]:bg-indigo-50/20"
+                className="border border-slate-200/90 rounded-none px-6 bg-white shadow-xs overflow-hidden transition-colors data-[state=open]:border-indigo-200 data-[state=open]:bg-indigo-50/20"
               >
                 <AccordionTrigger className="font-comico text-base sm:text-lg font-bold text-slate-900 hover:text-indigo-600 hover:no-underline transition-colors py-5 text-left">
                   Is my whiteboard saved automatically?
@@ -216,7 +216,7 @@ export function LandingPage() {
 
               <AccordionItem
                 value="item-5"
-                className="border border-slate-200/90 rounded-2xl px-6 bg-white shadow-xs overflow-hidden transition-colors data-[state=open]:border-indigo-200 data-[state=open]:bg-indigo-50/20"
+                className="border border-slate-200/90 rounded-none px-6 bg-white shadow-xs overflow-hidden transition-colors data-[state=open]:border-indigo-200 data-[state=open]:bg-indigo-50/20"
               >
                 <AccordionTrigger className="font-comico text-base sm:text-lg font-bold text-slate-900 hover:text-indigo-600 hover:no-underline transition-colors py-5 text-left">
                   How do I collaborate with others on a board?
@@ -228,7 +228,7 @@ export function LandingPage() {
 
               <AccordionItem
                 value="item-6"
-                className="border border-slate-200/90 rounded-2xl px-6 bg-white shadow-xs overflow-hidden transition-colors data-[state=open]:border-indigo-200 data-[state=open]:bg-indigo-50/20"
+                className="border border-slate-200/90 rounded-none px-6 bg-white shadow-xs overflow-hidden transition-colors data-[state=open]:border-indigo-200 data-[state=open]:bg-indigo-50/20"
               >
                 <AccordionTrigger className="font-comico text-base sm:text-lg font-bold text-slate-900 hover:text-indigo-600 hover:no-underline transition-colors py-5 text-left">
                   What makes Planning Portal unique for System Design interviews and RFCs?
@@ -240,7 +240,7 @@ export function LandingPage() {
 
               <AccordionItem
                 value="item-7"
-                className="border border-slate-200/90 rounded-2xl px-6 bg-white shadow-xs overflow-hidden transition-colors data-[state=open]:border-indigo-200 data-[state=open]:bg-indigo-50/20"
+                className="border border-slate-200/90 rounded-none px-6 bg-white shadow-xs overflow-hidden transition-colors data-[state=open]:border-indigo-200 data-[state=open]:bg-indigo-50/20"
               >
                 <AccordionTrigger className="font-comico text-base sm:text-lg font-bold text-slate-900 hover:text-indigo-600 hover:no-underline transition-colors py-5 text-left">
                   Can I export my architecture diagrams and boards?

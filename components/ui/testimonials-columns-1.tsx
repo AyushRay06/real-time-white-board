@@ -35,7 +35,7 @@ export const TestimonialsColumn = (props: {
             <React.Fragment key={index}>
               {props.testimonials.map(({ text, image, name, role }, i) => (
                 <div
-                  className={props.cardClassName || "p-8 rounded-3xl border border-slate-200/90 bg-white shadow-lg shadow-indigo-500/5 max-w-xs w-full transition-all hover:border-indigo-300 hover:shadow-indigo-500/10"}
+                  className={props.cardClassName || "p-8 rounded-none border border-slate-200/90 bg-white shadow-lg shadow-indigo-500/5 max-w-xs w-full transition-all hover:border-indigo-300 hover:shadow-indigo-500/10"}
                   key={`${index}-${i}`}
                 >
                   <div className="font-sans text-slate-700 text-sm leading-relaxed font-normal">{text}</div>
@@ -45,7 +45,7 @@ export const TestimonialsColumn = (props: {
                       height={40}
                       src={image}
                       alt={name}
-                      className="h-10 w-10 rounded-full object-cover border border-slate-200"
+                      className="h-10 w-10 rounded-none object-cover border border-slate-200"
                     />
                     <div className="flex flex-col">
                       <div className="font-comico font-bold text-slate-900 tracking-tight leading-5 text-sm">{name}</div>

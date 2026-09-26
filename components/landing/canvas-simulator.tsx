@@ -638,7 +638,7 @@ export function CanvasSimulator() {
   }
 
   return (
-    <div className="relative w-full max-w-6xl mx-auto rounded-3xl border border-slate-200/90 bg-white shadow-[0_20px_70px_-15px_rgba(79,70,229,0.12)] backdrop-blur-xl overflow-hidden">
+    <div className="relative w-full max-w-6xl mx-auto rounded-none border border-slate-200/90 bg-white shadow-[0_20px_70px_-15px_rgba(79,70,229,0.12)] backdrop-blur-xl overflow-hidden">
       {/* Canvas Top Bar */}
       <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-3 border-b border-slate-100 bg-slate-50/80">
         <div className="flex items-center gap-3">
@@ -669,7 +669,7 @@ export function CanvasSimulator() {
           {drawnLines.length > 0 && (
             <button
               onClick={() => setDrawnLines([])}
-              className="flex items-center gap-1 px-2.5 py-1 text-xs text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+              className="flex items-center gap-1 px-2.5 py-1 text-xs text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-none transition-colors cursor-pointer"
               title="Clear freehand drawings"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -682,7 +682,7 @@ export function CanvasSimulator() {
               spawnItem("sticky")
               setActiveTool("select")
             }}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100/80 rounded-lg border border-indigo-200/60 transition-colors shadow-xs cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-700 bg-indigo-50 hover:bg-indigo-100/80 rounded-none border border-indigo-200/60 transition-colors shadow-xs cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Sticky</span>
@@ -690,7 +690,7 @@ export function CanvasSimulator() {
 
           <button
             onClick={resetCanvas}
-            className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-800 px-2.5 py-1.5 rounded-md hover:bg-slate-200/60 transition-colors cursor-pointer"
+            className="flex items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-800 px-2.5 py-1.5 rounded-none hover:bg-slate-200/60 transition-colors cursor-pointer"
             title="Reset canvas elements"
           >
             <RotateCcw className="w-3 h-3" />
@@ -718,11 +718,11 @@ export function CanvasSimulator() {
         }}
       >
         {/* Left-Hand Vertical Tools Dock (matching actual canvas toolbar) */}
-        <div className="absolute top-1/2 -translate-y-1/2 left-3 sm:left-4 z-30 flex flex-col items-center gap-1 bg-white/95 p-1.5 rounded-2xl border border-slate-200/80 shadow-lg shadow-slate-300/40 backdrop-blur-md">
+        <div className="absolute top-1/2 -translate-y-1/2 left-3 sm:left-4 z-30 flex flex-col items-center gap-1 bg-white/95 p-1.5 rounded-none border border-slate-200/80 shadow-lg shadow-slate-300/40 backdrop-blur-md">
           {/* Select & Drag Tool */}
           <button
             onClick={() => setActiveTool("select")}
-            className={`p-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+            className={`p-2 rounded-none text-xs font-medium transition-all cursor-pointer ${
               activeTool === "select"
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
@@ -735,7 +735,7 @@ export function CanvasSimulator() {
           {/* Pencil Freehand Tool */}
           <button
             onClick={() => setActiveTool("pen")}
-            className={`p-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+            className={`p-2 rounded-none text-xs font-medium transition-all cursor-pointer ${
               activeTool === "pen"
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
@@ -755,7 +755,7 @@ export function CanvasSimulator() {
                 spawnItem("sticky")
               }
             }}
-            className={`p-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+            className={`p-2 rounded-none text-xs font-medium transition-all cursor-pointer ${
               activeTool === "sticky"
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
@@ -775,7 +775,7 @@ export function CanvasSimulator() {
                 spawnItem("rect")
               }
             }}
-            className={`p-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+            className={`p-2 rounded-none text-xs font-medium transition-all cursor-pointer ${
               activeTool === "rect"
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
@@ -795,7 +795,7 @@ export function CanvasSimulator() {
                 spawnItem("circle")
               }
             }}
-            className={`p-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
+            className={`p-2 rounded-none text-xs font-medium transition-all cursor-pointer ${
               activeTool === "circle"
                 ? "bg-indigo-600 text-white shadow-sm"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
@@ -813,7 +813,7 @@ export function CanvasSimulator() {
               <button
                 key={c.name}
                 onClick={() => handleColorSelect(i)}
-                className={`w-3.5 h-3.5 rounded-full transition-transform cursor-pointer ${
+                className={`w-3.5 h-3.5 rounded-none transition-transform cursor-pointer ${
                   activeColorIndex === i ? "scale-125 ring-2 ring-indigo-400 ring-offset-1" : "hover:scale-110"
                 }`}
                 style={{ backgroundColor: c.hex }}
@@ -846,7 +846,7 @@ export function CanvasSimulator() {
                     ])
                   }
                 }}
-                className={`p-1.5 text-sm transition-transform rounded-lg cursor-pointer ${
+                className={`p-1.5 text-sm transition-transform rounded-none cursor-pointer ${
                   activeTool === item.id
                     ? "bg-indigo-100 scale-125 shadow-xs"
                     : "hover:scale-125 hover:bg-slate-100"
@@ -860,7 +860,7 @@ export function CanvasSimulator() {
         </div>
 
         {/* Dynamic Tool Notification Badge */}
-        <div className="absolute top-4 right-4 sm:right-6 z-20 hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/95 border border-slate-200 shadow-sm text-xs font-medium text-slate-700 backdrop-blur-md pointer-events-none">
+        <div className="absolute top-4 right-4 sm:right-6 z-20 hidden md:flex items-center gap-2 px-3.5 py-1.5 rounded-none bg-white/95 border border-slate-200 shadow-sm text-xs font-medium text-slate-700 backdrop-blur-md pointer-events-none">
           {activeTool === "pen" ? (
             <>
               <Pencil className="w-3.5 h-3.5 text-indigo-600 animate-bounce" />
@@ -1054,25 +1054,25 @@ export function CanvasSimulator() {
                   isSelected ? "ring-2 ring-indigo-500 ring-offset-2" : ""
                 } ${
                   item.type === "circle"
-                    ? "rounded-full flex flex-col items-center justify-center text-center p-3 aspect-square"
+                    ? "rounded-none flex flex-col items-center justify-center text-center p-3 aspect-square"
                     : item.type === "sticky"
-                    ? "rounded-[2px] p-4"
+                    ? "rounded-none p-4"
                     : item.type === "sys-component"
-                    ? "rounded-xl p-2.5 flex flex-col items-center justify-center"
-                    : "rounded-2xl p-4"
+                    ? "rounded-none p-2.5 flex flex-col items-center justify-center"
+                    : "rounded-none p-4"
                 }`}
               >
                 {/* 1. ACTUAL CANVAS SYSTEM COMPONENT CARD */}
                 {item.type === "sys-component" && (
                   <div className="w-full h-full flex flex-col items-center justify-center text-center pointer-events-none relative">
                     {/* Status Pill Top-Right */}
-                    <div className="absolute top-0 right-0 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[7px] font-bold text-emerald-700 font-mono">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <div className="absolute top-0 right-0 flex items-center gap-1 px-1.5 py-0.5 rounded-none bg-emerald-50 border border-emerald-200/80 text-[7px] font-bold text-emerald-700 font-mono">
+                      <span className="w-1.5 h-1.5 rounded-none bg-emerald-500 animate-pulse" />
                       <span>ONLINE</span>
                     </div>
 
                     {/* Icon Badge */}
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-1.5 shadow-2xs ${item.iconBg || "bg-indigo-100"}`}>
+                    <div className={`w-9 h-9 rounded-none flex items-center justify-center mb-1.5 shadow-2xs ${item.iconBg || "bg-indigo-100"}`}>
                       {item.icon ? (
                         <item.icon className={`w-5 h-5 ${item.iconColor || "text-indigo-600"}`} strokeWidth={1.8} />
                       ) : (
@@ -1092,7 +1092,7 @@ export function CanvasSimulator() {
                   <>
                     {/* Top Adhesive Band */}
                     <div className="w-full h-3 -mt-4 -mx-4 mb-2.5 px-4 bg-black/[0.04] border-b border-black/[0.06] flex items-center pointer-events-none">
-                      <div className="w-full h-[1px] bg-white/30 rounded-full" />
+                      <div className="w-full h-[1px] bg-white/30 rounded-none" />
                     </div>
 
                     {/* 3D Curled Corner Flap */}
@@ -1140,10 +1140,10 @@ export function CanvasSimulator() {
 
                 {/* Floating Action Controls on Selected Item */}
                 {isSelected && (
-                  <div className="absolute -top-3.5 right-2 flex items-center gap-1 bg-white border border-slate-200 rounded-full px-1.5 py-0.5 shadow-md z-30">
+                  <div className="absolute -top-3.5 right-2 flex items-center gap-1 bg-white border border-slate-200 rounded-none px-1.5 py-0.5 shadow-md z-30">
                     <button
                       onClick={(e) => handleDeleteItem(item.id, e)}
-                      className="p-1 text-slate-400 hover:text-red-600 rounded-full transition-colors cursor-pointer"
+                      className="p-1 text-slate-400 hover:text-red-600 rounded-none transition-colors cursor-pointer"
                       title="Delete object"
                     >
                       <Trash2 className="w-3 h-3" />
@@ -1205,7 +1205,7 @@ export function CanvasSimulator() {
             >
               <path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.86a.5.5 0 0 0-.85.35Z" />
             </svg>
-            <span className="text-[10px] font-bold bg-emerald-500 text-white px-1.5 py-0.5 rounded shadow-sm">
+            <span className="text-[10px] font-bold bg-emerald-500 text-white px-1.5 py-0.5 rounded-none shadow-sm">
               Sarah
             </span>
           </motion.div>
@@ -1229,7 +1229,7 @@ export function CanvasSimulator() {
             >
               <path d="M5.5 3.21V20.8c0 .45.54.67.85.35l4.86-4.86a.5.5 0 0 1 .35-.15h6.87a.5.5 0 0 0 .35-.85L6.35 2.86a.5.5 0 0 0-.85.35Z" />
             </svg>
-            <span className="text-[10px] font-bold bg-purple-500 text-white px-1.5 py-0.5 rounded shadow-sm">
+            <span className="text-[10px] font-bold bg-purple-500 text-white px-1.5 py-0.5 rounded-none shadow-sm">
               Alex
             </span>
           </motion.div>
@@ -1278,7 +1278,7 @@ export function CanvasSimulator() {
         <div className="flex items-center gap-1">
           <button
             onClick={() => setZoomLevel((z) => Math.max(60, z - 15))}
-            className="p-1.5 hover:bg-slate-200/70 rounded text-slate-600 transition-colors cursor-pointer"
+            className="p-1.5 hover:bg-slate-200/70 rounded-none text-slate-600 transition-colors cursor-pointer"
             title="Zoom out"
           >
             <ZoomOut className="w-3.5 h-3.5" />
@@ -1292,7 +1292,7 @@ export function CanvasSimulator() {
           </button>
           <button
             onClick={() => setZoomLevel((z) => Math.min(150, z + 15))}
-            className="p-1.5 hover:bg-slate-200/70 rounded text-slate-600 transition-colors cursor-pointer"
+            className="p-1.5 hover:bg-slate-200/70 rounded-none text-slate-600 transition-colors cursor-pointer"
             title="Zoom in"
           >
             <ZoomIn className="w-3.5 h-3.5" />

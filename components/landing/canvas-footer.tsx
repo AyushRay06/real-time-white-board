@@ -53,7 +53,7 @@ export function CanvasFooter() {
             className="hidden sm:flex items-center gap-1.5 absolute -top-4 sm:top-14 left-8 lg:left-24 pointer-events-none select-none z-20"
           >
             <MousePointer2 className="w-4 h-4 fill-indigo-500 text-indigo-500 transform -rotate-12" />
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold text-white bg-indigo-600 shadow-xs">
+            <span className="px-2 py-0.5 rounded-none text-[11px] font-semibold text-white bg-indigo-600 shadow-xs">
               Ayush (you)
             </span>
           </motion.div>
@@ -69,7 +69,7 @@ export function CanvasFooter() {
           <SignUpButton mode="modal">
             <Button
               size="lg"
-              className="h-12 px-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full text-base font-semibold shadow-md shadow-indigo-600/20 transition-all hover:scale-105 border-none cursor-pointer"
+              className="h-12 px-8 bg-indigo-600 hover:bg-indigo-700 text-white rounded-none text-base font-semibold shadow-md shadow-indigo-600/20 transition-all hover:scale-105 border-none cursor-pointer"
             >
               Get Started Free
             </Button>
@@ -82,7 +82,7 @@ export function CanvasFooter() {
           {/* Left: Brand & Sticky Note */}
           <div className="md:col-span-4 flex flex-col items-start gap-4">
             <Link href="/" className="inline-flex items-center gap-2.5">
-              <div className="relative w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 p-0.5 shadow-xs flex items-center justify-center">
+              <div className="relative w-8 h-8 rounded-none bg-gradient-to-tr from-indigo-600 to-purple-600 p-0.5 shadow-xs flex items-center justify-center">
                 <Image
                   src="/logo.svg"
                   alt="Planning Portal logo"
@@ -101,7 +101,7 @@ export function CanvasFooter() {
             </p>
 
             {/* Creative Canvas Sticky Note */}
-            <div className="relative mt-2 p-3.5 bg-amber-50 border border-amber-200/80 rounded-xl shadow-xs max-w-[240px] transform -rotate-1 hover:rotate-0 transition-transform">
+            <div className="relative mt-2 p-3.5 bg-amber-50 border border-amber-200/80 rounded-none shadow-xs max-w-[240px] transform -rotate-1 hover:rotate-0 transition-transform">
               <div className="flex items-center gap-1.5 mb-1 text-[11px] font-semibold text-amber-800">
                 <span>📌</span>
                 <span>Team Board Note</span>
@@ -119,7 +119,7 @@ export function CanvasFooter() {
             </div>
             
             {/* Toolbar Dock */}
-            <div className="inline-flex items-center gap-1 bg-white border border-slate-200 p-1.5 rounded-2xl shadow-xs">
+            <div className="inline-flex items-center gap-1 bg-white border border-slate-200 p-1.5 rounded-none shadow-xs">
               {tools.map((tool) => {
                 const Icon = tool.icon
                 const isSelected = activeTool === tool.id
@@ -128,7 +128,7 @@ export function CanvasFooter() {
                     key={tool.id}
                     onClick={() => setActiveTool(tool.id)}
                     title={tool.label}
-                    className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all cursor-pointer ${
+                    className={`w-9 h-9 rounded-none flex items-center justify-center transition-all cursor-pointer ${
                       isSelected
                         ? "bg-indigo-50 text-indigo-600 shadow-xs border border-indigo-200/80"
                         : "text-slate-500 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent"
@@ -179,7 +179,7 @@ export function CanvasFooter() {
             {/* Simulated Teammate Cursor near Nav */}
             <div className="hidden lg:flex items-center gap-1.5 absolute -bottom-1 -left-12 pointer-events-none select-none">
               <MousePointer2 className="w-4 h-4 fill-emerald-500 text-emerald-500 transform -rotate-12" />
-              <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold text-white bg-emerald-600 shadow-xs">
+              <span className="px-2 py-0.5 rounded-none text-[11px] font-semibold text-white bg-emerald-600 shadow-xs">
                 Sarah
               </span>
             </div>
