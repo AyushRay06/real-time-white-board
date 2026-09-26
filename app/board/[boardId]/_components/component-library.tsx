@@ -233,7 +233,7 @@ export const ARCHITECTURE_SPECS: SpecItem[] = [
 ]
 
 interface ComponentLibraryProps {
-  onSelect: (type: SysComponent, customLabel?: string, iconSvg?: string) => void
+  onSelect: (type: SysComponent, customLabel?: string, iconSvg?: string, width?: number, height?: number) => void
   onSelectTemplate?: (templateId: "three-tier" | "microservices" | "cdn-caching") => void
   onSelectDoc?: (docType: DocType) => void
   isOpen: boolean
@@ -480,12 +480,14 @@ export function ComponentLibrary({
                         componentType: item.componentType,
                         customLabel: item.name,
                         iconSvg: item.svg,
+                        width: item.width,
+                        height: item.height,
                       })
                     )
                     e.dataTransfer.effectAllowed = "copy"
                   }}
                   onClick={() => {
-                    onSelect(item.componentType, item.name, item.svg)
+                    onSelect(item.componentType, item.name, item.svg, item.width, item.height)
                     onClose()
                   }}
                   className={`p-2 rounded-xl border cursor-grab active:cursor-grabbing transition-all group flex flex-col items-center text-center gap-1.5 shadow-2xs hover:scale-[1.02] active:scale-[0.98] ${cardBorder}`}

@@ -50,20 +50,13 @@ function getElementBounds(el) {
   return { minX, minY, maxX, maxY };
 }
 
-function isDescriptiveText(text) {
-  if (!text) return true;
-  const t = text.trim();
-  if (t === "JSON" || t === "DNS" || t === "{" || t === "}" || t === "PK" || t === "FK") return false;
-  return true;
-}
-
 function renderArrowhead(pFrom, pTo, stroke, strokeWidth) {
   const dx = pTo[0] - pFrom[0];
   const dy = pTo[1] - pFrom[1];
   const len = Math.hypot(dx, dy);
   if (len < 1) return "";
   const angle = Math.atan2(dy, dx);
-  const headLen = Math.max(strokeWidth * 4.5, 9);
+  const headLen = Math.max(strokeWidth * 4.5, 8);
   const a1 = angle - Math.PI / 6;
   const a2 = angle + Math.PI / 6;
   const p1x = (pTo[0] - headLen * Math.cos(a1)).toFixed(1);
@@ -134,18 +127,20 @@ function renderElementInner(el) {
     }
   }
   if (el.type === "text") {
-    if (isDescriptiveText(el.text)) return "";
     const lines = (el.text || "").split("\n");
-    const fontSize = Math.min(el.fontSize || 14, 28);
-    const lineHeight = fontSize * 1.2;
+    const fontSize = Math.max(el.fontSize || 14, 8);
+    const lineHeight = fontSize * 1.25;
     const textFill = el.strokeColor || "#000000";
+    const anchor = el.textAlign === "center" ? "middle" : el.textAlign === "right" ? "end" : "start";
+    const textX = el.textAlign === "center" ? (el.x + (el.width || 0) / 2).toFixed(1) : el.x.toFixed(1);
+
     let tspans = "";
     lines.forEach((line, i) => {
-      const ly = (el.y + (i + 1) * lineHeight).toFixed(1);
+      const ly = (el.y + (i + 0.9) * lineHeight).toFixed(1);
       const safeLine = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      tspans += `<tspan x="${el.x.toFixed(1)}" y="${ly}">${safeLine}</tspan>`;
+      tspans += `<tspan x="${textX}" y="${ly}">${safeLine}</tspan>`;
     });
-    return `<text font-family="sans-serif" font-size="${fontSize}" font-weight="700" fill="${textFill}" text-anchor="middle" dominant-baseline="middle">${tspans}</text>`;
+    return `<text font-family="'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif" font-size="${fontSize.toFixed(1)}" font-weight="600" fill="${textFill}" text-anchor="${anchor}">${tspans}</text>`;
   }
   return "";
 }
@@ -162,19 +157,11 @@ function renderElement(el) {
   return inner;
 }
 
-function getItemSvg(elements) {
-  // Filter out deleted elements and descriptive text labels
+function getItemSvgAndDims(elements) {
   let validEls = elements.filter(e => !e.isDeleted);
-  const nonTextEls = validEls.filter(e => e.type !== "text");
+  if (validEls.length === 0) return { svg: "", width: 90, height: 90 };
 
-  // If there are non-text shapes, strip out descriptive texts
-  if (nonTextEls.length > 0) {
-    validEls = validEls.filter(e => e.type !== "text" || !isDescriptiveText(e.text));
-  }
-
-  if (validEls.length === 0) return "";
-
-  // Outlier detection: if an element is far from median center, ignore it
+  // Outlier detection: if an element is far from median center, ignore it (fixes drwnio[2])
   if (validEls.length > 2) {
     const xs = validEls.map(e => e.x + (e.width || 0) / 2).sort((a,b) => a-b);
     const ys = validEls.map(e => e.y + (e.height || 0) / 2).sort((a,b) => a-b);
@@ -199,18 +186,30 @@ function getItemSvg(elements) {
 
   const contentW = maxX - minX;
   const contentH = maxY - minY;
-  const cx = (minX + maxX) / 2;
-  const cy = (minY + maxY) / 2;
+  const pad = 6;
+  const vbX = (minX - pad).toFixed(1);
+  const vbY = (minY - pad).toFixed(1);
+  const vbW = Math.max(contentW + pad * 2, 24).toFixed(1);
+  const vbH = Math.max(contentH + pad * 2, 24).toFixed(1);
 
-  // Make a uniform, centered square viewBox with 12% padding
-  const maxDim = Math.max(contentW, contentH);
-  const pad = Math.max(maxDim * 1.15, 36);
-  const vbX = (cx - pad / 2).toFixed(1);
-  const vbY = (cy - pad / 2).toFixed(1);
-  const vbDim = pad.toFixed(1);
+  // Compute natural dimensions scaled gracefully for canvas (between 70 and 220px)
+  const aspect = contentW / (contentH || 1);
+  let renderW = 96;
+  let renderH = Math.round(96 / aspect);
+  if (aspect > 1.8) {
+    renderW = 160;
+    renderH = Math.round(160 / aspect);
+  } else if (aspect < 0.55) {
+    renderH = 140;
+    renderW = Math.round(140 * aspect);
+  }
+  renderW = Math.max(64, Math.min(240, renderW));
+  renderH = Math.max(64, Math.min(200, renderH));
 
   const innerSvg = validEls.map(renderElement).filter(Boolean).join("");
-  return `<svg viewBox="${vbX} ${vbY} ${vbDim} ${vbDim}" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">${innerSvg}</svg>`;
+  const svg = `<svg viewBox="${vbX} ${vbY} ${vbW} ${vbH}" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">${innerSvg}</svg>`;
+
+  return { svg, width: renderW, height: renderH };
 }
 
 const allItems = [];
@@ -240,13 +239,16 @@ const drwnioMeta = [
 drwnioLib.forEach((item, idx) => {
   const meta = drwnioMeta[idx] || { name: `Draw.io Item ${idx + 1}`, type: "Server", cat: "Draw.io" };
   const elements = Array.isArray(item) ? item : item.elements;
+  const { svg, width, height } = getItemSvgAndDims(elements);
   allItems.push({
     id: `drwnio-${idx}`,
     name: meta.name,
     componentType: meta.type,
     category: meta.cat,
     pack: "Draw.io",
-    svg: getItemSvg(elements)
+    width,
+    height,
+    svg
   });
 });
 
@@ -272,13 +274,16 @@ const awsMeta = [
 awsLib.forEach((item, idx) => {
   const meta = awsMeta[idx] || { name: `AWS Item ${idx + 1}`, type: "Serverless", cat: "AWS Serverless" };
   const elements = Array.isArray(item) ? item : item.elements;
+  const { svg, width, height } = getItemSvgAndDims(elements);
   allItems.push({
     id: `aws-${idx}`,
     name: meta.name,
     componentType: meta.type,
     category: meta.cat,
     pack: "AWS Serverless",
-    svg: getItemSvg(elements)
+    width,
+    height,
+    svg
   });
 });
 
@@ -299,13 +304,16 @@ const archTypeMap = {
 };
 archLib.forEach((item, idx) => {
   const name = item.name || `Arch ${idx + 1}`;
+  const { svg, width, height } = getItemSvgAndDims(item.elements);
   allItems.push({
     id: `arch-${idx}`,
     name,
     componentType: archTypeMap[name] || "Server",
     category: "Architecture",
     pack: "Architecture",
-    svg: getItemSvg(item.elements)
+    width,
+    height,
+    svg
   });
 });
 
@@ -323,13 +331,16 @@ const softMeta = [
 softLib.forEach((item, idx) => {
   const meta = softMeta[idx] || { name: `Soft Item ${idx + 1}`, type: "Server", cat: "Software Patterns" };
   const elements = Array.isArray(item) ? item : item.elements;
+  const { svg, width, height } = getItemSvgAndDims(elements);
   allItems.push({
     id: `soft-${idx}`,
     name: meta.name,
     componentType: meta.type,
     category: meta.cat,
     pack: "Software Patterns",
-    svg: getItemSvg(elements)
+    width,
+    height,
+    svg
   });
 });
 
@@ -364,19 +375,22 @@ const sysMeta = [
 sysLib.forEach((item, idx) => {
   const meta = sysMeta[idx] || { name: `Sys Item ${idx + 1}`, type: "Server", cat: "System Design" };
   const elements = Array.isArray(item) ? item : item.elements;
+  const { svg, width, height } = getItemSvgAndDims(elements);
   allItems.push({
     id: `sys-${idx}`,
     name: meta.name,
     componentType: meta.type,
     category: meta.cat,
     pack: "System Design",
-    svg: getItemSvg(elements)
+    width,
+    height,
+    svg
   });
 });
 
-console.log(`Generated ${allItems.length} high-quality centered items.`);
+console.log(`Generated ${allItems.length} true-to-source Excalidraw items.`);
 
-const tsContent = `// Auto-generated from Excalidraw libraries with high-precision centered SVGs
+const tsContent = `// Auto-generated from Excalidraw libraries - true to source with natural dimensions
 import { SysComponent } from "@/types/canvas"
 
 export interface ExcalidrawLibraryItem {
@@ -385,6 +399,8 @@ export interface ExcalidrawLibraryItem {
   componentType: SysComponent
   category: string
   pack: string
+  width: number
+  height: number
   svg: string
 }
 
@@ -406,10 +422,12 @@ ${allItems.map(it => `  {
     componentType: SysComponent.${it.componentType},
     category: ${JSON.stringify(it.category)},
     pack: ${JSON.stringify(it.pack)},
+    width: ${it.width},
+    height: ${it.height},
     svg: ${JSON.stringify(it.svg)}
   }`).join(",\n")}
 ]
 `;
 
 fs.writeFileSync("lib/excalidraw-library.ts", tsContent, "utf8");
-console.log("Successfully updated lib/excalidraw-library.ts with high quality centered SVGs!");
+console.log("Successfully generated lib/excalidraw-library.ts with natural dimensions and pure Excalidraw rendering!");

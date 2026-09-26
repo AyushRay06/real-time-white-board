@@ -519,6 +519,18 @@ function renderDiagramDirectToCanvas({
 
       case LayerType.Component: {
         const comp = layer as ComponentLayer
+
+        if (comp.iconSvg) {
+          try {
+            const img = new Image()
+            img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(comp.iconSvg)}`
+            ctx.drawImage(img, comp.x, comp.y, comp.width, comp.height)
+          } catch {
+            // fallback
+          }
+          break
+        }
+
         const t = getComponentTheme(comp.componentType, comp.customColor, isDark)
         const label = comp.value || COMPONENT_LABELS[comp.componentType] || comp.componentType
 

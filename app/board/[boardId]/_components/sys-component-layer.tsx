@@ -398,6 +398,137 @@ export const SysComponentLayer = memo(function SysComponentLayer({
     isSimulating &&
     (nodeStage === simContext?.activeStage || nodeStage === (simContext?.activeStage ?? -99) + 1)
 
+  // ─── PURE EXCALIDRAW RENDERING ──────────────────────────────────────────
+  // If this layer has an authentic Excalidraw SVG drawing, render it AS IT IS:
+  // No artificial card background, no border box, no 44x44 badge squeeze.
+  // Full connection functionality enabled.
+  if (layer.iconSvg) {
+    return (
+      <g
+        onPointerDown={handlePointerDown}
+        onDoubleClick={(e) => {
+          e.stopPropagation()
+          onDoubleClick?.(id)
+        }}
+        style={{ cursor: isConnecting ? "crosshair" : "pointer" }}
+      >
+        {/* Vector SVG from Excalidraw rendered true to source with natural dimensions */}
+        <foreignObject
+          x={x}
+          y={y}
+          width={width}
+          height={height}
+          style={{ overflow: "visible", pointerEvents: "none" }}
+        >
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "transparent",
+              pointerEvents: "none",
+            }}
+            className="w-full h-full [&>svg]:w-full [&>svg]:h-full [&>svg]:block"
+            dangerouslySetInnerHTML={{ __html: layer.iconSvg }}
+          />
+        </foreignObject>
+
+        {/* Hit rect — catches all pointer events across the whole component */}
+        <rect
+          x={x}
+          y={y}
+          width={width}
+          height={height}
+          fill="white"
+          fillOpacity={0.001}
+          style={{ pointerEvents: "all" }}
+        />
+
+        {/* Connecting from highlight ring */}
+        {isConnectingFrom && (
+          <rect
+            x={x - 4}
+            y={y - 4}
+            width={width + 8}
+            height={height + 8}
+            rx={6}
+            fill="none"
+            stroke={isDark ? "#60A5FA" : "#2563EB"}
+            strokeWidth={2.5}
+            strokeDasharray="5 3"
+            className="animate-pulse"
+            style={{ pointerEvents: "none" }}
+          />
+        )}
+
+        {/* Selection indicator when selected by another user */}
+        {selectionColor && !isConnectingFrom && (
+          <rect
+            x={x - 2}
+            y={y - 2}
+            width={width + 4}
+            height={height + 4}
+            rx={4}
+            fill="none"
+            stroke={selectionColor}
+            strokeWidth={1.5}
+            strokeDasharray="4 4"
+            style={{ pointerEvents: "none" }}
+          />
+        )}
+
+        {/* Connection mode anchor ports (Top, Bottom, Left, Right) */}
+        {isConnecting && (
+          <g style={{ pointerEvents: "none" }}>
+            <circle cx={x + width / 2} cy={y} r={4.5} fill="#3b82f6" stroke="#ffffff" strokeWidth={1.5} />
+            <circle cx={x + width / 2} cy={y + height} r={4.5} fill="#3b82f6" stroke="#ffffff" strokeWidth={1.5} />
+            <circle cx={x} cy={y + height / 2} r={4.5} fill="#3b82f6" stroke="#ffffff" strokeWidth={1.5} />
+            <circle cx={x + width} cy={y + height / 2} r={4.5} fill="#3b82f6" stroke="#ffffff" strokeWidth={1.5} />
+          </g>
+        )}
+
+        {/* Tour Focus Spotlight Halo */}
+        {isFocused && (
+          <rect
+            x={x - 6}
+            y={y - 6}
+            width={width + 12}
+            height={height + 12}
+            rx={8}
+            fill="none"
+            stroke="#6366f1"
+            strokeWidth={3}
+            strokeDasharray="6 4"
+            className="animate-pulse"
+            style={{ filter: "drop-shadow(0 0 10px rgba(99,102,241,0.9))", pointerEvents: "none" }}
+          />
+        )}
+
+        {/* Active Request Hop Pulse Halo */}
+        {isSimulating && isActiveHopNode && (
+          <rect
+            x={x - 4}
+            y={y - 4}
+            width={width + 8}
+            height={height + 8}
+            rx={6}
+            fill="none"
+            stroke="#06b6d4"
+            strokeWidth={2}
+            opacity={0.85}
+            className="animate-pulse"
+            style={{
+              filter: "drop-shadow(0 0 8px rgba(6,182,212,0.6))",
+              pointerEvents: "none",
+            }}
+          />
+        )}
+      </g>
+    )
+  }
+
   return (
     <g
       onPointerDown={handlePointerDown}

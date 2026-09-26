@@ -431,15 +431,17 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
 
   // ─── INSERT SYSTEM DESIGN COMPONENT ─────────────────────────────────────
   const insertComponent = useMutation(
-    ({ storage, setMyPresence }, componentType: SysComponent, position: Point, customLabel?: string, iconSvg?: string) => {
+    ({ storage, setMyPresence }, componentType: SysComponent, position: Point, customLabel?: string, iconSvg?: string, width?: number, height?: number) => {
       const liveLayers = storage.get("layers")
       if (liveLayers.size >= MAX_LAYERS) return
       const liveLayerIds = storage.get("layerIds")
       const layerId = nanoid()
+      const w = width || 130
+      const h = height || 110
       const layer = new LiveObject({
         type: LayerType.Component,
-        x: position.x - 65, y: position.y - 55,
-        width: 130, height: 110,
+        x: position.x - w / 2, y: position.y - h / 2,
+        width: w, height: h,
         fill: { r: 99, g: 102, b: 241 },
         componentType,
         value: customLabel,
@@ -593,9 +595,9 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
     playDropSound()
   }, [getViewportCenterPoint, insertLayer])
 
-  const onLibrarySelect = useCallback((type: SysComponent, customLabel?: string, iconSvg?: string) => {
+  const onLibrarySelect = useCallback((type: SysComponent, customLabel?: string, iconSvg?: string, width?: number, height?: number) => {
     const center = getViewportCenterPoint()
-    insertComponent(type, center, customLabel, iconSvg)
+    insertComponent(type, center, customLabel, iconSvg, width, height)
     setIsLibraryOpen(false)
     playDropSound()
   }, [getViewportCenterPoint, insertComponent])
@@ -2289,7 +2291,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
             const point = pointerEventToCanvasPoint(e as any, camera)
 
             if (data.type === "sys-component" && data.componentType) {
-              insertComponent(data.componentType, point, data.customLabel, data.iconSvg)
+              insertComponent(data.componentType, point, data.customLabel, data.iconSvg, data.width, data.height)
             } else if (data.type === "sys-doc" && data.docType) {
               insertDoc(data.docType, point)
             }
