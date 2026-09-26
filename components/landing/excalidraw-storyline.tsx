@@ -403,7 +403,7 @@ export function ExcalidrawStoryline() {
                   <div className="w-full h-3 -mt-2 -mx-3.5 mb-2 px-3.5 bg-black/[0.04] border-b border-black/[0.06] flex items-center">
                     <div className="w-full h-[1px] bg-white/30 rounded-none" />
                   </div>
-                  <span className="block font-bold mb-1 text-[10px] text-amber-800">💡 Sarah's Note</span>
+                  <span className="block font-bold mb-1 text-[10px] text-amber-800">💡 Sarah&apos;s Note</span>
                   <p className="text-[11px] font-medium text-amber-950 leading-snug">
                     Ensure hero CTA button has 48px height for touch tap targets.
                   </p>
@@ -956,7 +956,7 @@ export function ExcalidrawStoryline() {
                   </div>
                   <div className="flex items-center justify-between px-2 py-0.5 text-slate-600">
                     <span>role</span>
-                    <span className="text-[10px] text-slate-400">ENUM('user','admin')</span>
+                    <span className="text-[10px] text-slate-400">ENUM(&apos;user&apos;,&apos;admin&apos;)</span>
                   </div>
                   <div className="flex items-center justify-between px-2 py-0.5 text-slate-600">
                     <span>created_at</span>
@@ -1113,7 +1113,7 @@ export function ExcalidrawStoryline() {
           Sequence Flow Trace
         </h2>
         <p className="text-slate-600 text-base sm:text-lg max-w-3xl mb-8 leading-relaxed">
-          Simulate the exact lifecycle of network requests through gateways, caches, and databases. Click "Simulate Flow Trace" to watch animated execution packets pulse step by step.
+          Simulate the exact lifecycle of network requests through gateways, caches, and databases. Click &quot;Simulate Flow Trace&quot; to watch animated execution packets pulse step by step.
         </p>
 
         {/* BROWSER WINDOW MOCKUP: SEQUENCE FLOW TRACE */}
