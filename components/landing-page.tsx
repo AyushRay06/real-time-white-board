@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/accordion"
 import localFont from "next/font/local"
 import { CanvasSimulator } from "@/components/landing/canvas-simulator"
-import { GlobalScrollStroke } from "@/components/ui/svg-follow-scroll"
 import { ExcalidrawStoryline } from "@/components/landing/excalidraw-storyline"
 import { TestimonialsSection } from "@/components/landing/testimonials-section"
 import { CanvasFooter } from "@/components/landing/canvas-footer"
@@ -91,7 +90,6 @@ export function LandingPage() {
       </header>
 
       <main className="flex-1 relative">
-        <GlobalScrollStroke />
         {/* HERO SECTION */}
         <section className="relative w-full pt-16 sm:pt-24 pb-16 sm:pb-24 overflow-hidden">
           <div className="container mx-auto px-4 md:px-6 flex flex-col items-center text-center">

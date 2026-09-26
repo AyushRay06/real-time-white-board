@@ -1,19 +1,13 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
+import React, { useState, useRef } from "react"
+import { motion, useScroll, useTransform } from "framer-motion"
 import {
-  Lightbulb,
-  Users,
-  Compass,
-  Zap,
   MousePointer2,
   Database,
   Server,
   Calculator,
   Play,
-  Pause,
-  RotateCcw,
   Check,
   Shield,
   Download,
@@ -21,15 +15,10 @@ import {
   Magnet,
   LayoutGrid,
   Sparkles,
-  ArrowRight,
   FolderKanban,
-  Star,
-  Search,
   Share2,
-  Copy,
   Sliders,
   Cpu,
-  Layers,
   Table,
   Key,
   Radio,
@@ -38,21 +27,23 @@ import {
   Network,
   CornerDownRight,
   MessageSquare,
-  Flame,
-  Heart,
-  Plus,
 } from "lucide-react"
 
 export function ExcalidrawStoryline() {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start 75%", "end 90%"],
+  })
+  const pathLength = useTransform(scrollYProgress, [0, 1], [0, 1])
+
   // ─── SECTION 1: CREATE (UI Layout Design) ───
-  const [activeUiDevice, setActiveUiDevice] = useState<"desktop" | "mobile">("desktop")
   const [selectedWireframeEl, setSelectedWireframeEl] = useState<string>("hero-cta")
   const [wireframeTheme, setWireframeTheme] = useState<"indigo" | "purple" | "emerald">("indigo")
 
   // ─── SECTION 2: COLLABORATE (Multiplayer Team Sync) ───
   const [copiedLink, setCopiedLink] = useState(false)
   const [reactions, setReactions] = useState<{ id: number; emoji: string; x: number; y: number }[]>([])
-  const [commentOpen, setCommentOpen] = useState(true)
 
   const triggerReaction = (emoji: string) => {
     const id = Date.now() + Math.random()
@@ -149,19 +140,63 @@ export function ExcalidrawStoryline() {
   const bandwidthMbps = Math.round((readQps * 2.5 * 8) / 1000)
 
   return (
-    <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 py-12">
-      {/* CONTINUOUS VERTICAL TIMELINE RAIL */}
-      <div className="hidden lg:block absolute left-8 top-12 bottom-24 w-[2px] bg-gradient-to-b from-indigo-200 via-purple-200 to-indigo-100" />
+    <div ref={containerRef} className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 py-12">
+      {/* ─── SCROLL PATH RIBBON CURLING DOWN THE LEFT-HAND SIDE ─── */}
+      <div className="hidden lg:block absolute left-0 xl:left-2 top-8 bottom-16 w-14 xl:w-16 pointer-events-none z-10 overflow-visible">
+        <svg
+          viewBox="0 0 100 6200"
+          fill="none"
+          overflow="visible"
+          xmlns="http://www.w3.org/2000/svg"
+          className="w-full h-full opacity-90"
+          preserveAspectRatio="none"
+        >
+          <defs>
+            <linearGradient id="featureLeftCurl" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#6366F1" />
+              <stop offset="18%" stopColor="#8B5CF6" />
+              <stop offset="36%" stopColor="#A855F7" />
+              <stop offset="54%" stopColor="#6366F1" />
+              <stop offset="72%" stopColor="#8B5CF6" />
+              <stop offset="90%" stopColor="#EC4899" />
+              <stop offset="100%" stopColor="#8B5CF6" />
+            </linearGradient>
+            <filter id="ribbonSoftGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="3.5" floodColor="#8B5CF6" floodOpacity="0.4" />
+            </filter>
+          </defs>
+          <motion.path
+            d="M 50 0
+               C 90 140, 100 300, 45 440
+               C -10 580, 5 760, 60 900
+               C 115 1040, 90 1220, 35 1360
+               C -20 1500, 15 1680, 70 1820
+               C 120 1960, 85 2140, 30 2280
+               C -25 2420, 20 2600, 75 2740
+               C 125 2880, 80 3060, 25 3200
+               C -30 3340, 25 3520, 80 3660
+               C 130 3800, 75 3980, 20 4120
+               C -35 4260, 30 4440, 85 4580
+               C 135 4720, 70 4900, 15 5040
+               C -40 5180, 35 5360, 90 5500
+               C 140 5640, 65 5820, 50 6200"
+            stroke="url(#featureLeftCurl)"
+            strokeWidth="6"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            filter="url(#ribbonSoftGlow)"
+            style={{
+              pathLength,
+              strokeDashoffset: useTransform(pathLength, (value) => 1 - value),
+            }}
+          />
+        </svg>
+      </div>
 
       {/* =========================================================================
           FEATURE 1: CREATE (UI Layout Wireframe Design)
          ========================================================================= */}
-      <div id="create" className="relative mb-32 lg:pl-16 scroll-mt-24">
-        {/* Timeline circular node */}
-        <div className="hidden lg:flex absolute -left-[54px] top-0 w-11 h-11 rounded-full bg-white border-2 border-indigo-300 shadow-md items-center justify-center text-amber-500 z-10">
-          <Lightbulb className="w-5 h-5 fill-amber-400 text-amber-500" />
-        </div>
-
+      <div id="create" className="relative mb-28 lg:pl-14 xl:pl-16 scroll-mt-24">
         {/* Header Tag Badge */}
         <div className="mb-3">
           <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-emerald-100/90 text-emerald-800 border border-emerald-200/60 tracking-wide font-mono">
@@ -177,7 +212,7 @@ export function ExcalidrawStoryline() {
         </p>
 
         {/* BROWSER WINDOW MOCKUP: UI LAYOUT WIREFRAME */}
-        <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-8">
+        <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-5">
           {/* Chrome top bar */}
           <div className="h-10 bg-slate-50 border-b border-slate-200 flex items-center px-4 justify-between select-none">
             <div className="flex items-center gap-2">
@@ -196,10 +231,9 @@ export function ExcalidrawStoryline() {
           </div>
 
           {/* Whiteboard Canvas Area */}
-          <div className="relative min-h-[460px] sm:min-h-[500px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 overflow-hidden flex flex-col justify-between">
+          <div className="relative min-h-[440px] sm:min-h-[480px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 overflow-hidden flex flex-col justify-between">
             {/* FLOATING TOP WIREFRAME CONTROLS */}
             <div className="flex items-center justify-between z-20 gap-3 flex-wrap">
-              {/* Elementary tools pill */}
               <div className="bg-white/95 backdrop-blur-md border border-slate-200 shadow-xs rounded-xl p-1.5 flex items-center gap-1">
                 {[
                   { id: "select", label: "Select", icon: MousePointer2 },
@@ -235,7 +269,7 @@ export function ExcalidrawStoryline() {
             </div>
 
             {/* LIVE WEBSITE WIREFRAME BEING DESIGNED BY 2 PEOPLE */}
-            <div className="relative my-auto flex items-center justify-center py-4">
+            <div className="relative my-auto flex items-center justify-center py-3">
               {/* Outer Website Canvas Artboard */}
               <div className="w-full max-w-2xl bg-white rounded-2xl border-2 border-dashed border-slate-300 shadow-lg p-5 relative transition-all">
                 {/* Artboard Header Label */}
@@ -268,11 +302,11 @@ export function ExcalidrawStoryline() {
                 </div>
 
                 {/* 2. Wireframe Hero Section */}
-                <div className="text-center py-4 px-2 mb-4 bg-slate-50/70 rounded-xl border border-slate-100 relative">
+                <div className="text-center py-3.5 px-2 mb-3 bg-slate-50/70 rounded-xl border border-slate-100 relative">
                   <span className="inline-block px-2.5 py-0.5 rounded-full text-[9px] font-mono font-bold bg-white text-slate-600 border border-slate-200 mb-2">
                     Sprint 14 • Prototype
                   </span>
-                  <h3 className="font-comico font-bold text-slate-800 text-base sm:text-lg mb-1">
+                  <h3 className="font-comico font-bold text-slate-800 text-sm sm:text-base mb-1">
                     Visual Workspace for Fast Engineering Teams
                   </h3>
                   <p className="text-[11px] text-slate-500 max-w-md mx-auto mb-3">
@@ -401,36 +435,36 @@ export function ExcalidrawStoryline() {
           </div>
         </div>
 
-        {/* 3 CREATE FEATURE CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/70 hover:bg-white hover:shadow-md transition-all">
-            <div className="text-2xl mb-3">🎨</div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">
-              Rapid UI Wireframing
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Drop wireframe containers, navbars, buttons, and bento cards onto canvas in seconds without complicated design software.
-            </p>
+        {/* COMPACT CREATE FEATURE CHIPS */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+              🎨
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-bold text-slate-800 text-xs">Rapid UI Wireframing</h4>
+              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Quick layout grids, navbars, and buttons in seconds.</p>
+            </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/70 hover:bg-white hover:shadow-md transition-all">
-            <div className="text-2xl mb-3">🧲</div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">
-              Smart Alignment Snapping
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Auto-snap to standard 8px/16px padding intervals and symmetrical column boundaries with zero jitter.
-            </p>
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+              🧲
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-bold text-slate-800 text-xs">Smart Grid Alignment</h4>
+              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Auto-snaps to 8px/16px padding with zero jitter.</p>
+            </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/70 hover:bg-white hover:shadow-md transition-all">
-            <div className="text-2xl mb-3">📝</div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">
-              Tactile 3D Annotations
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Pin realistic 3D curled sticky notes to any design element to give actionable peer review feedback inline.
-            </p>
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+              📝
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-bold text-slate-800 text-xs">Tactile 3D Annotations</h4>
+              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Curled paper sticky notes for actionable peer reviews.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -438,12 +472,7 @@ export function ExcalidrawStoryline() {
       {/* =========================================================================
           FEATURE 2: COLLABORATE (Multiplayer Session & Team Presence)
          ========================================================================= */}
-      <div id="collaborate" className="relative mb-32 lg:pl-16 scroll-mt-24">
-        {/* Timeline circular node */}
-        <div className="hidden lg:flex absolute -left-[54px] top-0 w-11 h-11 rounded-full bg-white border-2 border-indigo-300 shadow-md items-center justify-center text-indigo-600 z-10">
-          <Users className="w-5 h-5" />
-        </div>
-
+      <div id="collaborate" className="relative mb-28 lg:pl-14 xl:pl-16 scroll-mt-24">
         {/* Header Tag Badge */}
         <div className="mb-3">
           <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/60 tracking-wide font-mono">
@@ -459,7 +488,7 @@ export function ExcalidrawStoryline() {
         </p>
 
         {/* BROWSER WINDOW MOCKUP: MULTIPLAYER COLLABORATION */}
-        <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-8">
+        <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-5">
           {/* Chrome top bar */}
           <div className="h-10 bg-slate-50 border-b border-slate-200 flex items-center px-4 justify-between select-none">
             <div className="flex items-center gap-2">
@@ -480,11 +509,11 @@ export function ExcalidrawStoryline() {
           </div>
 
           {/* Whiteboard Canvas Area */}
-          <div className="relative min-h-[440px] sm:min-h-[480px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 overflow-hidden flex flex-col justify-between">
+          <div className="relative min-h-[420px] sm:min-h-[460px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 overflow-hidden flex flex-col justify-between">
             {/* Top Interactive Reaction Controls */}
             <div className="flex items-center justify-between z-20 gap-3">
               <div className="bg-white/95 backdrop-blur-md border border-slate-200 shadow-xs rounded-xl px-3 py-1.5 flex items-center gap-2">
-                <span className="text-xs font-semibold text-slate-700">Send Live Reaction:</span>
+                <span className="text-xs font-semibold text-slate-700">Send Reaction:</span>
                 {["🚀", "🔥", "❤️", "💡", "👏"].map((emoji) => (
                   <button
                     key={emoji}
@@ -528,7 +557,7 @@ export function ExcalidrawStoryline() {
             </div>
 
             {/* Collaborative Session Cards on Canvas */}
-            <div className="relative my-auto flex flex-col sm:flex-row items-center justify-center gap-6 py-4">
+            <div className="relative my-auto flex flex-col sm:flex-row items-center justify-center gap-6 py-3">
               {/* Card 1: Sprint Retrospective Column */}
               <div className="w-64 p-4 rounded-2xl bg-white border-2 border-indigo-400 shadow-lg relative">
                 <div className="flex items-center justify-between mb-2">
@@ -627,26 +656,26 @@ export function ExcalidrawStoryline() {
           </div>
         </div>
 
-        {/* 2 COLLABORATE CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/70 hover:bg-white hover:shadow-md transition-all">
-            <div className="text-2xl mb-3">🔗</div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">
-              One-Click Instant Sharing
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Anyone with the link can join your canvas instantly. No forced sign-ups or complex workspace permissions required.
-            </p>
+        {/* COMPACT COLLABORATE FEATURE CHIPS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+              🔗
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-bold text-slate-800 text-xs">One-Click Instant Sharing</h4>
+              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Share a room link; zero login hurdles for guests.</p>
+            </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/70 hover:bg-white hover:shadow-md transition-all">
-            <div className="text-2xl mb-3">💬</div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">
-              Contextual Pinned Discussions
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Pin comment threads directly to microservices, tables, or sprint tickets to resolve architecture decisions where they live.
-            </p>
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+              💬
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-bold text-slate-800 text-xs">Contextual Pinned Discussions</h4>
+              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Pin comment threads directly to services and tickets.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -654,12 +683,7 @@ export function ExcalidrawStoryline() {
       {/* =========================================================================
           COMMON USE CASES — STORYTELLING CHAPTER 1: SYSTEM ARCHITECTURE
          ========================================================================= */}
-      <div id="usecases" className="relative mb-32 lg:pl-16 scroll-mt-24">
-        {/* Timeline circular node */}
-        <div className="hidden lg:flex absolute -left-[54px] top-0 w-11 h-11 rounded-full bg-white border-2 border-indigo-300 shadow-md items-center justify-center text-purple-600 z-10">
-          <Compass className="w-5 h-5" />
-        </div>
-
+      <div id="usecases" className="relative mb-28 lg:pl-14 xl:pl-16 scroll-mt-24">
         {/* Header Tag Badge */}
         <div className="mb-3">
           <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-purple-100/90 text-purple-800 border border-purple-200/60 tracking-wide font-mono">
@@ -675,7 +699,7 @@ export function ExcalidrawStoryline() {
         </p>
 
         {/* BROWSER WINDOW MOCKUP: SYSTEM ARCHITECTURE */}
-        <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-8">
+        <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-5">
           {/* Chrome top bar with 1-Click Template Selector */}
           <div className="h-12 bg-slate-50 border-b border-slate-200 flex items-center px-4 justify-between select-none flex-wrap gap-2">
             <div className="flex items-center gap-2">
@@ -714,9 +738,9 @@ export function ExcalidrawStoryline() {
           </div>
 
           {/* Whiteboard Canvas Viewport */}
-          <div className="relative min-h-[460px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 sm:p-8 flex flex-col justify-between overflow-hidden">
+          <div className="relative min-h-[440px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 sm:p-8 flex flex-col justify-between overflow-hidden">
             {/* Ready-Made Built Components Tray */}
-            <div className="flex items-center justify-between mb-4 flex-wrap gap-2 z-20">
+            <div className="flex items-center justify-between mb-3 flex-wrap gap-2 z-20">
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="text-[11px] font-mono text-slate-500 font-bold uppercase mr-1">Ready-Made:</span>
                 {[
@@ -741,8 +765,8 @@ export function ExcalidrawStoryline() {
             </div>
 
             {/* VPC BOUNDARY WITH READY-MADE CLOUD NODES */}
-            <div className="relative w-full my-auto rounded-3xl border-2 border-dashed border-indigo-400 bg-indigo-50/25 p-6 transition-all">
-              <div className="flex items-center justify-between mb-4">
+            <div className="relative w-full my-auto rounded-3xl border-2 border-dashed border-indigo-400 bg-indigo-50/25 p-5 transition-all">
+              <div className="flex items-center justify-between mb-3">
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-indigo-600 text-white font-mono text-xs font-bold shadow-xs">
                   <Shield className="w-3.5 h-3.5" />
                   <span>Production VPC Boundary</span>
@@ -751,7 +775,7 @@ export function ExcalidrawStoryline() {
               </div>
 
               {/* Dynamic Grid of Cloud Primitive Nodes */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3.5">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {ARCH_TEMPLATES[selectedArchTemplate].nodes.map((node) => {
                   const Icon = node.icon
                   const isSelected = selectedCloudNode === node.id
@@ -759,13 +783,13 @@ export function ExcalidrawStoryline() {
                     <div
                       key={node.id}
                       onClick={() => setSelectedCloudNode(node.id)}
-                      className={`p-3.5 rounded-2xl bg-white border transition-all cursor-pointer text-left relative ${
+                      className={`p-3 rounded-2xl bg-white border transition-all cursor-pointer text-left relative ${
                         isSelected
                           ? "border-indigo-600 ring-2 ring-indigo-500 shadow-md scale-102"
                           : "border-slate-200 hover:border-slate-300 shadow-2xs hover:shadow-sm"
                       }`}
                     >
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-1.5">
                         <span className={`p-1.5 rounded-xl border ${node.color}`}>
                           <Icon className="w-4 h-4" />
                         </span>
@@ -779,7 +803,7 @@ export function ExcalidrawStoryline() {
                       <p className="text-[10px] text-slate-500 font-mono">
                         {node.type}
                       </p>
-                      <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between text-[9px] font-mono text-indigo-600">
+                      <div className="mt-1.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[9px] font-mono text-indigo-600">
                         <span>{node.sub}</span>
                         {isSelected && <span className="font-bold">Active</span>}
                       </div>
@@ -790,7 +814,7 @@ export function ExcalidrawStoryline() {
             </div>
 
             {/* Template Description Footer */}
-            <div className="mt-4 pt-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 font-mono">
+            <div className="mt-3 pt-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 font-mono">
               <span>{ARCH_TEMPLATES[selectedArchTemplate].desc}</span>
               <span className="text-indigo-600 font-bold hover:underline cursor-pointer">
                 Export to Architecture RFC →
@@ -799,36 +823,36 @@ export function ExcalidrawStoryline() {
           </div>
         </div>
 
-        {/* 3 SYSTEM DESIGN CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/70 hover:bg-white hover:shadow-md transition-all">
-            <div className="text-2xl mb-3">🏛️</div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">
-              Ready-Made Cloud Primitives
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Drop API Gateways, Kafka clusters, Redis caches, and PostgreSQL nodes with pre-configured networking metadata.
-            </p>
+        {/* COMPACT SYSTEM DESIGN CHIPS */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+              🏛️
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-bold text-slate-800 text-xs">Ready-Made Primitives</h4>
+              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Gateways, Kafka queues, and DBs ready to drop.</p>
+            </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/70 hover:bg-white hover:shadow-md transition-all">
-            <div className="text-2xl mb-3">⚡️</div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">
-              1-Click System Templates
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Instantly bootstrap verified architectures for E-Commerce, Real-time WebSockets, and AI RAG embedding pipelines.
-            </p>
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+              ⚡️
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-bold text-slate-800 text-xs">1-Click System Templates</h4>
+              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Instant architectures for Microservices, Chat & RAG.</p>
+            </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/70 hover:bg-white hover:shadow-md transition-all">
-            <div className="text-2xl mb-3">🛡️</div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">
-              VPC Containment Boundaries
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Group microservices into public, private, and database subnets. Dragging the VPC boundary moves all internal components synchronously.
-            </p>
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+              🛡️
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-bold text-slate-800 text-xs">VPC Auto-Containment</h4>
+              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Dragging the subnet boundary moves all child nodes.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -836,12 +860,7 @@ export function ExcalidrawStoryline() {
       {/* =========================================================================
           COMMON USE CASES — STORYTELLING CHAPTER 2: DATABASE & ERD SCHEMAS
          ========================================================================= */}
-      <div id="database-erd" className="relative mb-32 lg:pl-16 scroll-mt-24">
-        {/* Timeline circular node */}
-        <div className="hidden lg:flex absolute -left-[54px] top-0 w-11 h-11 rounded-full bg-white border-2 border-indigo-300 shadow-md items-center justify-center text-emerald-600 z-10">
-          <Database className="w-5 h-5" />
-        </div>
-
+      <div id="database-erd" className="relative mb-28 lg:pl-14 xl:pl-16 scroll-mt-24">
         {/* Header Tag Badge */}
         <div className="mb-3">
           <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-emerald-100/90 text-emerald-800 border border-emerald-200/60 tracking-wide font-mono">
@@ -857,7 +876,7 @@ export function ExcalidrawStoryline() {
         </p>
 
         {/* BROWSER WINDOW MOCKUP: DATABASE ERD */}
-        <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-8">
+        <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-5">
           {/* Chrome top bar */}
           <div className="h-10 bg-slate-50 border-b border-slate-200 flex items-center px-4 justify-between select-none">
             <div className="flex items-center gap-2">
@@ -873,7 +892,7 @@ export function ExcalidrawStoryline() {
           </div>
 
           {/* Whiteboard Canvas Area */}
-          <div className="relative min-h-[460px] sm:min-h-[500px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 sm:p-8 flex flex-col justify-between overflow-hidden">
+          <div className="relative min-h-[440px] sm:min-h-[480px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 sm:p-8 flex flex-col justify-between overflow-hidden">
             {/* Relational Table Controls Header */}
             <div className="flex items-center justify-between mb-4 z-20 flex-wrap gap-2">
               <div className="flex items-center gap-2">
@@ -904,11 +923,11 @@ export function ExcalidrawStoryline() {
             </div>
 
             {/* ERD DIAGRAM VIEW WITH 3 RELATIONAL TABLES & SVG CONNECTORS */}
-            <div className="relative my-auto flex flex-col lg:flex-row items-center justify-center gap-6 sm:gap-10 py-4">
+            <div className="relative my-auto flex flex-col lg:flex-row items-center justify-center gap-6 sm:gap-8 py-3">
               {/* Table 1: USERS */}
               <div
                 onClick={() => setSelectedTable("users")}
-                className={`w-64 rounded-2xl bg-white border shadow-md overflow-hidden transition-all cursor-pointer ${
+                className={`w-60 rounded-2xl bg-white border shadow-md overflow-hidden transition-all cursor-pointer ${
                   selectedTable === "users" ? "border-emerald-600 ring-2 ring-emerald-500/80 shadow-lg scale-102" : "border-slate-200"
                 }`}
               >
@@ -941,14 +960,12 @@ export function ExcalidrawStoryline() {
                 </div>
               </div>
 
-              {/* Dynamic Relational Arrow 1: users (1) -> orders (N) */}
+              {/* Relational Link 1 */}
               <div className="hidden lg:flex flex-col items-center">
-                <span className="text-[10px] font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 mb-1">
-                  1 : N Relation
+                <span className="text-[9px] font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 mb-1">
+                  1 : N
                 </span>
-                <div className="w-12 h-[2px] bg-emerald-500 relative flex items-center justify-end">
-                  <ArrowRight className="w-4 h-4 text-emerald-500 -mr-2" />
-                </div>
+                <div className="w-8 h-[2px] bg-emerald-500 relative flex items-center justify-end" />
               </div>
 
               {/* Table 2: ORDERS */}
@@ -957,7 +974,7 @@ export function ExcalidrawStoryline() {
                   setSelectedTable("orders")
                   setActiveForeignKey("user_id")
                 }}
-                className={`w-64 rounded-2xl bg-white border shadow-md overflow-hidden transition-all cursor-pointer ${
+                className={`w-60 rounded-2xl bg-white border shadow-md overflow-hidden transition-all cursor-pointer ${
                   selectedTable === "orders" ? "border-emerald-600 ring-2 ring-emerald-500/80 shadow-lg scale-102" : "border-slate-200"
                 }`}
               >
@@ -981,7 +998,7 @@ export function ExcalidrawStoryline() {
                     <span className="flex items-center gap-1">
                       <CornerDownRight className="w-3 h-3 text-emerald-600" /> user_id
                     </span>
-                    <span className="text-[10px] text-emerald-700">UUID [FK → users.id]</span>
+                    <span className="text-[10px] text-emerald-700">FK → users</span>
                   </div>
                   <div className="flex items-center justify-between px-2 py-0.5 text-slate-600">
                     <span>total_cents</span>
@@ -994,14 +1011,12 @@ export function ExcalidrawStoryline() {
                 </div>
               </div>
 
-              {/* Dynamic Relational Arrow 2: orders (1) -> payments (N) */}
+              {/* Relational Link 2 */}
               <div className="hidden lg:flex flex-col items-center">
-                <span className="text-[10px] font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 mb-1">
-                  1 : 1 Relation
+                <span className="text-[9px] font-mono font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 mb-1">
+                  1 : 1
                 </span>
-                <div className="w-12 h-[2px] bg-emerald-500 relative flex items-center justify-end">
-                  <ArrowRight className="w-4 h-4 text-emerald-500 -mr-2" />
-                </div>
+                <div className="w-8 h-[2px] bg-emerald-500 relative flex items-center justify-end" />
               </div>
 
               {/* Table 3: PAYMENTS */}
@@ -1010,7 +1025,7 @@ export function ExcalidrawStoryline() {
                   setSelectedTable("payments")
                   setActiveForeignKey("order_id")
                 }}
-                className={`w-64 rounded-2xl bg-white border shadow-md overflow-hidden transition-all cursor-pointer ${
+                className={`w-60 rounded-2xl bg-white border shadow-md overflow-hidden transition-all cursor-pointer ${
                   selectedTable === "payments" ? "border-emerald-600 ring-2 ring-emerald-500/80 shadow-lg scale-102" : "border-slate-200"
                 }`}
               >
@@ -1034,7 +1049,7 @@ export function ExcalidrawStoryline() {
                     <span className="flex items-center gap-1">
                       <CornerDownRight className="w-3 h-3 text-emerald-600" /> order_id
                     </span>
-                    <span className="text-[10px] text-emerald-700">UUID [FK → orders.id]</span>
+                    <span className="text-[10px] text-emerald-700">FK → orders</span>
                   </div>
                   <div className="flex items-center justify-between px-2 py-0.5 text-slate-600">
                     <span>provider</span>
@@ -1056,36 +1071,36 @@ export function ExcalidrawStoryline() {
           </div>
         </div>
 
-        {/* 3 DATABASE FEATURE CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/70 hover:bg-white hover:shadow-md transition-all">
-            <div className="text-2xl mb-3">📋</div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">
-              Visual Table Builder
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Design database schemas with primary keys, unique constraints, and PostgreSQL data types in a clean tabular view.
-            </p>
+        {/* COMPACT DATABASE FEATURE CHIPS */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+              📋
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-bold text-slate-800 text-xs">Visual Table Builder</h4>
+              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Define PK/FK constraints and PostgreSQL data types.</p>
+            </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/70 hover:bg-white hover:shadow-md transition-all">
-            <div className="text-2xl mb-3">🔗</div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">
-              Smart Foreign Key Routing
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Connect tables with 1-to-Many and Many-to-Many relational arrows that snap directly to foreign key row items.
-            </p>
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+              🔗
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-bold text-slate-800 text-xs">Smart Foreign Key Routing</h4>
+              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">1:N connectors anchored to specific foreign key rows.</p>
+            </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/70 hover:bg-white hover:shadow-md transition-all">
-            <div className="text-2xl mb-3">💾</div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">
-              SQL Migration Export
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Export completed ERD schemas directly to executable PostgreSQL DDL script files with indexes and foreign keys intact.
-            </p>
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+              💾
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-bold text-slate-800 text-xs">SQL Migration Export</h4>
+              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Export ERD tables to executable PostgreSQL DDL.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -1093,12 +1108,7 @@ export function ExcalidrawStoryline() {
       {/* =========================================================================
           COMMON USE CASES — STORYTELLING CHAPTER 3: SEQUENCE FLOW TRACE
          ========================================================================= */}
-      <div id="sequence-flow" className="relative mb-32 lg:pl-16 scroll-mt-24">
-        {/* Timeline circular node */}
-        <div className="hidden lg:flex absolute -left-[54px] top-0 w-11 h-11 rounded-full bg-white border-2 border-indigo-300 shadow-md items-center justify-center text-blue-600 z-10">
-          <Activity className="w-5 h-5" />
-        </div>
-
+      <div id="sequence-flow" className="relative mb-28 lg:pl-14 xl:pl-16 scroll-mt-24">
         {/* Header Tag Badge */}
         <div className="mb-3">
           <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-blue-100/90 text-blue-800 border border-blue-200/60 tracking-wide font-mono">
@@ -1114,7 +1124,7 @@ export function ExcalidrawStoryline() {
         </p>
 
         {/* BROWSER WINDOW MOCKUP: SEQUENCE FLOW TRACE */}
-        <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-8">
+        <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-5">
           {/* Chrome top bar */}
           <div className="h-10 bg-slate-50 border-b border-slate-200 flex items-center px-4 justify-between select-none">
             <div className="flex items-center gap-2">
@@ -1130,9 +1140,9 @@ export function ExcalidrawStoryline() {
           </div>
 
           {/* Whiteboard Canvas Area */}
-          <div className="relative min-h-[460px] sm:min-h-[500px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 sm:p-8 flex flex-col justify-between overflow-hidden">
+          <div className="relative min-h-[440px] sm:min-h-[480px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 sm:p-8 flex flex-col justify-between overflow-hidden">
             {/* Top Trace Controls & Interactive Simulation Trigger */}
-            <div className="flex items-center justify-between mb-4 z-20 flex-wrap gap-2">
+            <div className="flex items-center justify-between mb-3 z-20 flex-wrap gap-2">
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleSimulateTrace}
@@ -1166,9 +1176,9 @@ export function ExcalidrawStoryline() {
             </div>
 
             {/* SEQUENCE FLOW LIFELINES & ANIMATED PACKET PULSE */}
-            <div className="relative my-auto w-full max-w-4xl mx-auto py-6">
+            <div className="relative my-auto w-full max-w-4xl mx-auto py-4">
               {/* Actors Top Lifeline Headers */}
-              <div className="grid grid-cols-4 gap-4 text-center mb-8">
+              <div className="grid grid-cols-4 gap-4 text-center mb-6">
                 {[
                   { id: "client", name: "Client Browser", sub: "HTTPS / TLS", icon: MousePointer2, color: "text-slate-700 bg-slate-100" },
                   { id: "gateway", name: "API Gateway", sub: "Rate Limiting", icon: Server, color: "text-indigo-700 bg-indigo-50" },
@@ -1176,8 +1186,8 @@ export function ExcalidrawStoryline() {
                   { id: "postgres", name: "PostgreSQL", sub: "ACID Storage", icon: Database, color: "text-emerald-700 bg-emerald-50" },
                 ].map((actor) => (
                   <div key={actor.id} className="flex flex-col items-center">
-                    <div className={`p-2.5 rounded-2xl border border-slate-200 shadow-xs mb-1.5 ${actor.color}`}>
-                      <actor.icon className="w-5 h-5" />
+                    <div className={`p-2 rounded-2xl border border-slate-200 shadow-xs mb-1 ${actor.color}`}>
+                      <actor.icon className="w-4 h-4" />
                     </div>
                     <span className="font-bold text-slate-800 text-xs sm:text-sm">{actor.name}</span>
                     <span className="text-[10px] text-slate-400 font-mono">{actor.sub}</span>
@@ -1186,7 +1196,7 @@ export function ExcalidrawStoryline() {
               </div>
 
               {/* 4 Sequential Flow Step Bars */}
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {[
                   {
                     step: 1,
@@ -1226,14 +1236,14 @@ export function ExcalidrawStoryline() {
                     <div
                       key={item.step}
                       onClick={() => setFlowStep(item.step)}
-                      className={`p-3.5 rounded-2xl border transition-all cursor-pointer relative flex items-center justify-between ${
+                      className={`p-3 rounded-xl border transition-all cursor-pointer relative flex items-center justify-between ${
                         isCurrent
                           ? `${item.activeColor} ring-2 ring-blue-500 shadow-md scale-101`
                           : "border-slate-200 bg-white hover:bg-slate-50/70 opacity-75"
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className={`w-7 h-7 rounded-xl font-mono text-xs font-bold flex items-center justify-center ${
+                        <span className={`w-6 h-6 rounded-lg font-mono text-xs font-bold flex items-center justify-center ${
                           isCurrent ? "bg-slate-900 text-white shadow-xs" : "bg-slate-100 text-slate-600"
                         }`}>
                           {item.step}
@@ -1266,36 +1276,36 @@ export function ExcalidrawStoryline() {
           </div>
         </div>
 
-        {/* 3 SEQUENCE FLOW CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/70 hover:bg-white hover:shadow-md transition-all">
-            <div className="text-2xl mb-3">🚦</div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">
-              Live Flow Simulation
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Execute animated request traces step-by-step to visualize how network calls route through services and caches.
-            </p>
+        {/* COMPACT SEQUENCE FLOW CHIPS */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+              🚦
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-bold text-slate-800 text-xs">Live Request Simulation</h4>
+              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Animated packet journeys through gateways and caches.</p>
+            </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/70 hover:bg-white hover:shadow-md transition-all">
-            <div className="text-2xl mb-3">⏱️</div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">
-              Latency Budget Breakdowns
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Profile P95 and P99 response times at each hop before implementation to identify bottlenecks upfront.
-            </p>
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+              ⏱️
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-bold text-slate-800 text-xs">Latency Budgeting</h4>
+              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Inspect P95/P99 latency breakdowns at each hop.</p>
+            </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/70 hover:bg-white hover:shadow-md transition-all">
-            <div className="text-2xl mb-3">🛡️</div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">
-              Circuit Breaker Modeling
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Simulate fallback paths and database retry exponential backoffs directly on your whiteboard sequence diagrams.
-            </p>
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+              🛡️
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-bold text-slate-800 text-xs">Circuit Breaker Modeling</h4>
+              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Model fallback paths and DB exponential retries.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -1303,12 +1313,7 @@ export function ExcalidrawStoryline() {
       {/* =========================================================================
           COMMON USE CASES — STORYTELLING CHAPTER 4: CAPACITY ESTIMATOR
          ========================================================================= */}
-      <div id="capacity-estimator" className="relative mb-32 lg:pl-16 scroll-mt-24">
-        {/* Timeline circular node */}
-        <div className="hidden lg:flex absolute -left-[54px] top-0 w-11 h-11 rounded-full bg-white border-2 border-indigo-300 shadow-md items-center justify-center text-amber-600 z-10">
-          <Calculator className="w-5 h-5" />
-        </div>
-
+      <div id="capacity-estimator" className="relative mb-28 lg:pl-14 xl:pl-16 scroll-mt-24">
         {/* Header Tag Badge */}
         <div className="mb-3">
           <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-amber-100/90 text-amber-800 border border-amber-200/60 tracking-wide font-mono">
@@ -1324,7 +1329,7 @@ export function ExcalidrawStoryline() {
         </p>
 
         {/* BROWSER WINDOW MOCKUP: CAPACITY ESTIMATOR */}
-        <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-8">
+        <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-5">
           {/* Chrome top bar */}
           <div className="h-10 bg-slate-50 border-b border-slate-200 flex items-center px-4 justify-between select-none">
             <div className="flex items-center gap-2">
@@ -1340,7 +1345,7 @@ export function ExcalidrawStoryline() {
           </div>
 
           {/* Whiteboard Canvas Area */}
-          <div className="relative min-h-[460px] sm:min-h-[500px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 sm:p-8 flex flex-col justify-between overflow-hidden">
+          <div className="relative min-h-[440px] sm:min-h-[480px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 sm:p-8 flex flex-col justify-between overflow-hidden">
             {/* Presets Header */}
             <div className="flex items-center justify-between mb-4 z-20 flex-wrap gap-2">
               <div className="flex items-center gap-1.5">
@@ -1367,9 +1372,9 @@ export function ExcalidrawStoryline() {
             </div>
 
             {/* INTERACTIVE CAPACITY CANVAS WITH 3D CURLED STICKY NOTE */}
-            <div className="relative my-auto flex flex-col md:flex-row items-center justify-center gap-8 py-4">
+            <div className="relative my-auto flex flex-col md:flex-row items-center justify-center gap-8 py-3">
               {/* Left Column: Interactive Range Slider & Presets */}
-              <div className="w-full max-w-md bg-white p-6 rounded-3xl border border-slate-200 shadow-md">
+              <div className="w-full max-w-md bg-white p-5 rounded-3xl border border-slate-200 shadow-md">
                 <div className="flex items-center justify-between mb-3">
                   <span className="text-xs font-mono font-bold text-slate-400 uppercase">
                     Daily Active Users (DAU)
@@ -1385,7 +1390,7 @@ export function ExcalidrawStoryline() {
                   max="100"
                   value={dau}
                   onChange={(e) => setDau(Number(e.target.value))}
-                  className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-500 mb-6"
+                  className="w-full h-2.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-amber-500 mb-5"
                 />
 
                 <div className="grid grid-cols-2 gap-3 text-left">
@@ -1465,7 +1470,7 @@ export function ExcalidrawStoryline() {
                       </linearGradient>
                       <radialGradient id="cap-shadow" cx="20%" cy="20%" r="80%">
                         <stop offset="0%" stopColor="#000000" stopOpacity="0.45" />
-                        <stop offset="100%" stopColor="#000000" stopOpacity="0" />
+                        <stop offset="100%" stopColor="#000000" stopOpacity="0.8" />
                       </radialGradient>
                     </defs>
                     <path d="M 0 24 Q 12 20 24 0 L 24 24 Z" fill="url(#cap-shadow)" />
@@ -1485,36 +1490,36 @@ export function ExcalidrawStoryline() {
           </div>
         </div>
 
-        {/* 3 CAPACITY FEATURE CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/70 hover:bg-white hover:shadow-md transition-all">
-            <div className="text-2xl mb-3">🧮</div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">
-              Dynamic QPS Estimator
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Calculate read/write queries per second and network throughput on the fly with customizable read:write ratios.
-            </p>
+        {/* COMPACT CAPACITY FEATURE CHIPS */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+              🧮
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-bold text-slate-800 text-xs">Dynamic QPS Slider</h4>
+              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Real-time read/write calculations based on custom DAU.</p>
+            </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/70 hover:bg-white hover:shadow-md transition-all">
-            <div className="text-2xl mb-3">📐</div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">
-              Interview-Ready Formulas
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Format back-of-the-envelope estimations directly on 3D paper stickies to ace senior engineering system design interviews.
-            </p>
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+              📐
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-bold text-slate-800 text-xs">Interview Equations</h4>
+              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Back-of-the-envelope equations on 3D paper stickies.</p>
+            </div>
           </div>
 
-          <div className="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/70 hover:bg-white hover:shadow-md transition-all">
-            <div className="text-2xl mb-3">💾</div>
-            <h3 className="font-bold text-slate-900 text-base mb-1">
-              Storage Growth Forecasting
-            </h3>
-            <p className="text-slate-600 text-sm leading-relaxed">
-              Forecast 1-year and 5-year relational database capacity requirements to properly size disk volumes and cache TTLs.
-            </p>
+          <div className="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 border border-slate-200/70 hover:bg-white hover:border-slate-300 hover:shadow-xs transition-all flex items-center gap-3">
+            <span className="w-8 h-8 rounded-lg bg-white border border-slate-200/80 flex items-center justify-center text-base shrink-0 shadow-2xs">
+              💾
+            </span>
+            <div className="min-w-0">
+              <h4 className="font-bold text-slate-800 text-xs">Storage Growth Math</h4>
+              <p className="text-[11px] text-slate-500 leading-snug line-clamp-1">Monthly and yearly database volume projections.</p>
+            </div>
           </div>
         </div>
       </div>
@@ -1522,12 +1527,7 @@ export function ExcalidrawStoryline() {
       {/* =========================================================================
           SECTION 4: THE EASIEST WAY TO GET YOUR THOUGHTS ON SCREEN (SUPERPOWERS GRID)
          ========================================================================= */}
-      <div id="features" className="relative mb-24 lg:pl-16 scroll-mt-24">
-        {/* Timeline circular node */}
-        <div className="hidden lg:flex absolute -left-[54px] top-0 w-11 h-11 rounded-full bg-white border-2 border-indigo-300 shadow-md items-center justify-center text-emerald-600 z-10">
-          <Zap className="w-5 h-5" />
-        </div>
-
+      <div id="features" className="relative mb-20 lg:pl-14 xl:pl-16 scroll-mt-24">
         {/* Header Tag Badge */}
         <div className="mb-3">
           <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-emerald-100/90 text-emerald-800 border border-emerald-200/60 tracking-wide font-mono">
@@ -1538,124 +1538,124 @@ export function ExcalidrawStoryline() {
         <h2 className="font-zodiak text-3xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-3">
           The easiest way to get your thoughts on screen
         </h2>
-        <p className="text-slate-600 text-base sm:text-lg max-w-3xl mb-12 leading-relaxed">
+        <p className="text-slate-600 text-base sm:text-lg max-w-3xl mb-10 leading-relaxed">
           Quick drawings, architectural mockups, and diagrams with a clean minimal aesthetic. Dead simple shortcuts and zero fluff.
         </p>
 
         {/* 6-CARD SUPERPOWERS GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
           {/* Card 1: Diagonal Shortcuts */}
-          <div className="p-6 rounded-3xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-lg transition-all flex flex-col justify-between">
+          <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
             <div>
-              <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-4 font-bold">
+              <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-3 font-bold text-base">
                 ⌨️
               </div>
-              <h3 className="font-bold text-slate-900 text-lg mb-2">
+              <h3 className="font-bold text-slate-900 text-base mb-1.5">
                 Diagonal Hotkeys
               </h3>
-              <p className="text-slate-600 text-sm leading-relaxed mb-4">
+              <p className="text-slate-600 text-xs leading-relaxed mb-3">
                 Keystrokes positioned diagonally for instant muscle memory: V (Select), S (Sticky), T (Text), R (Rect), E (Ellipse), D (DB), Z (Zone).
               </p>
             </div>
-            <div className="p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-around font-mono text-xs font-bold text-slate-700">
-              <span className="px-2 py-1 bg-slate-100 rounded">V</span>
-              <span className="px-2 py-1 bg-slate-100 rounded">S</span>
-              <span className="px-2 py-1 bg-slate-100 rounded">R</span>
-              <span className="px-2 py-1 bg-slate-100 rounded">D</span>
-              <span className="px-2 py-1 bg-slate-100 rounded">Z</span>
+            <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-around font-mono text-xs font-bold text-slate-700">
+              <span className="px-2 py-0.5 bg-slate-100 rounded">V</span>
+              <span className="px-2 py-0.5 bg-slate-100 rounded">S</span>
+              <span className="px-2 py-0.5 bg-slate-100 rounded">R</span>
+              <span className="px-2 py-0.5 bg-slate-100 rounded">D</span>
+              <span className="px-2 py-0.5 bg-slate-100 rounded">Z</span>
             </div>
           </div>
 
           {/* Card 2: Lossless Vector Export */}
-          <div className="p-6 rounded-3xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-lg transition-all flex flex-col justify-between">
+          <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
             <div>
-              <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mb-4 font-bold">
-                <Download className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mb-3 font-bold">
+                <Download className="w-4 h-4" />
               </div>
-              <h3 className="font-bold text-slate-900 text-lg mb-2">
+              <h3 className="font-bold text-slate-900 text-base mb-1.5">
                 Lossless Vector Export
               </h3>
-              <p className="text-slate-600 text-sm leading-relaxed mb-4">
-                Export your whiteboards to pin-sharp SVG vectors or crisp PNGs. Perfectly sized for engineering RFCs, Confluence, and GitHub READMEs.
+              <p className="text-slate-600 text-xs leading-relaxed mb-3">
+                Export whiteboards to pin-sharp SVG vectors or crisp PNGs. Perfectly sized for RFCs, Confluence, and GitHub READMEs.
               </p>
             </div>
-            <div className="p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs font-mono">
+            <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs font-mono">
               <span className="font-bold text-emerald-700">.SVG Lossless</span>
               <span className="font-bold text-slate-600">.PNG 2x Retina</span>
             </div>
           </div>
 
           {/* Card 3: Magnetic Snapping & Auto-Layout */}
-          <div className="p-6 rounded-3xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-lg transition-all flex flex-col justify-between">
+          <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
             <div>
-              <div className="w-10 h-10 rounded-2xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 mb-4 font-bold">
-                <Magnet className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 mb-3 font-bold">
+                <Magnet className="w-4 h-4" />
               </div>
-              <h3 className="font-bold text-slate-900 text-lg mb-2">
+              <h3 className="font-bold text-slate-900 text-base mb-1.5">
                 Magnetic Snapping
               </h3>
-              <p className="text-slate-600 text-sm leading-relaxed mb-4">
-                Zero jitter elastic snapping with dynamic alignment guidelines. Align microservices and databases automatically with 1-click tier layout.
+              <p className="text-slate-600 text-xs leading-relaxed mb-3">
+                Zero jitter elastic snapping with alignment guidelines. Clean up microservice diagrams automatically with 1-click tier layout.
               </p>
             </div>
-            <div className="p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs font-mono text-purple-700 font-bold">
-              <span>Tier 1 → Tier 2 → Tier 3</span>
+            <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs font-mono text-purple-700 font-bold">
+              <span>Tier 1 → 2 → 3</span>
               <span className="text-[10px] text-slate-400">Auto-align</span>
             </div>
           </div>
 
           {/* Card 4: Architecture Zones */}
-          <div className="p-6 rounded-3xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-lg transition-all flex flex-col justify-between">
+          <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
             <div>
-              <div className="w-10 h-10 rounded-2xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-4 font-bold">
-                <Shield className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-3 font-bold">
+                <Shield className="w-4 h-4" />
               </div>
-              <h3 className="font-bold text-slate-900 text-lg mb-2">
+              <h3 className="font-bold text-slate-900 text-base mb-1.5">
                 Container Boundaries
               </h3>
-              <p className="text-slate-600 text-sm leading-relaxed mb-4">
-                Encapsulate multi-tier systems in VPC zones, subnets, and K8s clusters. Moving the container boundary moves all children automatically.
+              <p className="text-slate-600 text-xs leading-relaxed mb-3">
+                Encapsulate multi-tier systems in VPC zones, subnets, and K8s clusters. Moving the container moves all children automatically.
               </p>
             </div>
-            <div className="p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs font-mono text-indigo-700 font-bold">
-              <span>Auto-containment: ON</span>
+            <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs font-mono text-indigo-700 font-bold">
+              <span>Auto-contain: ON</span>
               <span className="text-[10px] text-slate-400">VPC 10.0.0.0/16</span>
             </div>
           </div>
 
           {/* Card 5: Personal Boards Dashboard */}
-          <div className="p-6 rounded-3xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-lg transition-all flex flex-col justify-between">
+          <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
             <div>
-              <div className="w-10 h-10 rounded-2xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-4 font-bold">
-                <FolderKanban className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-3 font-bold">
+                <FolderKanban className="w-4 h-4" />
               </div>
-              <h3 className="font-bold text-slate-900 text-lg mb-2">
+              <h3 className="font-bold text-slate-900 text-base mb-1.5">
                 Personal Dashboard
               </h3>
-              <p className="text-slate-600 text-sm leading-relaxed mb-4">
-                Organize your private boards with instant search, starred favorites, tag filters, and clean trash recovery. Zero complicated workspace setup.
+              <p className="text-slate-600 text-xs leading-relaxed mb-3">
+                Organize your private boards with instant search, starred favorites, tag filters, and clean trash recovery. Zero workspace hassle.
               </p>
             </div>
-            <div className="p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs font-mono text-blue-700 font-bold">
+            <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs font-mono text-blue-700 font-bold">
               <span>⭐ Favorites & Search</span>
               <span className="text-[10px] text-slate-400">Instant load</span>
             </div>
           </div>
 
           {/* Card 6: Light & Dark Modes */}
-          <div className="p-6 rounded-3xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-lg transition-all flex flex-col justify-between">
+          <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
             <div>
-              <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 mb-4 font-bold">
-                <Moon className="w-5 h-5" />
+              <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 mb-3 font-bold">
+                <Moon className="w-4 h-4" />
               </div>
-              <h3 className="font-bold text-slate-900 text-lg mb-2">
+              <h3 className="font-bold text-slate-900 text-base mb-1.5">
                 Canvas Theme Toggle
               </h3>
-              <p className="text-slate-600 text-sm leading-relaxed mb-4">
-                Toggle between light graph paper and dark mode grid canvas. High-contrast colors adapt dynamically for late-night architecture reviews.
+              <p className="text-slate-600 text-xs leading-relaxed mb-3">
+                Toggle between light graph paper and dark mode grid canvas. High-contrast colors adapt dynamically for late-night reviews.
               </p>
             </div>
-            <div className="p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs font-mono text-amber-700 font-bold">
+            <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs font-mono text-amber-700 font-bold">
               <span>☀️ Light & 🌙 Dark</span>
               <span className="text-[10px] text-slate-400">1-click switch</span>
             </div>
