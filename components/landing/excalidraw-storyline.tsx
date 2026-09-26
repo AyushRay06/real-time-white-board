@@ -41,6 +41,7 @@ import {
   ArrowRight,
   LayoutTemplate,
   Monitor,
+  History,
 } from "lucide-react"
 
 export function ExcalidrawStoryline() {
@@ -250,13 +251,6 @@ export function ExcalidrawStoryline() {
           FEATURE 1: CREATE (UI Layout Wireframe Design)
          ========================================================================= */}
       <div id="create" className="relative mb-28 lg:pl-16 xl:pl-20 scroll-mt-24">
-        {/* Header Tag Badge */}
-        <div className="mb-3">
-          <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-emerald-100/90 text-emerald-800 border border-emerald-200/60 tracking-wide font-mono">
-            interactive canvas • zero learning curve
-          </span>
-        </div>
-
         <h2 className="font-zodiak text-3xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-3">
           Create
         </h2>
@@ -277,10 +271,7 @@ export function ExcalidrawStoryline() {
               <LayoutGrid className="w-3.5 h-3.5 text-indigo-600" />
               <span>UI Layout Wireframe</span>
             </div>
-            <div className="flex items-center gap-2 text-[11px] font-mono text-slate-500">
-              <span className="hidden sm:inline">2 Collaborators Live</span>
-              <div className="w-2 h-2 rounded-full bg-indigo-500" />
-            </div>
+            <div className="w-12" />
           </div>
 
           {/* Whiteboard Canvas Area */}
@@ -480,13 +471,6 @@ export function ExcalidrawStoryline() {
           FEATURE 2: COLLABORATE (Multiplayer Session & Team Presence)
          ========================================================================= */}
       <div id="collaborate" className="relative mb-28 lg:pl-16 xl:pl-20 scroll-mt-24">
-        {/* Header Tag Badge */}
-        <div className="mb-3">
-          <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200/60 tracking-wide font-mono">
-            live multiplayer • sub-15ms sync
-          </span>
-        </div>
-
         <h2 className="font-zodiak text-3xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-3">
           Collaborate
         </h2>
@@ -507,12 +491,7 @@ export function ExcalidrawStoryline() {
               <Users className="w-3.5 h-3.5 text-indigo-600" />
               <span>Sprint 14 Retrospective</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-5 h-5 rounded-full bg-indigo-500 text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white">E</span>
-              <span className="w-5 h-5 rounded-full bg-purple-500 text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white">M</span>
-              <span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white">A</span>
-              <span className="text-[10px] font-mono font-bold text-slate-500 ml-1">+4 online</span>
-            </div>
+            <div className="w-12" />
           </div>
 
           {/* Whiteboard Canvas Area */}
@@ -660,13 +639,6 @@ export function ExcalidrawStoryline() {
           COMMON USE CASES — STORYTELLING CHAPTER 1: SYSTEM ARCHITECTURE
          ========================================================================= */}
       <div id="usecases" className="relative mb-28 lg:pl-16 xl:pl-20 scroll-mt-24">
-        {/* Header Tag Badge */}
-        <div className="mb-3">
-          <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-purple-100/90 text-purple-800 border border-purple-200/60 tracking-wide font-mono">
-            storytelling chapter 1 • system architecture
-          </span>
-        </div>
-
         <h2 className="font-zodiak text-3xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-3">
           System Architecture
         </h2>
@@ -716,10 +688,9 @@ export function ExcalidrawStoryline() {
 
             {/* 2. ACTUAL COMPONENT LIBRARY DRAWER */}
             <div className="w-48 bg-white border-r border-slate-200/80 flex flex-col shrink-0 z-20 hidden md:flex">
-              {/* Library Header & Tabs */}
+              {/* Library Header */}
               <div className="p-2.5 border-b border-slate-100 flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-800">Component Tab</span>
-                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold">Click to Add</span>
+                <span className="text-xs font-bold text-slate-800">Components</span>
               </div>
 
               {/* Search Bar */}
@@ -730,77 +701,35 @@ export function ExcalidrawStoryline() {
                 </div>
               </div>
 
-              {/* Categorized Component List */}
-              <div className="flex-1 overflow-y-auto p-2 space-y-3">
-                <div>
-                  <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
-                    Compute & Services
-                  </span>
-                  <div className="space-y-1">
-                    {[
-                      { name: "API Gateway", icon: Network, iconBg: "bg-indigo-100", iconColor: "text-indigo-600" },
-                      { name: "Microservice", icon: Box, iconBg: "bg-emerald-100", iconColor: "text-emerald-600" },
-                      { name: "Worker Service", icon: Cpu, iconBg: "bg-blue-100", iconColor: "text-blue-600" },
-                      { name: "Serverless", icon: Zap, iconBg: "bg-amber-100", iconColor: "text-amber-600" },
-                    ].map((comp) => (
-                      <div
-                        key={comp.name}
-                        onClick={() => handleAddArchComponent(comp)}
-                        title="Click to drop on canvas"
-                        className="flex items-center justify-between p-1.5 rounded-lg border border-slate-200/60 bg-white hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-2xs transition-all cursor-pointer select-none group"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className={`w-6 h-6 rounded-md flex items-center justify-center ${comp.iconBg}`}>
-                            <comp.icon className={`w-3.5 h-3.5 ${comp.iconColor}`} strokeWidth={1.8} />
-                          </span>
-                          <span className="text-[11px] font-semibold text-slate-700">{comp.name}</span>
-                        </div>
-                        <span className="text-[10px] text-indigo-600 opacity-0 group-hover:opacity-100 font-bold pr-1">+</span>
-                      </div>
-                    ))}
+              {/* Clean Component List - No scrollbars */}
+              <div className="p-2 space-y-1.5 overflow-hidden">
+                {[
+                  { name: "API Gateway", icon: Network, iconBg: "bg-indigo-100", iconColor: "text-indigo-600" },
+                  { name: "Microservice", icon: Box, iconBg: "bg-emerald-100", iconColor: "text-emerald-600" },
+                  { name: "Worker Service", icon: Cpu, iconBg: "bg-blue-100", iconColor: "text-blue-600" },
+                  { name: "PostgreSQL 16", icon: Database, iconBg: "bg-sky-100", iconColor: "text-sky-600" },
+                  { name: "Redis Cache", icon: Radio, iconBg: "bg-rose-100", iconColor: "text-rose-600" },
+                ].map((comp) => (
+                  <div
+                    key={comp.name}
+                    onClick={() => handleAddArchComponent(comp)}
+                    title="Click to drop on canvas"
+                    className="flex items-center justify-between p-1.5 rounded-lg border border-slate-200/60 bg-white hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-2xs transition-all cursor-pointer select-none group"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className={`w-6 h-6 rounded-md flex items-center justify-center ${comp.iconBg}`}>
+                        <comp.icon className={`w-3.5 h-3.5 ${comp.iconColor}`} strokeWidth={1.8} />
+                      </span>
+                      <span className="text-[11px] font-semibold text-slate-700">{comp.name}</span>
+                    </div>
+                    <span className="text-[10px] text-indigo-600 opacity-0 group-hover:opacity-100 font-bold pr-1">+</span>
                   </div>
-                </div>
-
-                <div>
-                  <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
-                    Databases & Caching
-                  </span>
-                  <div className="space-y-1">
-                    {[
-                      { name: "PostgreSQL 16", icon: Database, iconBg: "bg-sky-100", iconColor: "text-sky-600" },
-                      { name: "Redis Cache", icon: Radio, iconBg: "bg-rose-100", iconColor: "text-rose-600" },
-                      { name: "Kafka Stream", icon: Layers, iconBg: "bg-purple-100", iconColor: "text-purple-600" },
-                    ].map((comp) => (
-                      <div
-                        key={comp.name}
-                        onClick={() => handleAddArchComponent(comp)}
-                        title="Click to drop on canvas"
-                        className="flex items-center justify-between p-1.5 rounded-lg border border-slate-200/60 bg-white hover:border-indigo-300 hover:bg-indigo-50/40 hover:shadow-2xs transition-all cursor-pointer select-none group"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className={`w-6 h-6 rounded-md flex items-center justify-center ${comp.iconBg}`}>
-                            <comp.icon className={`w-3.5 h-3.5 ${comp.iconColor}`} strokeWidth={1.8} />
-                          </span>
-                          <span className="text-[11px] font-semibold text-slate-700">{comp.name}</span>
-                        </div>
-                        <span className="text-[10px] text-indigo-600 opacity-0 group-hover:opacity-100 font-bold pr-1">+</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
 
             {/* 3. INFINITE CANVAS VIEWPORT WITH INTERACTIVE NODES */}
             <div className="flex-1 relative overflow-hidden bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px]">
-              {/* Interaction Hint Badge */}
-              <div className="absolute top-3 left-4 z-10 flex items-center gap-2 px-3 py-1 rounded-full bg-white/95 border border-slate-200 shadow-2xs backdrop-blur-md">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] font-mono font-semibold text-slate-600">
-                  Click sidebar to add • Drag components to move
-                </span>
-              </div>
-
               {/* Interactive Nodes & Connectors Container */}
               <div className="absolute inset-0 overflow-auto flex items-center justify-center p-4">
                 <div className="relative w-[720px] h-[300px] shrink-0">
@@ -948,13 +877,6 @@ export function ExcalidrawStoryline() {
           COMMON USE CASES — STORYTELLING CHAPTER 2: DATABASE & ERD SCHEMAS
          ========================================================================= */}
       <div id="database-erd" className="relative mb-28 lg:pl-16 xl:pl-20 scroll-mt-24">
-        {/* Header Tag Badge */}
-        <div className="mb-3">
-          <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-emerald-100/90 text-emerald-800 border border-emerald-200/60 tracking-wide font-mono">
-            storytelling chapter 2 • relational erd
-          </span>
-        </div>
-
         <h2 className="font-zodiak text-3xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-3">
           Database & ERD Schemas
         </h2>
@@ -975,7 +897,7 @@ export function ExcalidrawStoryline() {
               <Database className="w-3.5 h-3.5 text-emerald-600" />
               <span>Database Schema & ERD</span>
             </div>
-            <div className="text-[11px] font-mono text-emerald-600 font-bold">PostgreSQL 16 Dialect</div>
+            <div className="w-12" />
           </div>
 
           {/* Whiteboard Canvas Area */}
@@ -1002,10 +924,6 @@ export function ExcalidrawStoryline() {
                     public.{tab}
                   </button>
                 ))}
-              </div>
-
-              <div className="px-2.5 py-1 rounded bg-white border border-slate-200 text-[11px] font-mono text-slate-600">
-                Foreign Key Auto-Routing: <span className="font-bold text-emerald-600">Active</span>
               </div>
             </div>
 
@@ -1191,13 +1109,6 @@ export function ExcalidrawStoryline() {
           COMMON USE CASES — STORYTELLING CHAPTER 3: SEQUENCE FLOW TRACE
          ========================================================================= */}
       <div id="sequence-flow" className="relative mb-28 lg:pl-16 xl:pl-20 scroll-mt-24">
-        {/* Header Tag Badge */}
-        <div className="mb-3">
-          <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-blue-100/90 text-blue-800 border border-blue-200/60 tracking-wide font-mono">
-            storytelling chapter 3 • sequence flow trace
-          </span>
-        </div>
-
         <h2 className="font-zodiak text-3xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-3">
           Sequence Flow Trace
         </h2>
@@ -1218,7 +1129,7 @@ export function ExcalidrawStoryline() {
               <Activity className="w-3.5 h-3.5 text-blue-600" />
               <span>Sequence Flow & Trace</span>
             </div>
-            <div className="text-[11px] font-mono text-blue-600 font-bold">Total P99: 68.4ms</div>
+            <div className="w-12" />
           </div>
 
           {/* Whiteboard Canvas Area */}
@@ -1256,10 +1167,10 @@ export function ExcalidrawStoryline() {
               <div className="text-xs font-mono text-slate-700 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-2xs flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
                 <span>
-                  {flowStep === 1 && "Step 1: Client → API Gateway (14.2ms)"}
-                  {flowStep === 2 && "Step 2: Gateway → Auth Server (1.8ms)"}
-                  {flowStep === 3 && "Step 3: Gateway → Order Server (28.5ms)"}
-                  {flowStep === 4 && "Step 4: Order Server → Database (23.9ms)"}
+                  {flowStep === 1 && "Step 1: Client → API Gateway"}
+                  {flowStep === 2 && "Step 2: Gateway → Auth Server"}
+                  {flowStep === 3 && "Step 3: Gateway → Order Server"}
+                  {flowStep === 4 && "Step 4: Order Server → Database"}
                 </span>
               </div>
             </div>
@@ -1517,139 +1428,97 @@ export function ExcalidrawStoryline() {
       </div>
 
       {/* =========================================================================
-          SECTION 4: THE EASIEST WAY TO GET YOUR THOUGHTS ON SCREEN (SUPERPOWERS GRID)
+          SECTION 4: THE EASIEST WAY TO GET YOUR THOUGHTS ON SCREEN (MINIMALIST CORE FEATURES)
          ========================================================================= */}
       <div id="features" className="relative mb-20 lg:pl-16 xl:pl-20 scroll-mt-24">
-        {/* Header Tag Badge */}
-        <div className="mb-3">
-          <span className="inline-block px-3 py-1 rounded-md text-xs font-semibold bg-emerald-100/90 text-emerald-800 border border-emerald-200/60 tracking-wide font-mono">
-            engineer-friendly productivity
-          </span>
-        </div>
-
         <h2 className="font-zodiak text-3xl sm:text-5xl font-bold text-slate-900 tracking-tight mb-3">
           The easiest way to get your thoughts on screen
         </h2>
         <p className="text-slate-600 text-base sm:text-lg max-w-3xl mb-10 leading-relaxed">
-          Quick drawings, architectural mockups, and diagrams with a clean minimal aesthetic. Dead simple shortcuts and zero fluff.
+          Quick sketches, system architectures, and engineering diagrams with a clean minimalist aesthetic and zero fluff.
         </p>
 
-        {/* 6-CARD SUPERPOWERS GRID */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {/* Card 1: Diagonal Shortcuts */}
+        {/* 4-CARD MINIMALIST GRID */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Card 1: Cloud Auto-Save & Version History */}
           <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
             <div>
-              <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-3 font-bold text-base">
-                ⌨️
+              <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-3 font-bold">
+                <History className="w-4 h-4 text-blue-600" />
               </div>
               <h3 className="font-bold text-slate-900 text-base mb-1.5">
-                Diagonal Hotkeys
+                Cloud Auto-Save & Version History
               </h3>
               <p className="text-slate-600 text-xs leading-relaxed mb-3">
-                Keystrokes positioned diagonally for instant muscle memory: V (Select), S (Sticky), T (Text), R (Rect), E (Ellipse), D (DB), Z (Zone).
+                Every stroke and layout change automatically syncs to the cloud in real time. Switch back to any previous version or snapshot of your whiteboard whenever you need.
               </p>
             </div>
-            <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-around font-mono text-xs font-bold text-slate-700">
-              <span className="px-2 py-0.5 bg-slate-100 rounded">V</span>
-              <span className="px-2 py-0.5 bg-slate-100 rounded">S</span>
-              <span className="px-2 py-0.5 bg-slate-100 rounded">R</span>
-              <span className="px-2 py-0.5 bg-slate-100 rounded">D</span>
-              <span className="px-2 py-0.5 bg-slate-100 rounded">Z</span>
+            <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs font-mono">
+              <span className="font-bold text-blue-700">Real-time Cloud Sync</span>
+              <span className="font-bold text-slate-600">Version History Rollback</span>
             </div>
           </div>
 
-          {/* Card 2: Lossless Vector Export */}
+          {/* Card 2: Download as PNG, Mermaid & SVG */}
           <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
             <div>
               <div className="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mb-3 font-bold">
                 <Download className="w-4 h-4" />
               </div>
               <h3 className="font-bold text-slate-900 text-base mb-1.5">
-                Lossless Vector Export
+                Download as PNG, Mermaid & SVG
               </h3>
               <p className="text-slate-600 text-xs leading-relaxed mb-3">
-                Export whiteboards to pin-sharp SVG vectors or crisp PNGs. Perfectly sized for RFCs, Confluence, and GitHub READMEs.
+                Download your diagrams as high-resolution PNGs, standard Mermaid code, or crisp SVGs ready for documentation, RFCs, and READMEs.
               </p>
             </div>
-            <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs font-mono">
-              <span className="font-bold text-emerald-700">.SVG Lossless</span>
-              <span className="font-bold text-slate-600">.PNG 2x Retina</span>
+            <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-around text-xs font-mono">
+              <span className="font-bold text-emerald-700">PNG</span>
+              <span className="text-slate-300">•</span>
+              <span className="font-bold text-indigo-700">Mermaid</span>
+              <span className="text-slate-300">•</span>
+              <span className="font-bold text-slate-700">SVG</span>
             </div>
           </div>
 
-          {/* Card 3: Magnetic Snapping & Auto-Layout */}
+          {/* Card 3: Smart Alignment & Snapping */}
           <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
             <div>
               <div className="w-9 h-9 rounded-xl bg-purple-50 border border-purple-100 flex items-center justify-center text-purple-600 mb-3 font-bold">
                 <Magnet className="w-4 h-4" />
               </div>
               <h3 className="font-bold text-slate-900 text-base mb-1.5">
-                Magnetic Snapping
+                Smart Alignment & Snapping
               </h3>
               <p className="text-slate-600 text-xs leading-relaxed mb-3">
-                Zero jitter elastic snapping with alignment guidelines. Clean up microservice diagrams automatically with 1-click tier layout.
+                Zero-jitter magnetic snapping with dynamic guidelines keeps system architectures, wireframes, and tables cleanly aligned.
               </p>
             </div>
             <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs font-mono text-purple-700 font-bold">
-              <span>Tier 1 → 2 → 3</span>
+              <span>Smart Guidelines</span>
               <span className="text-[10px] text-slate-400">Auto-align</span>
             </div>
           </div>
 
-          {/* Card 4: Architecture Zones */}
+          {/* Card 4: Diagonal Shortcuts */}
           <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
             <div>
-              <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-600 mb-3 font-bold">
-                <Shield className="w-4 h-4" />
+              <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 mb-3 font-bold text-base">
+                ⌨️
               </div>
               <h3 className="font-bold text-slate-900 text-base mb-1.5">
-                Container Boundaries
+                Diagonal Hotkeys
               </h3>
               <p className="text-slate-600 text-xs leading-relaxed mb-3">
-                Encapsulate multi-tier systems in VPC zones, subnets, and K8s clusters. Moving the container moves all children automatically.
+                Ergonomic keyboard shortcuts for rapid tool switching: V (Select), S (Sticky), T (Text), R (Rectangle), and D (Database).
               </p>
             </div>
-            <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs font-mono text-indigo-700 font-bold">
-              <span>Auto-contain: ON</span>
-              <span className="text-[10px] text-slate-400">VPC 10.0.0.0/16</span>
-            </div>
-          </div>
-
-          {/* Card 5: Personal Boards Dashboard */}
-          <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
-            <div>
-              <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center text-blue-600 mb-3 font-bold">
-                <FolderKanban className="w-4 h-4" />
-              </div>
-              <h3 className="font-bold text-slate-900 text-base mb-1.5">
-                Personal Dashboard
-              </h3>
-              <p className="text-slate-600 text-xs leading-relaxed mb-3">
-                Organize your private boards with instant search, starred favorites, tag filters, and clean trash recovery. Zero workspace hassle.
-              </p>
-            </div>
-            <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs font-mono text-blue-700 font-bold">
-              <span>⭐ Favorites & Search</span>
-              <span className="text-[10px] text-slate-400">Instant load</span>
-            </div>
-          </div>
-
-          {/* Card 6: Light & Dark Modes */}
-          <div className="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 hover:bg-white hover:shadow-md transition-all flex flex-col justify-between">
-            <div>
-              <div className="w-9 h-9 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 mb-3 font-bold">
-                <Moon className="w-4 h-4" />
-              </div>
-              <h3 className="font-bold text-slate-900 text-base mb-1.5">
-                Canvas Theme Toggle
-              </h3>
-              <p className="text-slate-600 text-xs leading-relaxed mb-3">
-                Toggle between light graph paper and dark mode grid canvas. High-contrast colors adapt dynamically for late-night reviews.
-              </p>
-            </div>
-            <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-between text-xs font-mono text-amber-700 font-bold">
-              <span>☀️ Light & 🌙 Dark</span>
-              <span className="text-[10px] text-slate-400">1-click switch</span>
+            <div className="p-2.5 bg-white rounded-xl border border-slate-200 flex items-center justify-around font-mono text-xs font-bold text-slate-700">
+              <span className="px-2 py-0.5 bg-slate-100 rounded">V</span>
+              <span className="px-2 py-0.5 bg-slate-100 rounded">S</span>
+              <span className="px-2 py-0.5 bg-slate-100 rounded">T</span>
+              <span className="px-2 py-0.5 bg-slate-100 rounded">R</span>
+              <span className="px-2 py-0.5 bg-slate-100 rounded">D</span>
             </div>
           </div>
         </div>
