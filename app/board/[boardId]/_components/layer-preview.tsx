@@ -1,6 +1,6 @@
 "use client"
 
-import { LayerType, CanvasMode, CanvasState } from "@/types/canvas"
+import { LayerType, CanvasMode, CanvasState, Camera } from "@/types/canvas"
 import { useStorage } from "@liveblocks/react/suspense"
 import { memo } from "react"
 import { Rectangle } from "./rectangle"
@@ -23,10 +23,11 @@ interface LayerPreviewProps {
   connectingFromId?: string | null
   onConnectClick?: (layerId: string) => void
   onStartRelationConnect?: (layerId: string, fieldName: string) => void
+  camera?: Camera
 }
 
 export const LayerPreview = memo(
-  ({ id, onLayerPointerDown, onLayerDoubleClick, selectionColor, canvasState, connectingFromId, onConnectClick, onStartRelationConnect }: LayerPreviewProps) => {
+  ({ id, onLayerPointerDown, onLayerDoubleClick, selectionColor, canvasState, connectingFromId, onConnectClick, onStartRelationConnect, camera }: LayerPreviewProps) => {
     const layer = useStorage((root) => root.layers.get(id))
 
     if (!layer) return null
@@ -88,6 +89,7 @@ export const LayerPreview = memo(
             layer={layer}
             onPointerDown={onLayerPointerDown}
             selectionColor={selectionColor}
+            camera={camera}
           />
         )
       case LayerType.Section:

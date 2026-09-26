@@ -16,6 +16,7 @@ import {
   StrokeWidth,
   Roundness,
   DocType,
+  Point,
 } from "@/types/canvas"
 import { useSelectionBounds } from "@/hooks/use-selection-bound"
 import { useMutation, useSelf, useStorage } from "@liveblocks/react/suspense"
@@ -261,6 +262,27 @@ export const SelectionTools = memo(
       const layer = storage.get("layers").get(soleLayerId)
       if (layer && layer.get("type") === LayerType.Arrow) {
         ;(layer as any).set("arrowStyle", style)
+      }
+    }, [soleLayerId])
+
+    const flipArrowPath = useMutation(({ storage }) => {
+      if (!soleLayerId) return
+      const layer = storage.get("layers").get(soleLayerId)
+      if (layer && layer.get("type") === LayerType.Arrow) {
+        const curOffset = ((layer as any).get("controlOffset") as Point) || { x: 0, y: 0 }
+        if (curOffset.x === 0 && curOffset.y === 0) {
+          ;(layer as any).set("controlOffset", { x: -60, y: -60 })
+        } else {
+          ;(layer as any).set("controlOffset", { x: -curOffset.x, y: -curOffset.y })
+        }
+      }
+    }, [soleLayerId])
+
+    const resetArrowPath = useMutation(({ storage }) => {
+      if (!soleLayerId) return
+      const layer = storage.get("layers").get(soleLayerId)
+      if (layer && layer.get("type") === LayerType.Arrow) {
+        ;(layer as any).set("controlOffset", { x: 0, y: 0 })
       }
     }, [soleLayerId])
 
@@ -1262,6 +1284,26 @@ export const SelectionTools = memo(
                   }`}
                 >
                   <Minus className="w-3.5 h-3.5" />
+                </button>
+              </Hint>
+            </div>
+
+            {/* Quick Path Bend & Flip Controls */}
+            <div className={`flex items-center p-0.5 rounded-lg border ${buttonPillClass}`}>
+              <Hint label="Flip Path / Curve Direction">
+                <button
+                  onClick={flipArrowPath}
+                  className={`p-1 rounded ${buttonPillInactive}`}
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                </button>
+              </Hint>
+              <Hint label="Reset Path to Center">
+                <button
+                  onClick={resetArrowPath}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium tracking-tight ${buttonPillInactive}`}
+                >
+                  Auto
                 </button>
               </Hint>
             </div>

@@ -1106,14 +1106,10 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         const layer = liveLayers.get(id)
         if (layer && !layer.get("isLocked")) {
           if (layer.get("type") === LayerType.Arrow) {
-            const cur = (layer as any).get("controlOffset") || { x: 0, y: 0 }
-            ;(layer as any).set("controlOffset", {
-              x: cur.x + finalOffsetX,
-              y: cur.y + finalOffsetY,
-            })
-          } else {
-            layer.update({ x: layer.get("x") + finalOffsetX, y: layer.get("y") + finalOffsetY })
+            // Arrows are anchored to components and are shaped via handles / toolbar
+            return
           }
+          layer.update({ x: layer.get("x") + finalOffsetX, y: layer.get("y") + finalOffsetY })
         }
       })
       setCanvasState({ mode: CanvasMode.Translating, current: point })
@@ -2373,6 +2369,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
               connectingFromId={connectingFromId}
               onConnectClick={onConnectClick}
               onStartRelationConnect={onStartRelationConnect}
+              camera={camera}
             />
           ))}
 

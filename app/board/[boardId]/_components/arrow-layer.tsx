@@ -2,7 +2,7 @@
 
 import { memo, useState, useRef, useEffect, useCallback } from "react"
 import { useStorage, useMutation } from "@liveblocks/react/suspense"
-import { ArrowLayer, AnchorSide, Point, ArrowStyle } from "@/types/canvas"
+import { ArrowLayer, AnchorSide, Point, ArrowStyle, Camera } from "@/types/canvas"
 import { getAnchorPoint } from "./sys-component-layer"
 import { useSimulation } from "./simulation-context"
 
@@ -13,20 +13,7 @@ interface ArrowLayerProps {
   layer: ArrowLayer
   onPointerDown: (e: React.PointerEvent, id: string) => void
   selectionColor?: string
-}
-
-function getCanvasPointFromClient(clientX: number, clientY: number, element: SVGElement): Point {
-  const g = (element.closest("svg > g") as SVGGraphicsElement) ||
-            (element.closest("g[style*='transform']") as SVGGraphicsElement) ||
-            (element as unknown as SVGGraphicsElement)
-  const ctm = g.getScreenCTM()
-  if (!ctm) return { x: clientX, y: clientY }
-  const svg = element.ownerSVGElement || (element as unknown as SVGSVGElement)
-  const pt = svg.createSVGPoint()
-  pt.x = clientX
-  pt.y = clientY
-  const transformed = pt.matrixTransform(ctm.inverse())
-  return { x: transformed.x, y: transformed.y }
+  camera?: Camera
 }
 
 export type HandleType = "vertical-segment" | "horizontal-segment" | "point"
@@ -276,6 +263,7 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
   layer,
   onPointerDown,
   selectionColor,
+  camera,
 }: ArrowLayerProps) {
   const fromLayer = useStorage((root) => root.layers.get(layer.fromLayerId))
   const toLayer   = useStorage((root) => root.layers.get(layer.toLayerId))
@@ -335,14 +323,16 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
     e.stopPropagation()
     e.preventDefault()
 
-    const targetEl = e.currentTarget as SVGElement
-    const startPt = getCanvasPointFromClient(e.clientX, e.clientY, targetEl)
+    const startClientX = e.clientX
+    const startClientY = e.clientY
     const startOffset = layer.controlOffset || { x: 0, y: 0 }
+    const zoom = camera?.zoom || 1
 
     const onPointerMove = (ev: PointerEvent) => {
-      const curPt = getCanvasPointFromClient(ev.clientX, ev.clientY, targetEl)
-      const dx = curPt.x - startPt.x
-      const dy = curPt.y - startPt.y
+      ev.stopPropagation()
+      ev.preventDefault()
+      const dx = (ev.clientX - startClientX) / zoom
+      const dy = (ev.clientY - startClientY) / zoom
 
       updateControlOffset({
         x: axis === "y" ? 0 : Math.round(startOffset.x + dx),
@@ -350,14 +340,16 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
       })
     }
 
-    const onPointerUp = () => {
+    const onPointerUp = (ev: PointerEvent) => {
+      ev.stopPropagation()
+      ev.preventDefault()
       window.removeEventListener("pointermove", onPointerMove)
       window.removeEventListener("pointerup", onPointerUp)
     }
 
     window.addEventListener("pointermove", onPointerMove)
     window.addEventListener("pointerup", onPointerUp)
-  }, [layer.controlOffset, updateControlOffset])
+  }, [layer.controlOffset, updateControlOffset, camera?.zoom])
 
   // Drag the source or destination endpoint to change the attached component anchor
   const handleAnchorDrag = useCallback((e: React.PointerEvent, type: "from" | "to") => {
@@ -367,12 +359,19 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
     const targetLayer = type === "from" ? fromLayer : toLayer
     if (!targetLayer) return
 
-    const targetEl = e.currentTarget as SVGElement
     const centerX = targetLayer.x + targetLayer.width / 2
     const centerY = targetLayer.y + targetLayer.height / 2
+    const zoom = camera?.zoom || 1
+    const camX = camera?.x || 0
+    const camY = camera?.y || 0
 
     const onPointerMove = (ev: PointerEvent) => {
-      const canvasPt = getCanvasPointFromClient(ev.clientX, ev.clientY, targetEl)
+      ev.stopPropagation()
+      ev.preventDefault()
+      const canvasPt = {
+        x: (ev.clientX - camX) / zoom,
+        y: (ev.clientY - camY) / zoom,
+      }
       const dx = canvasPt.x - centerX
       const dy = canvasPt.y - centerY
 
@@ -390,14 +389,16 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
       }
     }
 
-    const onPointerUp = () => {
+    const onPointerUp = (ev: PointerEvent) => {
+      ev.stopPropagation()
+      ev.preventDefault()
       window.removeEventListener("pointermove", onPointerMove)
       window.removeEventListener("pointerup", onPointerUp)
     }
 
     window.addEventListener("pointermove", onPointerMove)
     window.addEventListener("pointerup", onPointerUp)
-  }, [fromLayer, toLayer, layer.fromAnchor, layer.toAnchor, updateFromAnchor, updateToAnchor])
+  }, [fromLayer, toLayer, layer.fromAnchor, layer.toAnchor, updateFromAnchor, updateToAnchor, camera?.x, camera?.y, camera?.zoom])
 
   // If either connected layer is gone, don't render (now strictly after ALL hooks)
   if (!fromLayer || !toLayer) return null
