@@ -3,7 +3,7 @@
 import React, { useState } from "react"
 import { SysComponent, DocType } from "@/types/canvas"
 import { COMPONENT_LABELS, COMPONENT_COLORS, ComponentIcon } from "./sys-component-layer"
-import { EXCALIDRAW_LIBRARY_ITEMS } from "@/lib/excalidraw-library"
+import { EXCALIDRAW_LIBRARY_ITEMS, EXCALIDRAW_PACKS } from "@/lib/excalidraw-library"
 import {
   Network,
   Server,
@@ -251,6 +251,7 @@ export function ComponentLibrary({
   activeSpace,
 }: ComponentLibraryProps) {
   const [search, setSearch] = useState("")
+  const [selectedPack, setSelectedPack] = useState<string>("All")
   const { theme } = useCanvasTheme()
   const isDark = theme === "dark"
 
@@ -295,7 +296,7 @@ export function ComponentLibrary({
           </span>
           <span className="px-1.5 py-0.5 text-[9px] font-semibold bg-indigo-500/15 text-indigo-400 rounded-full border border-indigo-500/30 shrink-0">
             {activeSpace === "components" && "49"}
-            {activeSpace === "excalidraw" && "18"}
+            {activeSpace === "excalidraw" && `${EXCALIDRAW_LIBRARY_ITEMS.length}`}
             {activeSpace === "tables" && "6"}
             {activeSpace === "specs" && "4"}
             {activeSpace === "templates" && "3"}
@@ -433,15 +434,41 @@ export function ComponentLibrary({
             </div>
           </div>
 
+          {/* Pack Filter Pills */}
+          <div className="px-2.5 py-1.5 border-b border-neutral-100 dark:border-slate-800/60 flex items-center gap-1 overflow-x-auto [scrollbar-width:none] shrink-0">
+            {EXCALIDRAW_PACKS.map((pack) => {
+              const isSelected = selectedPack === pack
+              return (
+                <button
+                  key={pack}
+                  type="button"
+                  onClick={() => setSelectedPack(pack)}
+                  className={`px-2 py-0.5 text-[10px] font-semibold rounded-full whitespace-nowrap transition-colors shrink-0 ${
+                    isSelected
+                      ? "bg-indigo-600 text-white shadow-xs"
+                      : isDark
+                      ? "bg-slate-800/70 text-slate-400 hover:text-slate-200 hover:bg-slate-800"
+                      : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+                  }`}
+                >
+                  {pack}
+                </button>
+              )
+            })}
+          </div>
+
           {/* Grid of Excalidraw vector icons */}
           <div className="overflow-y-auto flex-1 p-2 [scrollbar-width:none]">
             <div className="grid grid-cols-2 gap-2">
-              {EXCALIDRAW_LIBRARY_ITEMS.filter(
-                (item) =>
+              {EXCALIDRAW_LIBRARY_ITEMS.filter((item) => {
+                const matchesPack = selectedPack === "All" || item.pack === selectedPack
+                const matchesSearch =
                   !search ||
                   item.name.toLowerCase().includes(search.toLowerCase()) ||
-                  item.category.toLowerCase().includes(search.toLowerCase())
-              ).map((item) => (
+                  item.category.toLowerCase().includes(search.toLowerCase()) ||
+                  item.pack.toLowerCase().includes(search.toLowerCase())
+                return matchesPack && matchesSearch
+              }).map((item) => (
                 <div
                   key={item.id}
                   draggable={true}
@@ -472,7 +499,7 @@ export function ComponentLibrary({
                       {item.name}
                     </span>
                     <span className="text-[9px] text-neutral-400 dark:text-slate-500 block truncate">
-                      {item.category}
+                      {item.pack}
                     </span>
                   </div>
                 </div>
