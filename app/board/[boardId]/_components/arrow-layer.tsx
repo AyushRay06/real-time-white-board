@@ -15,43 +15,67 @@ interface ArrowLayerProps {
   selectionColor?: string
 }
 
+function getCanvasPointFromClient(clientX: number, clientY: number, element: SVGElement): Point {
+  const g = (element.closest("svg > g") as SVGGraphicsElement) ||
+            (element.closest("g[style*='transform']") as SVGGraphicsElement) ||
+            (element as unknown as SVGGraphicsElement)
+  const ctm = g.getScreenCTM()
+  if (!ctm) return { x: clientX, y: clientY }
+  const svg = element.ownerSVGElement || (element as unknown as SVGSVGElement)
+  const pt = svg.createSVGPoint()
+  pt.x = clientX
+  pt.y = clientY
+  const transformed = pt.matrixTransform(ctm.inverse())
+  return { x: transformed.x, y: transformed.y }
+}
+
 function buildCubicPath(
   from: Point,
   to: Point,
   fromAnchor: AnchorSide,
   toAnchor: AnchorSide,
   controlOffset?: Point
-): { d: string; cp1: Point; cp2: Point; mid: Point } {
+): { d: string; cp1: Point; cp2: Point; mid: Point; defaultMid: Point } {
   const dx = Math.abs(to.x - from.x)
   const dy = Math.abs(to.y - from.y)
   const tension = Math.max(60, Math.max(dx, dy) * 0.45)
 
+  let cp1_0: Point
+  switch (fromAnchor) {
+    case "right":  cp1_0 = { x: from.x + tension, y: from.y }; break
+    case "left":   cp1_0 = { x: from.x - tension, y: from.y }; break
+    case "bottom": cp1_0 = { x: from.x,           y: from.y + tension }; break
+    default:       cp1_0 = { x: from.x,           y: from.y - tension }; break
+  }
+
+  let cp2_0: Point
+  switch (toAnchor) {
+    case "left":   cp2_0 = { x: to.x - tension, y: to.y }; break
+    case "right":  cp2_0 = { x: to.x + tension, y: to.y }; break
+    case "top":    cp2_0 = { x: to.x,           y: to.y - tension }; break
+    default:       cp2_0 = { x: to.x,           y: to.y + tension }; break
+  }
+
+  const defaultMid = bezierMidpoint(from, cp1_0, cp2_0, to)
+
   const ox = controlOffset?.x ?? 0
   const oy = controlOffset?.y ?? 0
 
-  let cp1: Point
-  switch (fromAnchor) {
-    case "right":  cp1 = { x: from.x + tension + ox, y: from.y + oy }; break
-    case "left":   cp1 = { x: from.x - tension + ox, y: from.y + oy }; break
-    case "bottom": cp1 = { x: from.x + ox, y: from.y + tension + oy }; break
-    default:       cp1 = { x: from.x + ox, y: from.y - tension + oy }; break
-  }
+  // 4/3 factor ensures that the cubic curve's midpoint at t=0.5 matches defaultMid + (ox, oy) with mathematical precision
+  const shiftX = ox * (4 / 3)
+  const shiftY = oy * (4 / 3)
 
-  let cp2: Point
-  switch (toAnchor) {
-    case "left":   cp2 = { x: to.x - tension + ox, y: to.y + oy }; break
-    case "right":  cp2 = { x: to.x + tension + ox, y: to.y + oy }; break
-    case "top":    cp2 = { x: to.x + ox, y: to.y - tension + oy }; break
-    default:       cp2 = { x: to.x + ox, y: to.y + tension + oy }; break
-  }
+  const cp1 = { x: cp1_0.x + shiftX, y: cp1_0.y + shiftY }
+  const cp2 = { x: cp2_0.x + shiftX, y: cp2_0.y + shiftY }
 
-  const mid = bezierMidpoint(from, cp1, cp2, to)
+  const mid = { x: defaultMid.x + ox, y: defaultMid.y + oy }
 
   return {
     d: `M ${from.x} ${from.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${to.x} ${to.y}`,
     cp1,
     cp2,
     mid,
+    defaultMid,
   }
 }
 
@@ -62,37 +86,60 @@ function buildSharpPath(
   fromAnchor: AnchorSide,
   toAnchor: AnchorSide,
   controlOffset?: Point
-): { d: string; mid: Point } {
+): { d: string; mid: Point; defaultMid: Point } {
   const ox = controlOffset?.x ?? 0
   const oy = controlOffset?.y ?? 0
 
-  if ((fromAnchor === "right" || fromAnchor === "left") && (toAnchor === "left" || toAnchor === "right")) {
-    const midX = (from.x + to.x) / 2 + ox
-    const midY = (from.y + to.y) / 2 + oy
-    return {
-      d: `M ${from.x} ${from.y} L ${midX} ${from.y} L ${midX} ${to.y} L ${to.x} ${to.y}`,
-      mid: { x: midX, y: midY },
-    }
-  } else if ((fromAnchor === "bottom" || fromAnchor === "top") && (toAnchor === "top" || toAnchor === "bottom")) {
-    const midX = (from.x + to.x) / 2 + ox
-    const midY = (from.y + to.y) / 2 + oy
-    return {
-      d: `M ${from.x} ${from.y} L ${from.x} ${midY} L ${to.x} ${midY} L ${to.x} ${to.y}`,
-      mid: { x: midX, y: midY },
-    }
+  const isFromHorizontal = fromAnchor === "left" || fromAnchor === "right"
+  const isToHorizontal = toAnchor === "left" || toAnchor === "right"
+
+  let defaultMid: Point
+  if (isFromHorizontal && isToHorizontal) {
+    defaultMid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 }
+  } else if (!isFromHorizontal && !isToHorizontal) {
+    defaultMid = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 }
   } else {
     // Corner turn
-    const cornerX = (fromAnchor === "right" || fromAnchor === "left")
-      ? to.x + ox
-      : from.x + ox
-    const cornerY = (fromAnchor === "right" || fromAnchor === "left")
-      ? from.y + oy
-      : to.y + oy
-    return {
-      d: `M ${from.x} ${from.y} L ${cornerX} ${cornerY} L ${to.x} ${to.y}`,
-      mid: { x: cornerX, y: cornerY },
+    defaultMid = isFromHorizontal
+      ? { x: to.x, y: from.y }
+      : { x: from.x, y: to.y }
+  }
+
+  const mid = { x: defaultMid.x + ox, y: defaultMid.y + oy }
+
+  let d: string
+  if (isFromHorizontal && isToHorizontal) {
+    // Horizontal connection (left/right)
+    if (Math.abs(oy) > 3) {
+      // User created a vertical detour step!
+      const stepX1 = from.x + (mid.x - from.x) * 0.5
+      const stepX2 = mid.x + (to.x - mid.x) * 0.5
+      d = `M ${from.x} ${from.y} L ${stepX1} ${from.y} L ${stepX1} ${mid.y} L ${stepX2} ${mid.y} L ${stepX2} ${to.y} L ${to.x} ${to.y}`
+    } else {
+      // Standard 3-segment orthogonal
+      d = `M ${from.x} ${from.y} L ${mid.x} ${from.y} L ${mid.x} ${to.y} L ${to.x} ${to.y}`
+    }
+  } else if (!isFromHorizontal && !isToHorizontal) {
+    // Vertical connection (top/bottom)
+    if (Math.abs(ox) > 3) {
+      // User created a horizontal detour step!
+      const stepY1 = from.y + (mid.y - from.y) * 0.5
+      const stepY2 = mid.y + (to.y - mid.y) * 0.5
+      d = `M ${from.x} ${from.y} L ${from.x} ${stepY1} L ${mid.x} ${stepY1} L ${mid.x} ${stepY2} L ${to.x} ${stepY2} L ${to.x} ${to.y}`
+    } else {
+      // Standard 3-segment orthogonal
+      d = `M ${from.x} ${from.y} L ${from.x} ${mid.y} L ${to.x} ${mid.y} L ${to.x} ${to.y}`
+    }
+  } else {
+    // L-shaped / corner connection
+    if (isFromHorizontal) {
+      d = `M ${from.x} ${from.y} L ${mid.x} ${from.y} L ${mid.x} ${mid.y} L ${to.x} ${mid.y} L ${to.x} ${to.y}`
+    } else {
+      d = `M ${from.x} ${from.y} L ${from.x} ${mid.y} L ${mid.x} ${mid.y} L ${mid.x} ${to.y} L ${to.x} ${to.y}`
     }
   }
+
+  return { d, mid, defaultMid }
 }
 
 /** Cubic bezier point at t=0.5 — true visual midpoint of the curve */
@@ -202,23 +249,22 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
     ;(storage.get("layers").get(id) as any)?.set("toAnchor", anchor)
   }, [id])
 
+  const [isHovered, setIsHovered] = useState(false)
+
   // Drag the arrow bend / flow controller handle
   const handleBendPointerDown = useCallback((e: React.PointerEvent) => {
     e.stopPropagation()
     e.preventDefault()
 
-    const target = (e.target as SVGElement).ownerSVGElement
-    const ctm = target?.getScreenCTM()
-    const scaleX = ctm ? ctm.a : 1
-    const scaleY = ctm ? ctm.d : 1
-
-    const startClientX = e.clientX
-    const startClientY = e.clientY
+    const targetEl = e.currentTarget as SVGElement
+    const startPt = getCanvasPointFromClient(e.clientX, e.clientY, targetEl)
     const startOffset = layer.controlOffset || { x: 0, y: 0 }
 
     const onPointerMove = (ev: PointerEvent) => {
-      const dx = (ev.clientX - startClientX) / scaleX
-      const dy = (ev.clientY - startClientY) / scaleY
+      const curPt = getCanvasPointFromClient(ev.clientX, ev.clientY, targetEl)
+      const dx = curPt.x - startPt.x
+      const dy = curPt.y - startPt.y
+
       updateControlOffset({
         x: Math.round(startOffset.x + dx),
         y: Math.round(startOffset.y + dy),
@@ -242,21 +288,12 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
     const targetLayer = type === "from" ? fromLayer : toLayer
     if (!targetLayer) return
 
-    const target = (e.target as SVGElement).ownerSVGElement
-
+    const targetEl = e.currentTarget as SVGElement
     const centerX = targetLayer.x + targetLayer.width / 2
     const centerY = targetLayer.y + targetLayer.height / 2
 
     const onPointerMove = (ev: PointerEvent) => {
-      if (!target) return
-      const currentCtm = target.getScreenCTM()
-      if (!currentCtm) return
-
-      const svgPoint = target.createSVGPoint()
-      svgPoint.x = ev.clientX
-      svgPoint.y = ev.clientY
-      const canvasPt = svgPoint.matrixTransform(currentCtm.inverse())
-
+      const canvasPt = getCanvasPointFromClient(ev.clientX, ev.clientY, targetEl)
       const dx = canvasPt.x - centerX
       const dy = canvasPt.y - centerY
 
@@ -294,15 +331,18 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
 
   let pathD: string
   let mid: Point
+  let defaultMid: Point
 
   if (isSharp) {
     const sharp = buildSharpPath(fromPt, toPt, layer.fromAnchor, layer.toAnchor, controlOffset)
     pathD = sharp.d
     mid = sharp.mid
+    defaultMid = sharp.defaultMid
   } else {
     const cubic = buildCubicPath(fromPt, toPt, layer.fromAnchor, layer.toAnchor, controlOffset)
     pathD = cubic.d
     mid = cubic.mid
+    defaultMid = cubic.defaultMid
   }
 
   const arrowPts = arrowheadPoints(toPt, layer.toAnchor)
@@ -364,6 +404,8 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
     <g
       onPointerDown={(e) => onPointerDown(e, id)}
       onDoubleClick={handleDblClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{ cursor: "pointer" }}
     >
       {/* Wide invisible hit area for easy selection */}
@@ -430,37 +472,67 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
             />
             <title>Drag to change destination anchor side (Top / Right / Bottom / Left)</title>
           </g>
+        </g>
+      )}
 
-          {/* Interactive Arrow Flow Bend / Edge Controller Handle */}
-          <g
-            className="cursor-move pointer-events-auto"
-            onPointerDown={handleBendPointerDown}
-            onDoubleClick={(e) => {
-              e.stopPropagation()
-              updateControlOffset({ x: 0, y: 0 })
-            }}
-          >
-            {/* Wide touch target */}
-            <circle cx={mid.x} cy={mid.y} r={16} fill="transparent" />
-            {/* Outer ring */}
-            <circle
-              cx={mid.x}
-              cy={mid.y}
-              r={8}
-              fill="#ffffff"
-              stroke={selectionColor}
-              strokeWidth={2.5}
-              className="drop-shadow-md hover:scale-125 transition-transform"
+      {/* ── ARROW PATH EDITING POINTER HANDLE (Visible when selected or hovered) ── */}
+      {(selectionColor || isHovered) && (
+        <g
+          className="cursor-grab active:cursor-grabbing pointer-events-auto"
+          onPointerDown={handleBendPointerDown}
+          onDoubleClick={(e) => {
+            e.stopPropagation()
+            updateControlOffset({ x: 0, y: 0 })
+          }}
+        >
+          {/* Subtle guide line if bent from default */}
+          {(layer.controlOffset?.x || layer.controlOffset?.y) ? (
+            <line
+              x1={defaultMid.x}
+              y1={defaultMid.y}
+              x2={mid.x}
+              y2={mid.y}
+              stroke={selectionColor || stroke}
+              strokeWidth={1}
+              strokeDasharray="2 3"
+              strokeOpacity={0.6}
+              className="pointer-events-none"
             />
-            {/* Center dot */}
-            <circle
-              cx={mid.x}
-              cy={mid.y}
-              r={3.5}
-              fill={selectionColor}
-            />
-            <title>Drag to reshape arrow flow · Double-click to reset</title>
-          </g>
+          ) : null}
+
+          {/* Wide touch/click target area */}
+          <circle cx={mid.x} cy={mid.y} r={18} fill="transparent" />
+
+          {/* Outer glowing aura */}
+          <circle
+            cx={mid.x}
+            cy={mid.y}
+            r={10}
+            fill={selectionColor ? `${selectionColor}25` : "rgba(99, 102, 241, 0.2)"}
+            stroke="none"
+            className="animate-pulse pointer-events-none"
+          />
+
+          {/* Outer ring badge */}
+          <circle
+            cx={mid.x}
+            cy={mid.y}
+            r={7.5}
+            fill="#ffffff"
+            stroke={selectionColor || stroke}
+            strokeWidth={2.5}
+            style={{ filter: "drop-shadow(0 2px 5px rgba(0,0,0,0.3))" }}
+          />
+
+          {/* Center pointer dot */}
+          <circle
+            cx={mid.x}
+            cy={mid.y}
+            r={3}
+            fill={selectionColor || stroke}
+          />
+
+          <title>Drag pointer to reshape arrow path · Double-click to reset</title>
         </g>
       )}
 

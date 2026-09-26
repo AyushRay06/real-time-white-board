@@ -479,15 +479,6 @@ export const SysComponentLayer = memo(function SysComponentLayer({
           />
         )}
 
-        {/* Connection mode anchor ports (Top, Bottom, Left, Right) */}
-        {isConnecting && (
-          <g style={{ pointerEvents: "none" }}>
-            <circle cx={x + width / 2} cy={y} r={4.5} fill="#3b82f6" stroke="#ffffff" strokeWidth={1.5} />
-            <circle cx={x + width / 2} cy={y + height} r={4.5} fill="#3b82f6" stroke="#ffffff" strokeWidth={1.5} />
-            <circle cx={x} cy={y + height / 2} r={4.5} fill="#3b82f6" stroke="#ffffff" strokeWidth={1.5} />
-            <circle cx={x + width} cy={y + height / 2} r={4.5} fill="#3b82f6" stroke="#ffffff" strokeWidth={1.5} />
-          </g>
-        )}
 
         {/* Tour Focus Spotlight Halo */}
         {isFocused && (
