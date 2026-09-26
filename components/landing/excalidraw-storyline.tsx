@@ -37,24 +37,89 @@ export function ExcalidrawStoryline() {
   })
   const pathLength = useTransform(scrollYProgress, [0, 1], [0, 1])
 
-  // Spring coil path with self-intersecting loops on the left-hand side
+  // Completely organic, randomized curling ribbon with spontaneous loops, coils, and varied amplitudes
   const springLoopPath = useMemo(() => {
-    const totalHeight = 6200
-    const numLoops = 11
-    const coilH = totalHeight / numLoops
-    let d = "M 45 0"
-
-    for (let i = 0; i < numLoops; i++) {
-      const yBase = i * coilH
-      // 1. Descend & sweep right
-      // 2. Loop around bottom & curve up
-      // 3. Loop in itself (crossing over descending branch like a spring)
-      // 4. Exit downward into next spring coil
-      d += ` C 82 ${yBase + coilH * 0.22}, 95 ${yBase + coilH * 0.42}, 78 ${yBase + coilH * 0.58}`
-      d += ` C 62 ${yBase + coilH * 0.72}, 12 ${yBase + coilH * 0.68}, 16 ${yBase + coilH * 0.48}`
-      d += ` C 20 ${yBase + coilH * 0.32}, 88 ${yBase + coilH * 0.34}, 54 ${yBase + coilH * 0.68}`
-      d += ` C 32 ${yBase + coilH * 0.88}, 38 ${yBase + coilH * 0.94}, 45 ${yBase + coilH}`
+    let seed = 42891
+    const random = () => {
+      let t = (seed += 0x6d2b79f5)
+      t = Math.imul(t ^ (t >>> 15), t | 1)
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296
     }
+
+    const totalHeight = 6200
+    let curX = 45
+    let curY = 0
+    let d = `M ${curX} ${curY}`
+
+    while (curY < totalHeight) {
+      const remaining = totalHeight - curY
+      if (remaining < 180) {
+        // Final smooth finish to bottom
+        d += ` C ${curX + (random() - 0.5) * 20} ${curY + remaining * 0.5}, ${45 + (random() - 0.5) * 15} ${curY + remaining * 0.8}, 45 ${totalHeight}`
+        break
+      }
+
+      // Random segment height between 320px and 620px
+      const segH = Math.min(remaining, 320 + random() * 300)
+      const mode = Math.floor(random() * 5)
+      const nextX = 35 + random() * 25 // landing X around 35-60
+
+      if (mode === 0) {
+        // Wide Right-hand Spring Loop
+        const rightApex = 78 + random() * 16
+        const loopTop = curY + segH * (0.28 + random() * 0.1)
+        const loopBottom = curY + segH * (0.62 + random() * 0.12)
+        const loopLeft = 14 + random() * 16
+
+        d += ` C ${rightApex} ${curY + segH * 0.18}, ${rightApex} ${loopBottom * 0.85}, ${rightApex - 15} ${loopBottom}`
+        d += ` C ${loopLeft + 15} ${loopBottom + 30}, ${loopLeft} ${loopTop + 40}, ${loopLeft + 10} ${loopTop}`
+        d += ` C ${loopLeft + 30} ${loopTop - 25}, ${rightApex - 5} ${loopTop + 15}, ${rightApex - 25} ${curY + segH * 0.75}`
+        d += ` C ${rightApex - 45} ${curY + segH * 0.92}, ${nextX + (random() - 0.5) * 15} ${curY + segH * 0.96}, ${nextX} ${curY + segH}`
+      } else if (mode === 1) {
+        // Wide Left-hand Spring Loop (loops to the opposite side!)
+        const leftApex = 8 + random() * 16
+        const loopTop = curY + segH * (0.25 + random() * 0.1)
+        const loopBottom = curY + segH * (0.65 + random() * 0.12)
+        const loopRight = 72 + random() * 18
+
+        d += ` C ${leftApex} ${curY + segH * 0.18}, ${leftApex} ${loopBottom * 0.85}, ${leftApex + 15} ${loopBottom}`
+        d += ` C ${loopRight - 15} ${loopBottom + 30}, ${loopRight} ${loopTop + 40}, ${loopRight - 10} ${loopTop}`
+        d += ` C ${loopRight - 30} ${loopTop - 25}, ${leftApex + 5} ${loopTop + 15}, ${leftApex + 25} ${curY + segH * 0.75}`
+        d += ` C ${leftApex + 45} ${curY + segH * 0.92}, ${nextX + (random() - 0.5) * 15} ${curY + segH * 0.96}, ${nextX} ${curY + segH}`
+      } else if (mode === 2) {
+        // Tight energetic 3D corkscrew loop
+        const loopSide = random() > 0.5 ? 1 : -1
+        const apexX = loopSide === 1 ? 75 + random() * 15 : 15 + random() * 15
+        const crossX = loopSide === 1 ? 30 + random() * 15 : 60 + random() * 15
+        const loopCenterY = curY + segH * 0.45
+
+        d += ` C ${curX + loopSide * 35} ${curY + segH * 0.15}, ${apexX} ${loopCenterY - 40}, ${apexX} ${loopCenterY}`
+        d += ` C ${apexX} ${loopCenterY + 45}, ${crossX} ${loopCenterY + 50}, ${crossX} ${loopCenterY}`
+        d += ` C ${crossX} ${loopCenterY - 45}, ${apexX + (loopSide * -10)} ${loopCenterY - 30}, ${crossX + loopSide * 10} ${loopCenterY + 70}`
+        d += ` C ${crossX} ${curY + segH * 0.85}, ${nextX} ${curY + segH * 0.95}, ${nextX} ${curY + segH}`
+      } else if (mode === 3) {
+        // Spontaneous double-wave curl (lazy sweeping wave that loops into itself)
+        const swingRight = 75 + random() * 18
+        const swingLeft = 10 + random() * 18
+
+        d += ` C ${swingRight} ${curY + segH * 0.22}, ${swingRight - 10} ${curY + segH * 0.48}, ${45 + (random() - 0.5) * 20} ${curY + segH * 0.52}`
+        d += ` C ${swingLeft + 10} ${curY + segH * 0.56}, ${swingLeft} ${curY + segH * 0.78}, ${45 + (random() - 0.5) * 15} ${curY + segH * 0.84}`
+        d += ` C ${swingRight - 20} ${curY + segH * 0.88}, ${nextX} ${curY + segH * 0.96}, ${nextX} ${curY + segH}`
+      } else {
+        // Teardrop loop that loops around and crosses back down
+        const loopApexX = 20 + random() * 55
+        const loopApexY = curY + segH * (0.35 + random() * 0.2)
+
+        d += ` C ${curX + (random() - 0.5) * 40} ${curY + segH * 0.15}, ${loopApexX + 35} ${loopApexY - 30}, ${loopApexX} ${loopApexY}`
+        d += ` C ${loopApexX - 35} ${loopApexY + 30}, ${curX - 20} ${loopApexY + 40}, ${loopApexX + 15} ${loopApexY - 15}`
+        d += ` C ${loopApexX + 35} ${curY + segH * 0.75}, ${nextX + (random() - 0.5) * 20} ${curY + segH * 0.9}, ${nextX} ${curY + segH}`
+      }
+
+      curX = nextX
+      curY += segH
+    }
+
     return d
   }, [])
 
