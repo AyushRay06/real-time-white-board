@@ -27,6 +27,20 @@ import {
   Network,
   CornerDownRight,
   MessageSquare,
+  Users,
+  Box,
+  Zap,
+  Cloud,
+  Shuffle,
+  Layers,
+  Globe,
+  Search,
+  Type,
+  Square,
+  StickyNote,
+  ArrowRight,
+  LayoutTemplate,
+  Monitor,
 } from "lucide-react"
 
 export function ExcalidrawStoryline() {
@@ -90,70 +104,103 @@ export function ExcalidrawStoryline() {
 
   // ─── SECTION 1: CREATE (UI Layout Design) ───
   const [selectedWireframeEl, setSelectedWireframeEl] = useState<string>("hero-cta")
-  const [wireframeTheme, setWireframeTheme] = useState<"indigo" | "purple" | "emerald">("indigo")
 
   // ─── SECTION 2: COLLABORATE (Multiplayer Team Sync) ───
   const [copiedLink, setCopiedLink] = useState(false)
-  const [reactions, setReactions] = useState<{ id: number; emoji: string; x: number; y: number }[]>([])
-
-  const triggerReaction = (emoji: string) => {
-    const id = Date.now() + Math.random()
-    const x = 120 + Math.random() * 260
-    const y = 80 + Math.random() * 140
-    setReactions((prev) => [...prev.slice(-15), { id, emoji, x, y }])
-    setTimeout(() => {
-      setReactions((prev) => prev.filter((r) => r.id !== id))
-    }, 2000)
-  }
 
   // ─── SECTION 3A: SYSTEM ARCHITECTURE ───
-  type ArchTemplate = "ecommerce" | "chat" | "rag"
-  const [selectedArchTemplate, setSelectedArchTemplate] = useState<ArchTemplate>("ecommerce")
-  const [selectedCloudNode, setSelectedCloudNode] = useState<string>("gateway")
+  type ArchTemplate = "microservices" | "three-tier" | "cdn-caching"
+  const [selectedArchTemplate, setSelectedArchTemplate] = useState<ArchTemplate>("microservices")
+  const [selectedCloudNode, setSelectedCloudNode] = useState<string>("orders")
+  const [selectedComponentTab, setSelectedComponentTab] = useState<"components" | "layouts">("components")
+  const [componentSearch, setComponentSearch] = useState<string>("")
 
   const ARCH_TEMPLATES: Record<ArchTemplate, {
     name: string
     badge: string
     desc: string
-    nodes: Array<{ id: string; name: string; type: string; tier: string; sub: string; icon: any; color: string }>
+    nodes: Array<{
+      id: string
+      name: string
+      type: string
+      icon: any
+      iconBg: string
+      iconColor: string
+      x: number
+      y: number
+    }>
+    arrows: Array<{
+      from: string
+      to: string
+      label: string
+      dashed?: boolean
+    }>
   }> = {
-    ecommerce: {
-      name: "E-Commerce Microservices",
-      badge: "Production Ready",
-      desc: "High-throughput checkout pipeline with asynchronous event queuing and read-replica caching.",
+    microservices: {
+      name: "Event-Driven Microservices",
+      badge: "Kafka + gRPC",
+      desc: "Decoupled microservices architecture with asynchronous Kafka event streaming and read-replica caching.",
       nodes: [
-        { id: "edge", name: "Cloudflare Edge", type: "CDN / WAF", tier: "Tier 1: Edge", sub: "Global Anycast", icon: Shield, color: "text-amber-600 bg-amber-50 border-amber-200" },
-        { id: "gateway", name: "Envoy API Gateway", type: "Reverse Proxy", tier: "Tier 1: Edge", sub: "Rate Limiting & Auth", icon: Server, color: "text-indigo-600 bg-indigo-50 border-indigo-200" },
-        { id: "orders", name: "Order Microservice", type: "Golang RPC", tier: "Tier 2: Service", sub: "gRPC & REST /v1", icon: Cpu, color: "text-blue-600 bg-blue-50 border-blue-200" },
-        { id: "kafka", name: "Apache Kafka", type: "Event Streaming", tier: "Tier 2: Queue", sub: "Partitioned Topics", icon: Network, color: "text-purple-600 bg-purple-50 border-purple-200" },
-        { id: "redis", name: "Redis Cluster", type: "In-Memory Cache", tier: "Tier 3: Data", sub: "Sub-2ms Session TTL", icon: Radio, color: "text-rose-600 bg-rose-50 border-rose-200" },
-        { id: "postgres", name: "PostgreSQL 16", type: "Primary Relational", tier: "Tier 3: Data", sub: "Multi-AZ ACID Storage", icon: Database, color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
+        { id: "client", name: "Web Client", type: "React Ingress", icon: Monitor, iconBg: "bg-blue-100", iconColor: "text-blue-600", x: 20, y: 110 },
+        { id: "gateway", name: "API Gateway", type: "Envoy Proxy", icon: Network, iconBg: "bg-indigo-100", iconColor: "text-indigo-600", x: 155, y: 110 },
+        { id: "orders", name: "Order Service", type: "Golang RPC", icon: Box, iconBg: "bg-emerald-100", iconColor: "text-emerald-600", x: 295, y: 35 },
+        { id: "auth", name: "Auth Service", type: "Node.js JWT", icon: Shield, iconBg: "bg-purple-100", iconColor: "text-purple-600", x: 295, y: 185 },
+        { id: "kafka", name: "Kafka Stream", type: "Event Bus", icon: Layers, iconBg: "bg-amber-100", iconColor: "text-amber-600", x: 440, y: 35 },
+        { id: "redis", name: "Redis Cache", type: "In-Memory TTL", icon: Radio, iconBg: "bg-rose-100", iconColor: "text-rose-600", x: 440, y: 185 },
+        { id: "postgres", name: "PostgreSQL 16", type: "Primary Relational", icon: Database, iconBg: "bg-sky-100", iconColor: "text-sky-600", x: 585, y: 35 },
+      ],
+      arrows: [
+        { from: "client", to: "gateway", label: "HTTPS" },
+        { from: "gateway", to: "orders", label: "gRPC" },
+        { from: "gateway", to: "auth", label: "REST" },
+        { from: "orders", to: "kafka", label: "Produce" },
+        { from: "auth", to: "redis", label: "Session" },
+        { from: "kafka", to: "postgres", label: "Consume" },
       ],
     },
-    chat: {
-      name: "Real-time PubSub & Chat",
-      badge: "WebSockets",
-      desc: "Bi-directional WebSocket streaming architecture backed by Redis Pub/Sub cluster.",
+    "three-tier": {
+      name: "Classic 3-Tier Web App",
+      badge: "High Availability",
+      desc: "Multi-AZ web architecture featuring redundant application servers, active/standby database, and cache tier.",
       nodes: [
-        { id: "edge", name: "NLB Load Balancer", type: "Network LB", tier: "Tier 1: Edge", sub: "TLS Termination", icon: Shield, color: "text-amber-600 bg-amber-50 border-amber-200" },
-        { id: "gateway", name: "Socket.IO Gateway", type: "WS Cluster", tier: "Tier 1: Edge", sub: "100k Concurrent Conns", icon: Server, color: "text-indigo-600 bg-indigo-50 border-indigo-200" },
-        { id: "presence", name: "Presence Worker", type: "Node.js Service", tier: "Tier 2: Service", sub: "Heartbeat & Typing", icon: Cpu, color: "text-blue-600 bg-blue-50 border-blue-200" },
-        { id: "redis", name: "Redis Pub/Sub", type: "Message Bus", tier: "Tier 2: Queue", sub: "Instant Fanout", icon: Radio, color: "text-rose-600 bg-rose-50 border-rose-200" },
-        { id: "messages", name: "Cassandra DB", type: "Time-series Store", tier: "Tier 3: Data", sub: "LSM Message Log", icon: Database, color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
-        { id: "s3", name: "S3 Object Store", type: "Blob Storage", tier: "Tier 3: Data", sub: "Media Attachments", icon: HardDrive, color: "text-purple-600 bg-purple-50 border-purple-200" },
+        { id: "client", name: "Web Client", type: "Browser Ingress", icon: Monitor, iconBg: "bg-blue-100", iconColor: "text-blue-600", x: 20, y: 110 },
+        { id: "lb", name: "Load Balancer", type: "ALB / NGINX", icon: Shuffle, iconBg: "bg-amber-100", iconColor: "text-amber-600", x: 155, y: 110 },
+        { id: "app1", name: "App Node A", type: "Production Pod", icon: Server, iconBg: "bg-indigo-100", iconColor: "text-indigo-600", x: 295, y: 35 },
+        { id: "app2", name: "App Node B", type: "Production Pod", icon: Server, iconBg: "bg-indigo-100", iconColor: "text-indigo-600", x: 295, y: 185 },
+        { id: "primary", name: "Primary DB", type: "PostgreSQL 16", icon: Database, iconBg: "bg-sky-100", iconColor: "text-sky-600", x: 440, y: 35 },
+        { id: "replica", name: "Read Replica", type: "Async Multi-AZ", icon: Database, iconBg: "bg-purple-100", iconColor: "text-purple-600", x: 440, y: 185 },
+        { id: "redis", name: "Redis Cache", type: "LRU Cluster", icon: Radio, iconBg: "bg-rose-100", iconColor: "text-rose-600", x: 585, y: 110 },
+      ],
+      arrows: [
+        { from: "client", to: "lb", label: "TLS 443" },
+        { from: "lb", to: "app1", label: "Route" },
+        { from: "lb", to: "app2", label: "Route" },
+        { from: "app1", to: "primary", label: "Write" },
+        { from: "app2", to: "replica", label: "Read" },
+        { from: "primary", to: "replica", label: "Sync", dashed: true },
+        { from: "app1", to: "redis", label: "Cache" },
       ],
     },
-    rag: {
-      name: "AI RAG & Vector Pipeline",
-      badge: "LLM Systems",
-      desc: "Document ingestion, embeddings generator, and semantic vector search gateway.",
+    "cdn-caching": {
+      name: "CDN Edge & Multi-Region",
+      badge: "Sub-10ms Global",
+      desc: "Global edge computing network with distributed cache invalidation and geo-routed data persistence.",
       nodes: [
-        { id: "edge", name: "API Gateway", type: "FastAPI / Py", tier: "Tier 1: Edge", sub: "Semantic Routing", icon: Server, color: "text-indigo-600 bg-indigo-50 border-indigo-200" },
-        { id: "embed", name: "Embedding Worker", type: "Python Service", tier: "Tier 2: Service", sub: "text-embedding-3", icon: Cpu, color: "text-blue-600 bg-blue-50 border-blue-200" },
-        { id: "queue", name: "Celery / SQS", type: "Task Queue", tier: "Tier 2: Queue", sub: "Async Chunking", icon: Network, color: "text-purple-600 bg-purple-50 border-purple-200" },
-        { id: "vector", name: "Pinecone / pgvector", type: "Vector Database", tier: "Tier 3: Data", sub: "HNSW Cosine Index", icon: Radio, color: "text-rose-600 bg-rose-50 border-rose-200" },
-        { id: "postgres", name: "PostgreSQL", type: "Metadata DB", tier: "Tier 3: Data", sub: "User Auth & Quotas", icon: Database, color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
-        { id: "llm", name: "Anthropic / OpenAI", type: "LLM Inference", tier: "External", sub: "Streaming Token Gen", icon: Sparkles, color: "text-amber-600 bg-amber-50 border-amber-200" },
+        { id: "users", name: "Global Users", type: "Worldwide Traffic", icon: Globe, iconBg: "bg-blue-100", iconColor: "text-blue-600", x: 20, y: 110 },
+        { id: "cdn", name: "Cloudflare CDN", type: "Edge POPs", icon: Cloud, iconBg: "bg-purple-100", iconColor: "text-purple-600", x: 155, y: 110 },
+        { id: "worker", name: "Edge Worker", type: "V8 Isolate", icon: Zap, iconBg: "bg-amber-100", iconColor: "text-amber-600", x: 295, y: 35 },
+        { id: "origin", name: "Origin API", type: "Core Gateway", icon: Server, iconBg: "bg-indigo-100", iconColor: "text-indigo-600", x: 295, y: 185 },
+        { id: "cache", name: "Redis Cluster", type: "Geo-Replicated", icon: Radio, iconBg: "bg-rose-100", iconColor: "text-rose-600", x: 440, y: 35 },
+        { id: "globaldb", name: "Distributed DB", type: "CockroachDB", icon: Database, iconBg: "bg-emerald-100", iconColor: "text-emerald-600", x: 440, y: 185 },
+        { id: "storage", name: "S3 Object Store", type: "Media Blobs", icon: HardDrive, iconBg: "bg-sky-100", iconColor: "text-sky-600", x: 585, y: 110 },
+      ],
+      arrows: [
+        { from: "users", to: "cdn", label: "Anycast" },
+        { from: "cdn", to: "worker", label: "< 5ms" },
+        { from: "cdn", to: "origin", label: "Miss Route" },
+        { from: "worker", to: "cache", label: "Edge KV" },
+        { from: "origin", to: "globaldb", label: "ACID Sync" },
+        { from: "origin", to: "storage", label: "Assets" },
       ],
     },
   }
@@ -269,9 +316,9 @@ export function ExcalidrawStoryline() {
               <span className="w-3 h-3 rounded-full bg-amber-400/90" />
               <span className="w-3 h-3 rounded-full bg-emerald-400/90" />
             </div>
-            <div className="px-6 py-1 rounded-full bg-white border border-slate-200/80 text-[11px] font-mono text-slate-500 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              whiteboard.design/team/ui-wireframe-layout
+            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-2xs">
+              <LayoutGrid className="w-3.5 h-3.5 text-indigo-600" />
+              <span>UI Layout Wireframe</span>
             </div>
             <div className="flex items-center gap-2 text-[11px] font-mono text-slate-500">
               <span className="hidden sm:inline">2 Collaborators Live</span>
@@ -280,43 +327,7 @@ export function ExcalidrawStoryline() {
           </div>
 
           {/* Whiteboard Canvas Area */}
-          <div className="relative min-h-[440px] sm:min-h-[480px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 overflow-hidden flex flex-col justify-between">
-            {/* FLOATING TOP WIREFRAME CONTROLS */}
-            <div className="flex items-center justify-between z-20 gap-3 flex-wrap">
-              <div className="bg-white/95 backdrop-blur-md border border-slate-200 shadow-xs rounded-xl p-1.5 flex items-center gap-1">
-                {[
-                  { id: "select", label: "Select", icon: MousePointer2 },
-                  { id: "box", label: "Wireframe Box", icon: LayoutGrid },
-                  { id: "text", label: "Text", icon: LayoutGrid },
-                  { id: "note", label: "Sticky", icon: Sliders },
-                ].map((t) => (
-                  <button
-                    key={t.id}
-                    className="px-2.5 py-1 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 flex items-center gap-1.5 transition-colors cursor-pointer"
-                  >
-                    <t.icon className="w-3.5 h-3.5" />
-                    <span className="hidden sm:inline">{t.label}</span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Wireframe theme palette */}
-              <div className="bg-white/95 backdrop-blur-md border border-slate-200 shadow-xs rounded-xl px-3 py-1.5 flex items-center gap-2 text-xs text-slate-600">
-                <span className="font-mono text-[10px] font-bold text-slate-400 uppercase">Accent</span>
-                {(["indigo", "purple", "emerald"] as const).map((theme) => (
-                  <button
-                    key={theme}
-                    onClick={() => setWireframeTheme(theme)}
-                    className={`w-4 h-4 rounded-full transition-transform cursor-pointer ${
-                      wireframeTheme === theme ? "scale-125 ring-2 ring-slate-800 ring-offset-1" : "opacity-75 hover:opacity-100"
-                    } ${
-                      theme === "indigo" ? "bg-indigo-600" : theme === "purple" ? "bg-purple-600" : "bg-emerald-600"
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
-
+          <div className="relative min-h-[440px] sm:min-h-[480px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 overflow-hidden flex flex-col justify-center">
             {/* LIVE WEBSITE WIREFRAME BEING DESIGNED BY 2 PEOPLE */}
             <div className="relative my-auto flex items-center justify-center py-3">
               {/* Outer Website Canvas Artboard */}
@@ -330,9 +341,7 @@ export function ExcalidrawStoryline() {
                 {/* 1. Wireframe Navbar */}
                 <div className="w-full pb-3 border-b border-slate-100 flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
-                    <div className={`w-5 h-5 rounded-md ${
-                      wireframeTheme === "indigo" ? "bg-indigo-600" : wireframeTheme === "purple" ? "bg-purple-600" : "bg-emerald-600"
-                    }`} />
+                    <div className="w-5 h-5 rounded-md bg-indigo-600" />
                     <div className="w-20 h-3 rounded bg-slate-200" />
                   </div>
                   <div className="hidden sm:flex items-center gap-3">
@@ -342,9 +351,7 @@ export function ExcalidrawStoryline() {
                   </div>
                   <div className="flex items-center gap-2">
                     <div className="w-12 h-5 rounded bg-slate-100" />
-                    <div className={`px-2.5 py-1 rounded text-[10px] font-bold text-white ${
-                      wireframeTheme === "indigo" ? "bg-indigo-600" : wireframeTheme === "purple" ? "bg-purple-600" : "bg-emerald-600"
-                    }`}>
+                    <div className="px-2.5 py-1 rounded text-[10px] font-bold text-white bg-indigo-600">
                       Get Started
                     </div>
                   </div>
@@ -364,9 +371,9 @@ export function ExcalidrawStoryline() {
                   <div className="flex items-center justify-center gap-2">
                     <button
                       onClick={() => setSelectedWireframeEl("hero-cta")}
-                      className={`px-4 py-1.5 rounded-lg text-xs font-bold text-white shadow-sm transition-all cursor-pointer relative ${
-                        wireframeTheme === "indigo" ? "bg-indigo-600" : wireframeTheme === "purple" ? "bg-purple-600" : "bg-emerald-600"
-                      } ${selectedWireframeEl === "hero-cta" ? "ring-2 ring-indigo-400 ring-offset-2 scale-105" : ""}`}
+                      className={`px-4 py-1.5 rounded-lg text-xs font-bold text-white shadow-sm transition-all cursor-pointer relative bg-indigo-600 ${
+                        selectedWireframeEl === "hero-cta" ? "ring-2 ring-indigo-400 ring-offset-2 scale-105" : ""
+                      }`}
                     >
                       <span>Explore Whiteboard</span>
                       {selectedWireframeEl === "hero-cta" && (
@@ -475,12 +482,6 @@ export function ExcalidrawStoryline() {
                 </div>
               </div>
             </div>
-
-            {/* Bottom mini status bar */}
-            <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono pt-3 border-t border-slate-100">
-              <span>Selected Element: <strong className="text-slate-700">{selectedWireframeEl}</strong></span>
-              <span className="text-indigo-600 font-semibold">12-column flex grid active</span>
-            </div>
           </div>
         </div>
 
@@ -545,9 +546,9 @@ export function ExcalidrawStoryline() {
               <span className="w-3 h-3 rounded-full bg-amber-400/90" />
               <span className="w-3 h-3 rounded-full bg-emerald-400/90" />
             </div>
-            <div className="px-6 py-1 rounded-full bg-white border border-slate-200/80 text-[11px] font-mono text-slate-500 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              whiteboard.design/room/sprint-14-retro
+            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-2xs">
+              <Users className="w-3.5 h-3.5 text-indigo-600" />
+              <span>Sprint 14 Retrospective</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-5 h-5 rounded-full bg-indigo-500 text-white text-[9px] font-bold flex items-center justify-center ring-2 ring-white">E</span>
@@ -558,51 +559,19 @@ export function ExcalidrawStoryline() {
           </div>
 
           {/* Whiteboard Canvas Area */}
-          <div className="relative min-h-[420px] sm:min-h-[460px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 overflow-hidden flex flex-col justify-between">
-            {/* Top Interactive Reaction Controls */}
-            <div className="flex items-center justify-between z-20 gap-3">
-              <div className="bg-white/95 backdrop-blur-md border border-slate-200 shadow-xs rounded-xl px-3 py-1.5 flex items-center gap-2">
-                <span className="text-xs font-semibold text-slate-700">Send Reaction:</span>
-                {["🚀", "🔥", "❤️", "💡", "👏"].map((emoji) => (
-                  <button
-                    key={emoji}
-                    onClick={() => triggerReaction(emoji)}
-                    className="p-1 hover:scale-125 transition-transform text-sm cursor-pointer rounded hover:bg-slate-100"
-                    title={`Send ${emoji}`}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-
-              {/* Share Room Button */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => {
-                    setCopiedLink(true)
-                    setTimeout(() => setCopiedLink(false), 2000)
-                  }}
-                  className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
-                >
-                  {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
-                  <span>{copiedLink ? "Link Copied!" : "Share Link"}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Dynamic Reaction Particles Floating Across Screen */}
-            <div className="absolute inset-0 pointer-events-none overflow-hidden z-30">
-              {reactions.map((r) => (
-                <motion.div
-                  key={r.id}
-                  initial={{ opacity: 1, scale: 0.5, y: r.y, x: r.x }}
-                  animate={{ opacity: 0, scale: 1.5, y: r.y - 120 }}
-                  transition={{ duration: 1.8, ease: "easeOut" }}
-                  className="absolute text-2xl select-none"
-                >
-                  {r.emoji}
-                </motion.div>
-              ))}
+          <div className="relative min-h-[420px] sm:min-h-[460px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 overflow-hidden flex flex-col justify-center">
+            {/* Share Room Button Top-Right */}
+            <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+              <button
+                onClick={() => {
+                  setCopiedLink(true)
+                  setTimeout(() => setCopiedLink(false), 2000)
+                }}
+                className="px-3 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+              >
+                {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
+                <span>{copiedLink ? "Link Copied!" : "Share Link"}</span>
+              </button>
             </div>
 
             {/* Collaborative Session Cards on Canvas */}
@@ -693,15 +662,6 @@ export function ExcalidrawStoryline() {
                 </span>
               </motion.div>
             </div>
-
-            {/* Bottom mini status */}
-            <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono pt-3 border-t border-slate-100">
-              <span>Rooms require zero sign-in for guests</span>
-              <span className="text-emerald-600 font-semibold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
-                WebSocket Latency: 12ms
-              </span>
-            </div>
           </div>
         </div>
 
@@ -749,18 +709,21 @@ export function ExcalidrawStoryline() {
 
         {/* BROWSER WINDOW MOCKUP: SYSTEM ARCHITECTURE */}
         <div className="rounded-2xl border border-slate-200/90 shadow-xl bg-white overflow-hidden mb-5">
-          {/* Chrome top bar with 1-Click Template Selector */}
+          {/* Chrome top bar with Prebuilt Layout Switcher */}
           <div className="h-12 bg-slate-50 border-b border-slate-200 flex items-center px-4 justify-between select-none flex-wrap gap-2">
             <div className="flex items-center gap-2">
               <span className="w-3 h-3 rounded-full bg-red-400/90" />
               <span className="w-3 h-3 rounded-full bg-amber-400/90" />
               <span className="w-3 h-3 rounded-full bg-emerald-400/90" />
-              <span className="text-xs font-mono font-bold text-slate-700 ml-2">Architecture Templates:</span>
+              <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-2xs ml-1">
+                <Network className="w-3.5 h-3.5 text-purple-600" />
+                <span>System Architecture & Cloud Topology</span>
+              </div>
             </div>
 
-            {/* 1-Click Architecture Templates Switcher */}
+            {/* Prebuilt Layouts Switcher */}
             <div className="flex items-center gap-1.5">
-              {(["ecommerce", "chat", "rag"] as const).map((tKey) => {
+              {(["microservices", "three-tier", "cdn-caching"] as const).map((tKey) => {
                 const tmpl = ARCH_TEMPLATES[tKey]
                 const isActive = selectedArchTemplate === tKey
                 return (
@@ -786,88 +749,205 @@ export function ExcalidrawStoryline() {
             </div>
           </div>
 
-          {/* Whiteboard Canvas Viewport */}
-          <div className="relative min-h-[440px] bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px] p-6 sm:p-8 flex flex-col justify-between overflow-hidden">
-            {/* Ready-Made Built Components Tray */}
-            <div className="flex items-center justify-between mb-3 flex-wrap gap-2 z-20">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-[11px] font-mono text-slate-500 font-bold uppercase mr-1">Ready-Made:</span>
-                {[
-                  { name: "API Gateway", icon: Server },
-                  { name: "Kafka Queue", icon: Network },
-                  { name: "Redis Cache", icon: Radio },
-                  { name: "PostgreSQL", icon: Database },
-                ].map((c) => (
-                  <span
-                    key={c.name}
-                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 text-[11px] font-medium shadow-2xs"
-                  >
-                    <c.icon className="w-3 h-3 text-indigo-600" />
-                    <span>{c.name}</span>
-                  </span>
-                ))}
-              </div>
-
-              <div className="text-[11px] font-mono text-indigo-700 bg-indigo-50 border border-indigo-200 px-2.5 py-1 rounded-lg font-semibold">
-                VPC Boundary: 10.0.0.0/16 Active
-              </div>
+          {/* Whiteboard Workspace: Tool Toolbar + Component Library Drawer + Canvas */}
+          <div className="flex h-[420px] bg-[#FAFBFD] overflow-hidden relative select-none">
+            {/* 1. ACTUAL CANVAS TOOLBAR (Left vertical dock) */}
+            <div className="w-11 bg-white border-r border-slate-200/80 p-1 flex flex-col items-center gap-1 shrink-0 z-20">
+              <button className="p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Select Tool">
+                <MousePointer2 className="w-4 h-4" />
+              </button>
+              <button className="p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Text Tool">
+                <Type className="w-4 h-4" />
+              </button>
+              <button className="p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Sticky Note">
+                <StickyNote className="w-4 h-4" />
+              </button>
+              <button className="p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Container Box">
+                <Square className="w-4 h-4" />
+              </button>
+              <button className="p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Directional Arrow">
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              {/* Active Component Library Tool Icon */}
+              <button className="p-2 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-200 shadow-2xs relative" title="Component Library (Active)">
+                <Box className="w-4 h-4" />
+                <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-indigo-600" />
+              </button>
+              <button className="p-2 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors" title="Prebuilt Layouts">
+                <LayoutTemplate className="w-4 h-4" />
+              </button>
             </div>
 
-            {/* VPC BOUNDARY WITH READY-MADE CLOUD NODES */}
-            <div className="relative w-full my-auto rounded-3xl border-2 border-dashed border-indigo-400 bg-indigo-50/25 p-5 transition-all">
-              <div className="flex items-center justify-between mb-3">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-indigo-600 text-white font-mono text-xs font-bold shadow-xs">
-                  <Shield className="w-3.5 h-3.5" />
-                  <span>Production VPC Boundary</span>
+            {/* 2. ACTUAL COMPONENT LIBRARY DRAWER */}
+            <div className="w-48 bg-white border-r border-slate-200/80 flex flex-col shrink-0 z-20 hidden md:flex">
+              {/* Library Header & Tabs */}
+              <div className="p-2.5 border-b border-slate-100 flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-800">Component Tab</span>
+                <span className="text-[9px] font-mono px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold">30+ Primitives</span>
+              </div>
+
+              {/* Search Bar */}
+              <div className="p-2 border-b border-slate-100">
+                <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-50 border border-slate-200/80 text-[11px] text-slate-400">
+                  <Search className="w-3 h-3 text-slate-400" />
+                  <span className="truncate">Search components...</span>
                 </div>
-                <span className="text-xs font-mono text-indigo-700">Multi-tier Auto-layout</span>
               </div>
 
-              {/* Dynamic Grid of Cloud Primitive Nodes */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                {ARCH_TEMPLATES[selectedArchTemplate].nodes.map((node) => {
-                  const Icon = node.icon
-                  const isSelected = selectedCloudNode === node.id
-                  return (
-                    <div
-                      key={node.id}
-                      onClick={() => setSelectedCloudNode(node.id)}
-                      className={`p-3 rounded-2xl bg-white border transition-all cursor-pointer text-left relative ${
-                        isSelected
-                          ? "border-indigo-600 ring-2 ring-indigo-500 shadow-md scale-102"
-                          : "border-slate-200 hover:border-slate-300 shadow-2xs hover:shadow-sm"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between mb-1.5">
-                        <span className={`p-1.5 rounded-xl border ${node.color}`}>
-                          <Icon className="w-4 h-4" />
+              {/* Categorized Component List */}
+              <div className="flex-1 overflow-y-auto p-2 space-y-3">
+                <div>
+                  <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+                    Compute & Services
+                  </span>
+                  <div className="space-y-1">
+                    {[
+                      { name: "API Gateway", icon: Network, iconBg: "bg-indigo-100", iconColor: "text-indigo-600" },
+                      { name: "Microservice", icon: Box, iconBg: "bg-emerald-100", iconColor: "text-emerald-600" },
+                      { name: "Worker Service", icon: Cpu, iconBg: "bg-blue-100", iconColor: "text-blue-600" },
+                      { name: "Serverless", icon: Zap, iconBg: "bg-amber-100", iconColor: "text-amber-600" },
+                    ].map((comp) => (
+                      <div
+                        key={comp.name}
+                        className="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200/60 bg-white hover:border-slate-300 hover:shadow-2xs transition-all cursor-grab select-none"
+                      >
+                        <span className={`w-6 h-6 rounded-md flex items-center justify-center ${comp.iconBg}`}>
+                          <comp.icon className={`w-3.5 h-3.5 ${comp.iconColor}`} strokeWidth={1.8} />
                         </span>
-                        <span className="text-[9px] font-mono text-slate-400 font-bold">
-                          {node.tier}
+                        <span className="text-[11px] font-semibold text-slate-700">{comp.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <span className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+                    Databases & Caching
+                  </span>
+                  <div className="space-y-1">
+                    {[
+                      { name: "PostgreSQL 16", icon: Database, iconBg: "bg-sky-100", iconColor: "text-sky-600" },
+                      { name: "Redis Cache", icon: Radio, iconBg: "bg-rose-100", iconColor: "text-rose-600" },
+                      { name: "Kafka Stream", icon: Layers, iconBg: "bg-purple-100", iconColor: "text-purple-600" },
+                    ].map((comp) => (
+                      <div
+                        key={comp.name}
+                        className="flex items-center gap-2 p-1.5 rounded-lg border border-slate-200/60 bg-white hover:border-slate-300 hover:shadow-2xs transition-all cursor-grab select-none"
+                      >
+                        <span className={`w-6 h-6 rounded-md flex items-center justify-center ${comp.iconBg}`}>
+                          <comp.icon className={`w-3.5 h-3.5 ${comp.iconColor}`} strokeWidth={1.8} />
                         </span>
+                        <span className="text-[11px] font-semibold text-slate-700">{comp.name}</span>
                       </div>
-                      <h4 className="font-bold text-slate-900 text-xs sm:text-sm leading-tight mb-0.5">
-                        {node.name}
-                      </h4>
-                      <p className="text-[10px] text-slate-500 font-mono">
-                        {node.type}
-                      </p>
-                      <div className="mt-1.5 pt-1.5 border-t border-slate-100 flex items-center justify-between text-[9px] font-mono text-indigo-600">
-                        <span>{node.sub}</span>
-                        {isSelected && <span className="font-bold">Active</span>}
-                      </div>
-                    </div>
-                  )
-                })}
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
-            {/* Template Description Footer */}
-            <div className="mt-3 pt-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500 font-mono">
-              <span>{ARCH_TEMPLATES[selectedArchTemplate].desc}</span>
-              <span className="text-indigo-600 font-bold hover:underline cursor-pointer">
-                Export to Architecture RFC →
-              </span>
+            {/* 3. INFINITE CANVAS VIEWPORT WITH PREBUILT LAYOUT */}
+            <div className="flex-1 relative overflow-hidden bg-[#FAFBFD] bg-[radial-gradient(#CBD5E1_1.25px,transparent_1.25px)] [background-size:20px_20px]">
+              {/* Active Layout Badge */}
+              <div className="absolute top-3 left-4 z-10 flex items-center gap-2 px-3 py-1 rounded-full bg-white/95 border border-slate-200 shadow-2xs backdrop-blur-md">
+                <span className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
+                <span className="text-[11px] font-mono font-bold text-slate-700">
+                  Active Layout: {ARCH_TEMPLATES[selectedArchTemplate].name}
+                </span>
+              </div>
+
+              {/* Interactive Nodes & Connectors Container */}
+              <div className="absolute inset-0 overflow-auto flex items-center justify-center p-4">
+                <div className="relative w-[720px] h-[300px] shrink-0">
+                  {/* SVG Connecting Arrows */}
+                  <svg className="absolute inset-0 w-full h-full pointer-events-none z-10 overflow-visible">
+                    <defs>
+                      <marker
+                        id="archArrowStory"
+                        markerWidth="8"
+                        markerHeight="8"
+                        refX="7"
+                        refY="4"
+                        orient="auto"
+                      >
+                        <path d="M 0 1 L 7 4 L 0 7 z" fill="#6366F1" />
+                      </marker>
+                    </defs>
+                    {ARCH_TEMPLATES[selectedArchTemplate].arrows.map((arr, i) => {
+                      const fromNode = ARCH_TEMPLATES[selectedArchTemplate].nodes.find((n) => n.id === arr.from)
+                      const toNode = ARCH_TEMPLATES[selectedArchTemplate].nodes.find((n) => n.id === arr.to)
+                      if (!fromNode || !toNode) return null
+
+                      const x1 = fromNode.x + 105
+                      const y1 = fromNode.y + 40
+                      const x2 = toNode.x
+                      const y2 = toNode.y + 40
+                      const midX = (x1 + x2) / 2
+                      const midY = (y1 + y2) / 2
+                      const path = `M ${x1} ${y1} C ${x1 + (x2 - x1) * 0.45} ${y1}, ${x2 - (x2 - x1) * 0.45} ${y2}, ${x2} ${y2}`
+
+                      return (
+                        <g key={i}>
+                          <path
+                            d={path}
+                            fill="none"
+                            stroke="#6366F1"
+                            strokeWidth="2"
+                            strokeDasharray={arr.dashed ? "4 4" : undefined}
+                            markerEnd="url(#archArrowStory)"
+                            strokeLinecap="round"
+                          />
+                          <g transform={`translate(${midX}, ${midY})`}>
+                            <rect x="-28" y="-9" width="56" height="18" rx="9" fill="white" stroke="#CBD5E1" strokeWidth="1" className="shadow-2xs" />
+                            <text x="0" y="2" fill="#475569" fontSize="8" fontWeight="bold" textAnchor="middle" dominantBaseline="middle" className="font-mono">
+                              {arr.label}
+                            </text>
+                          </g>
+                        </g>
+                      )
+                    })}
+                  </svg>
+
+                  {/* Actual Canvas Component Nodes */}
+                  {ARCH_TEMPLATES[selectedArchTemplate].nodes.map((node) => {
+                    const Icon = node.icon
+                    const isSelected = selectedCloudNode === node.id
+                    return (
+                      <div
+                        key={node.id}
+                        onClick={() => setSelectedCloudNode(node.id)}
+                        style={{
+                          position: "absolute",
+                          left: `${node.x}px`,
+                          top: `${node.y}px`,
+                          width: "105px",
+                          height: "82px",
+                        }}
+                        className={`rounded-xl bg-white border p-2 flex flex-col items-center justify-center text-center cursor-pointer select-none transition-all z-20 ${
+                          isSelected
+                            ? "border-indigo-600 ring-2 ring-indigo-400 shadow-md scale-105"
+                            : "border-slate-200/90 hover:border-slate-300 shadow-2xs hover:shadow-xs"
+                        }`}
+                      >
+                        {/* Online Status Pill */}
+                        <div className="absolute top-1.5 right-1.5 flex items-center gap-1 px-1 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[7px] font-bold text-emerald-700 font-mono">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <span>ONLINE</span>
+                        </div>
+
+                        {/* Icon container */}
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-1 shadow-2xs ${node.iconBg}`}>
+                          <Icon className={`w-4 h-4 ${node.iconColor}`} strokeWidth={1.8} />
+                        </div>
+
+                        {/* Label */}
+                        <span className="text-[10px] font-bold text-slate-800 leading-tight tracking-tight">
+                          {node.name}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -933,9 +1013,9 @@ export function ExcalidrawStoryline() {
               <span className="w-3 h-3 rounded-full bg-amber-400/90" />
               <span className="w-3 h-3 rounded-full bg-emerald-400/90" />
             </div>
-            <div className="px-6 py-1 rounded-full bg-white border border-slate-200/80 text-[11px] font-mono text-slate-500 flex items-center gap-2">
-              <Database className="w-3 h-3 text-emerald-600" />
-              schema-designer.sql/public/erd-model
+            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-2xs">
+              <Database className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Database Schema & ERD</span>
             </div>
             <div className="text-[11px] font-mono text-emerald-600 font-bold">PostgreSQL 16 Dialect</div>
           </div>
@@ -1112,11 +1192,6 @@ export function ExcalidrawStoryline() {
               </div>
             </div>
 
-            {/* Bottom mini status bar */}
-            <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono pt-3 border-t border-slate-100">
-              <span>Selected Table: <strong className="text-emerald-700">public.{selectedTable}</strong></span>
-              <span className="text-slate-600 font-semibold">1-Click SQL Migration Generation Ready</span>
-            </div>
           </div>
         </div>
 
@@ -1181,9 +1256,9 @@ export function ExcalidrawStoryline() {
               <span className="w-3 h-3 rounded-full bg-amber-400/90" />
               <span className="w-3 h-3 rounded-full bg-emerald-400/90" />
             </div>
-            <div className="px-6 py-1 rounded-full bg-white border border-slate-200/80 text-[11px] font-mono text-slate-500 flex items-center gap-2">
-              <Activity className="w-3 h-3 text-blue-600" />
-              trace.request/orders/checkout-sequence
+            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-2xs">
+              <Activity className="w-3.5 h-3.5 text-blue-600" />
+              <span>Sequence Flow & Trace</span>
             </div>
             <div className="text-[11px] font-mono text-blue-600 font-bold">Total P99: 68.4ms</div>
           </div>
@@ -1317,11 +1392,6 @@ export function ExcalidrawStoryline() {
               </div>
             </div>
 
-            {/* Bottom mini status bar */}
-            <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono pt-3 border-t border-slate-100">
-              <span>Interactive Step-by-Step Sequence Execution</span>
-              <span className="text-blue-600 font-semibold">Simulate Flow Mode: Enabled</span>
-            </div>
           </div>
         </div>
 
@@ -1386,9 +1456,9 @@ export function ExcalidrawStoryline() {
               <span className="w-3 h-3 rounded-full bg-amber-400/90" />
               <span className="w-3 h-3 rounded-full bg-emerald-400/90" />
             </div>
-            <div className="px-6 py-1 rounded-full bg-white border border-slate-200/80 text-[11px] font-mono text-slate-500 flex items-center gap-2">
-              <Calculator className="w-3 h-3 text-amber-600" />
-              system-design.estimator/scale-equations
+            <div className="flex items-center gap-2 px-3 py-1 rounded-md bg-white border border-slate-200/80 text-xs font-semibold text-slate-700 shadow-2xs">
+              <Calculator className="w-3.5 h-3.5 text-amber-600" />
+              <span>Capacity & Scale Estimator</span>
             </div>
             <div className="text-[11px] font-mono text-amber-600 font-bold">Live Calculator</div>
           </div>
@@ -1531,11 +1601,6 @@ export function ExcalidrawStoryline() {
               </div>
             </div>
 
-            {/* Bottom mini status bar */}
-            <div className="flex items-center justify-between text-[11px] text-slate-400 font-mono pt-3 border-t border-slate-100">
-              <span>Automatic Back-of-the-Envelope Math</span>
-              <span className="text-amber-700 font-semibold">Live System Interview Mode</span>
-            </div>
           </div>
         </div>
 

@@ -17,11 +17,18 @@ import {
   Trash2,
   Check,
   Edit3,
+  Monitor,
+  Network,
+  Shield,
+  Cpu,
+  Radio,
+  Database,
+  Box,
 } from "lucide-react"
 
 export interface CanvasItem {
   id: string
-  type: "sticky" | "rect" | "circle"
+  type: "sticky" | "rect" | "circle" | "sys-component"
   title: string
   content?: string
   author: string
@@ -34,6 +41,9 @@ export interface CanvasItem {
   width: number
   height: number
   rotation: number
+  icon?: any
+  iconBg?: string
+  iconColor?: string
 }
 
 interface Connector {
@@ -80,114 +90,126 @@ interface IntersectionResult {
 const INITIAL_ITEMS: CanvasItem[] = [
   {
     id: "item-1",
-    type: "rect",
-    title: "Web & Mobile Client",
-    content: "Next.js 14 • React App\nPublic HTTPS Traffic",
+    type: "sys-component",
+    title: "Web Client",
     author: "Client",
-    authorColor: "bg-indigo-600",
-    color: "bg-indigo-50/95",
-    borderColor: "border-indigo-400",
-    textColor: "text-indigo-950",
-    x: 80,
-    y: 160,
-    width: 170,
-    height: 105,
+    authorColor: "bg-blue-600",
+    color: "bg-white",
+    borderColor: "border-blue-300",
+    textColor: "text-blue-950",
+    icon: Monitor,
+    iconBg: "bg-blue-100",
+    iconColor: "text-blue-600",
+    x: 60,
+    y: 175,
+    width: 110,
+    height: 95,
     rotation: 0,
   },
   {
     id: "item-2",
-    type: "circle",
+    type: "sys-component",
     title: "API Gateway",
-    content: "Envoy / NGINX\nTLS • JWT • Rate Limiting",
     author: "Gateway",
-    authorColor: "bg-sky-600",
-    color: "bg-sky-50/95",
-    borderColor: "border-sky-400",
-    textColor: "text-sky-950",
-    x: 295,
-    y: 145,
-    width: 135,
-    height: 135,
+    authorColor: "bg-indigo-600",
+    color: "bg-white",
+    borderColor: "border-indigo-300",
+    textColor: "text-indigo-950",
+    icon: Network,
+    iconBg: "bg-indigo-100",
+    iconColor: "text-indigo-600",
+    x: 245,
+    y: 175,
+    width: 115,
+    height: 95,
     rotation: 0,
   },
   {
     id: "item-3",
-    type: "rect",
+    type: "sys-component",
     title: "Auth Microservice",
-    content: "Node.js / Express\nJWT Validation & OAuth2",
     author: "Auth",
     authorColor: "bg-purple-600",
-    color: "bg-purple-50/95",
-    borderColor: "border-purple-400",
+    color: "bg-white",
+    borderColor: "border-purple-300",
     textColor: "text-purple-950",
-    x: 505,
-    y: 55,
-    width: 175,
-    height: 100,
+    icon: Shield,
+    iconBg: "bg-purple-100",
+    iconColor: "text-purple-600",
+    x: 440,
+    y: 75,
+    width: 135,
+    height: 95,
     rotation: 0,
   },
   {
     id: "item-4",
-    type: "rect",
+    type: "sys-component",
     title: "Order Microservice",
-    content: "Go / gRPC Service\nCheckout & Transactions",
     author: "Orders",
-    authorColor: "bg-blue-600",
-    color: "bg-blue-50/95",
-    borderColor: "border-blue-400",
-    textColor: "text-blue-950",
-    x: 505,
-    y: 205,
-    width: 175,
-    height: 100,
+    authorColor: "bg-emerald-600",
+    color: "bg-white",
+    borderColor: "border-emerald-300",
+    textColor: "text-emerald-950",
+    icon: Cpu,
+    iconBg: "bg-emerald-100",
+    iconColor: "text-emerald-600",
+    x: 440,
+    y: 275,
+    width: 135,
+    height: 95,
     rotation: 0,
   },
   {
     id: "item-5",
-    type: "rect",
+    type: "sys-component",
     title: "Redis Cache",
-    content: "Redis In-Memory Cluster\n< 2ms Token & Session Store",
     author: "Cache",
     authorColor: "bg-rose-600",
-    color: "bg-rose-50/95",
-    borderColor: "border-rose-400",
+    color: "bg-white",
+    borderColor: "border-rose-300",
     textColor: "text-rose-950",
-    x: 755,
-    y: 55,
-    width: 175,
-    height: 100,
+    icon: Radio,
+    iconBg: "bg-rose-100",
+    iconColor: "text-rose-600",
+    x: 655,
+    y: 75,
+    width: 115,
+    height: 95,
     rotation: 0,
   },
   {
     id: "item-6",
-    type: "rect",
+    type: "sys-component",
     title: "PostgreSQL DB",
-    content: "PostgreSQL 16 Primary\nACID Relational Orders Core",
     author: "Database",
-    authorColor: "bg-emerald-600",
-    color: "bg-emerald-50/95",
-    borderColor: "border-emerald-400",
-    textColor: "text-emerald-950",
-    x: 755,
-    y: 205,
-    width: 175,
-    height: 100,
+    authorColor: "bg-sky-600",
+    color: "bg-white",
+    borderColor: "border-sky-300",
+    textColor: "text-sky-950",
+    icon: Database,
+    iconBg: "bg-sky-100",
+    iconColor: "text-sky-600",
+    x: 655,
+    y: 275,
+    width: 115,
+    height: 95,
     rotation: 0,
   },
   {
     id: "item-7",
     type: "sticky",
     title: "⚡️ Architecture RFC",
-    content: "• gRPC for inter-service RPC\n• Redis TTL: 3600s\n• Connection pool: 25\n• Multi-AZ automatic failover",
+    content: "• Token cache TTL: 3600s\n• Multi-AZ read replicas\n• Zero-downtime deploys",
     author: "Ayush",
     authorColor: "bg-amber-600",
     color: "bg-amber-100",
     borderColor: "border-amber-300",
     textColor: "text-amber-950",
-    x: 505,
-    y: 350,
-    width: 215,
-    height: 130,
+    x: 825,
+    y: 165,
+    width: 175,
+    height: 125,
     rotation: -1.5,
   },
 ]
@@ -198,43 +220,43 @@ const INITIAL_CONNECTORS: Connector[] = [
     fromId: "item-1",
     toId: "item-2",
     color: "#6366F1",
-    label: "HTTPS / TLS",
+    label: "HTTPS",
   },
   {
     id: "conn-2",
     fromId: "item-2",
     toId: "item-3",
     color: "#8B5CF6",
-    label: "/auth route",
+    label: "gRPC",
   },
   {
     id: "conn-3",
     fromId: "item-2",
     toId: "item-4",
-    color: "#3B82F6",
-    label: "/orders route",
+    color: "#10B981",
+    label: "REST",
   },
   {
     id: "conn-4",
     fromId: "item-3",
     toId: "item-5",
     color: "#F43F5E",
-    label: "Session check",
+    label: "Cache",
     dashed: true,
   },
   {
     id: "conn-5",
     fromId: "item-4",
     toId: "item-6",
-    color: "#10B981",
-    label: "Read / Write",
+    color: "#0EA5E9",
+    label: "SQL",
   },
   {
     id: "conn-6",
     fromId: "item-4",
     toId: "item-7",
     color: "#F59E0B",
-    label: "RFC Spec",
+    label: "RFC Note",
     dashed: true,
   },
 ]
@@ -1026,7 +1048,7 @@ export function CanvasSimulator() {
                       ? "polygon(0% 0%, 100% 0%, 100% calc(100% - 24px), calc(100% - 24px) 100%, 0% 100%)"
                       : undefined,
                 }}
-                className={`group p-4 border transition-shadow select-none relative ${
+                className={`group border transition-shadow select-none relative ${
                   isDragging ? "cursor-grabbing shadow-2xl scale-[1.02]" : "cursor-grab shadow-md hover:shadow-lg"
                 } ${item.borderColor} ${item.color} ${item.textColor} ${
                   isSelected ? "ring-2 ring-indigo-500 ring-offset-2" : ""
@@ -1034,11 +1056,38 @@ export function CanvasSimulator() {
                   item.type === "circle"
                     ? "rounded-full flex flex-col items-center justify-center text-center p-3 aspect-square"
                     : item.type === "sticky"
-                    ? "rounded-[2px]"
-                    : "rounded-2xl"
+                    ? "rounded-[2px] p-4"
+                    : item.type === "sys-component"
+                    ? "rounded-xl p-2.5 flex flex-col items-center justify-center"
+                    : "rounded-2xl p-4"
                 }`}
               >
-                {/* 3D Paper Sticky Note Details */}
+                {/* 1. ACTUAL CANVAS SYSTEM COMPONENT CARD */}
+                {item.type === "sys-component" && (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-center pointer-events-none relative">
+                    {/* Status Pill Top-Right */}
+                    <div className="absolute top-0 right-0 flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-50 border border-emerald-200/80 text-[7px] font-bold text-emerald-700 font-mono">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>ONLINE</span>
+                    </div>
+
+                    {/* Icon Badge */}
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-1.5 shadow-2xs ${item.iconBg || "bg-indigo-100"}`}>
+                      {item.icon ? (
+                        <item.icon className={`w-5 h-5 ${item.iconColor || "text-indigo-600"}`} strokeWidth={1.8} />
+                      ) : (
+                        <Box className="w-5 h-5 text-indigo-600" strokeWidth={1.8} />
+                      )}
+                    </div>
+
+                    {/* Clean Component Title (No descriptions) */}
+                    <span className="text-[11px] font-bold text-slate-800 leading-tight tracking-tight">
+                      {item.title}
+                    </span>
+                  </div>
+                )}
+
+                {/* 2. 3D Paper Sticky Note Details */}
                 {item.type === "sticky" && (
                   <>
                     {/* Top Adhesive Band */}
@@ -1076,6 +1125,16 @@ export function CanvasSimulator() {
                         />
                       </svg>
                     </div>
+
+                    {/* Sticky Note Content */}
+                    <h4 className="font-comico font-bold text-xs leading-tight mb-1 pointer-events-none">
+                      {item.title}
+                    </h4>
+                    {item.content && (
+                      <p className="text-[11px] leading-relaxed whitespace-pre-line opacity-85 pointer-events-none">
+                        {item.content}
+                      </p>
+                    )}
                   </>
                 )}
 
@@ -1092,31 +1151,18 @@ export function CanvasSimulator() {
                   </div>
                 )}
 
-                {/* Item Header */}
-                {item.type !== "circle" && (
-                  <div className="flex items-center justify-between mb-2 pointer-events-none">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className={`w-4 h-4 rounded-full ${item.authorColor} text-white text-[9px] font-bold flex items-center justify-center`}
-                      >
-                        {item.author[0]}
-                      </span>
-                      <span className="font-comico text-[11px] font-bold opacity-75">
-                        {item.author}
-                      </span>
-                    </div>
-                    <span className="text-[10px] font-mono opacity-50">drag me</span>
-                  </div>
-                )}
-
-                {/* Item Content */}
-                <h4 className="font-comico font-bold text-sm leading-tight mb-1 pointer-events-none">
-                  {item.title}
-                </h4>
-                {item.content && (
-                  <p className="text-xs leading-relaxed whitespace-pre-line opacity-85 pointer-events-none">
-                    {item.content}
-                  </p>
+                {/* Fallback for regular rect/circle if placed */}
+                {item.type !== "sys-component" && item.type !== "sticky" && (
+                  <>
+                    <h4 className="font-comico font-bold text-sm leading-tight mb-1 pointer-events-none">
+                      {item.title}
+                    </h4>
+                    {item.content && (
+                      <p className="text-xs leading-relaxed whitespace-pre-line opacity-85 pointer-events-none">
+                        {item.content}
+                      </p>
+                    )}
+                  </>
                 )}
               </div>
             )
