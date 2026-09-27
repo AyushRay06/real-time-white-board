@@ -1,5 +1,15 @@
+import type { Metadata } from "next"
 import { Suspense } from "react"
 import { Navbar } from "./_components/navbar"
+
+export const metadata: Metadata = {
+  title: "Dashboard",
+  description:
+    "Manage your collaborative whiteboards on HLD. Create new boards, browse your team's canvases, and jump back into your most recent designs.",
+  alternates: {
+    canonical: "https://hld.ayushray.in",
+  },
+}
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -11,9 +21,7 @@ const DashboardLayout = ({ children }: DashboardLayoutProps) => {
       <Suspense fallback={<div className="h-16 w-full border-b border-slate-200/80 bg-white" />}>
         <Navbar />
       </Suspense>
-      <div className="flex-1">
-        {children}
-      </div>
+      <div className="flex-1">{children}</div>
     </main>
   )
 }

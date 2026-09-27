@@ -1,0 +1,28 @@
+# HLD
+
+> Real-time collaborative whiteboard for teams. Draw shapes, add sticky notes, and design system architectures together on an infinite canvas — powered by Liveblocks, Convex, and Clerk.
+
+HLD is a web-based collaborative diagramming and whiteboarding tool. It enables multiple users to work simultaneously on a shared infinite canvas with real-time synchronisation. It is free to use and supports user authentication via Clerk.
+
+## Features
+
+- Real-time collaboration with live cursors and presence indicators
+- Infinite canvas with pan and zoom
+- Drawing tools: shapes (rectangle, ellipse, triangle, diamond, path), freehand pen
+- Sticky notes with customisable text and colours
+- System architecture diagram templates (AWS, serverless, software architecture)
+- Board management: create, rename, favourite, and delete boards
+- Organisation and team management
+- Mobile responsive
+- Free and open source
+
+## Tech Stack
+
+- **Frontend**: Next.js 14, React, TypeScript, TailwindCSS, Shadcn UI
+- **Real-time**: Liveblocks (live cursors, canvas sync)
+- **Database / Backend**: Convex (real-time database and server functions)
+- **Authentication**: Clerk
+
+## Docs
+
+- [App](https://hld.ayushray.in): Main application and dashboard
