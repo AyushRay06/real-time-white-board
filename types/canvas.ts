@@ -296,6 +296,9 @@ export type ArrowLayer = {
   toLayerId: string
   fromAnchor: AnchorSide
   toAnchor: AnchorSide
+  // Fractional offset (0–1) along the anchor side; 0.5 = center (default)
+  fromAnchorT?: number
+  toAnchorT?: number
   // x, y, width, height kept for bounding-box compatibility (selection)
   x: number
   y: number

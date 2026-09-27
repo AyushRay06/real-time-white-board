@@ -12,14 +12,22 @@ import { useSimulation } from "./simulation-context"
 import { useCanvasTheme } from "./canvas-theme-context"
 
 // ─── Anchor point geometry ────────────────────────────────────────────────────
+/**
+ * Returns the canvas-space point for an anchor on a layer's border.
+ * @param t  0–1 fractional position along the side (0.5 = center, the default).
+ *           For "top"/"bottom": t=0 is left edge, t=1 is right edge.
+ *           For "left"/"right": t=0 is top edge, t=1 is bottom edge.
+ */
 export function getAnchorPoint(
-  x: number, y: number, width: number, height: number, anchor: AnchorSide
+  x: number, y: number, width: number, height: number,
+  anchor: AnchorSide,
+  t: number = 0.5
 ): Point {
   switch (anchor) {
-    case "top":    return { x: x + width / 2, y }
-    case "bottom": return { x: x + width / 2, y: y + height }
-    case "left":   return { x,               y: y + height / 2 }
-    case "right":  return { x: x + width,    y: y + height / 2 }
+    case "top":    return { x: x + width * t,   y }
+    case "bottom": return { x: x + width * t,   y: y + height }
+    case "left":   return { x,                  y: y + height * t }
+    case "right":  return { x: x + width,       y: y + height * t }
   }
 }
 
