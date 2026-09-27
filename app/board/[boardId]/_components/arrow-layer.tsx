@@ -25,31 +25,68 @@ export interface PathResult {
   labelPt: Point
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// PATH BUILDERS — all now accept waypoints[] (intermediate control points)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Build a polyline through all points: from → ...waypoints → to
+ */
+function buildPolylinePath(pts: Point[]): string {
+  if (pts.length < 2) return ""
+  const [first, ...rest] = pts
+  return `M ${first.x} ${first.y} ` + rest.map(p => `L ${p.x} ${p.y}`).join(" ")
+}
+
+/**
+ * Build a smooth cubic catmull-rom–like path through waypoints.
+ * Uses Bezier approximation for smooth curves through each waypoint.
+ */
+function buildSmoothPath(pts: Point[]): string {
+  if (pts.length < 2) return ""
+  if (pts.length === 2) {
+    const dx = pts[1].x - pts[0].x
+    const dy = pts[1].y - pts[0].y
+    const dist = Math.hypot(dx, dy)
+    const t = Math.min(Math.max(50, dist * 0.45), 260)
+    // Simple S-curve for 2 points — uses first/last anchor implicitly
+    return `M ${pts[0].x} ${pts[0].y} L ${pts[1].x} ${pts[1].y}`
+  }
+
+  // Catmull-Rom to Bezier conversion for smooth interpolation
+  let d = `M ${pts[0].x} ${pts[0].y}`
+  for (let i = 0; i < pts.length - 1; i++) {
+    const p0 = pts[Math.max(0, i - 1)]
+    const p1 = pts[i]
+    const p2 = pts[i + 1]
+    const p3 = pts[Math.min(pts.length - 1, i + 2)]
+
+    const alpha = 0.5 // Centripetal Catmull-Rom
+    const cp1x = p1.x + (p2.x - p0.x) / 6 * alpha * 2
+    const cp1y = p1.y + (p2.y - p0.y) / 6 * alpha * 2
+    const cp2x = p2.x - (p3.x - p1.x) / 6 * alpha * 2
+    const cp2y = p2.y - (p3.y - p1.y) / 6 * alpha * 2
+
+    d += ` C ${cp1x.toFixed(2)} ${cp1y.toFixed(2)}, ${cp2x.toFixed(2)} ${cp2y.toFixed(2)}, ${p2.x} ${p2.y}`
+  }
+  return d
+}
+
 function buildStraightPath(
   from: Point,
   to: Point,
-  controlOffset?: Point
+  waypoints: Point[]
 ): PathResult {
-  const ox = controlOffset?.x ?? 0
-  const oy = controlOffset?.y ?? 0
-  const midX = (from.x + to.x) / 2
-  const midY = (from.y + to.y) / 2
+  const allPts = [from, ...waypoints, to]
+  const mid = waypoints.length > 0
+    ? waypoints[Math.floor(waypoints.length / 2)]
+    : { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 }
 
-  if (Math.abs(ox) < 2 && Math.abs(oy) < 2) {
-    return {
-      d: `M ${from.x} ${from.y} L ${to.x} ${to.y}`,
-      handlePt: { x: midX, y: midY },
-      handleType: "point",
-      labelPt: { x: midX, y: midY },
-    }
-  }
-
-  const elbow = { x: Math.round(midX + ox), y: Math.round(midY + oy) }
   return {
-    d: `M ${from.x} ${from.y} L ${elbow.x} ${elbow.y} L ${to.x} ${to.y}`,
-    handlePt: elbow,
+    d: buildPolylinePath(allPts),
+    handlePt: mid,
     handleType: "point",
-    labelPt: elbow,
+    labelPt: mid,
   }
 }
 
@@ -58,153 +95,136 @@ function buildCubicPath(
   to: Point,
   fromAnchor: AnchorSide,
   toAnchor: AnchorSide,
-  controlOffset?: Point
+  waypoints: Point[]
 ): PathResult {
+  const mid = waypoints.length > 0
+    ? waypoints[Math.floor(waypoints.length / 2)]
+    : bezierMidpoint(from, computeCP1(from, fromAnchor, to), computeCP2(to, toAnchor, from), to)
+
+  if (waypoints.length === 0) {
+    // Original cubic bezier with no waypoints
+    const cp1 = computeCP1(from, fromAnchor, to)
+    const cp2 = computeCP2(to, toAnchor, from)
+    return {
+      d: `M ${from.x} ${from.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${to.x} ${to.y}`,
+      handlePt: bezierMidpoint(from, cp1, cp2, to),
+      handleType: "point",
+      labelPt: bezierMidpoint(from, cp1, cp2, to),
+    }
+  }
+
+  // With waypoints: build smooth path through from → ...waypoints → to
+  const allPts = [from, ...waypoints, to]
+  const d = buildSmoothPath(allPts)
+
+  return {
+    d,
+    handlePt: mid,
+    handleType: "point",
+    labelPt: mid,
+  }
+}
+
+function computeCP1(from: Point, fromAnchor: AnchorSide, to: Point): Point {
   const dx = to.x - from.x
   const dy = to.y - from.y
   const dist = Math.hypot(dx, dy)
   const tension = Math.min(Math.max(50, dist * 0.45), 260)
-
-  let v1 = { x: 0, y: 0 }
   switch (fromAnchor) {
-    case "right":  v1 = { x: 1,  y: 0  }; break
-    case "left":   v1 = { x: -1, y: 0  }; break
-    case "bottom": v1 = { x: 0,  y: 1  }; break
-    case "top":    v1 = { x: 0,  y: -1 }; break
-  }
-
-  let v2 = { x: 0, y: 0 }
-  switch (toAnchor) {
-    case "right":  v2 = { x: 1,  y: 0  }; break
-    case "left":   v2 = { x: -1, y: 0  }; break
-    case "bottom": v2 = { x: 0,  y: 1  }; break
-    case "top":    v2 = { x: 0,  y: -1 }; break
-  }
-
-  const cp1_0 = { x: from.x + v1.x * tension, y: from.y + v1.y * tension }
-  const cp2_0 = { x: to.x + v2.x * tension,   y: to.y + v2.y * tension }
-
-  const defaultMid = bezierMidpoint(from, cp1_0, cp2_0, to)
-
-  const ox = controlOffset?.x ?? 0
-  const oy = controlOffset?.y ?? 0
-
-  // 4/3 shift factor ensures that the cubic curve's midpoint at t=0.5 exactly matches defaultMid + (ox, oy)
-  const shiftX = ox * (4 / 3)
-  const shiftY = oy * (4 / 3)
-
-  const cp1 = { x: cp1_0.x + shiftX, y: cp1_0.y + shiftY }
-  const cp2 = { x: cp2_0.x + shiftX, y: cp2_0.y + shiftY }
-
-  const apex = { x: defaultMid.x + ox, y: defaultMid.y + oy }
-
-  return {
-    d: `M ${from.x} ${from.y} C ${cp1.x} ${cp1.y}, ${cp2.x} ${cp2.y}, ${to.x} ${to.y}`,
-    handlePt: apex,
-    handleType: "point",
-    labelPt: apex,
+    case "right":  return { x: from.x + tension, y: from.y }
+    case "left":   return { x: from.x - tension, y: from.y }
+    case "bottom": return { x: from.x, y: from.y + tension }
+    case "top":    return { x: from.x, y: from.y - tension }
   }
 }
 
-/** Crisp orthogonal right-angle routing with adjustable segment / elbow bus */
+function computeCP2(to: Point, toAnchor: AnchorSide, from: Point): Point {
+  const dx = from.x - to.x
+  const dy = from.y - to.y
+  const dist = Math.hypot(dx, dy)
+  const tension = Math.min(Math.max(50, dist * 0.45), 260)
+  switch (toAnchor) {
+    case "right":  return { x: to.x + tension, y: to.y }
+    case "left":   return { x: to.x - tension, y: to.y }
+    case "bottom": return { x: to.x, y: to.y + tension }
+    case "top":    return { x: to.x, y: to.y - tension }
+  }
+}
+
+/** Crisp orthogonal right-angle routing with waypoints support */
 function buildOrthogonalPath(
   from: Point,
   to: Point,
   fromAnchor: AnchorSide,
   toAnchor: AnchorSide,
-  controlOffset?: Point
+  waypoints: Point[]
 ): PathResult {
-  const ox = controlOffset?.x ?? 0
-  const oy = controlOffset?.y ?? 0
+  // With waypoints: just connect them as a polyline
+  if (waypoints.length > 0) {
+    const allPts = [from, ...waypoints, to]
+    const mid = waypoints[Math.floor(waypoints.length / 2)]
+    return {
+      d: buildPolylinePath(allPts),
+      handlePt: mid,
+      handleType: "point",
+      labelPt: mid,
+    }
+  }
 
+  // No waypoints — default orthogonal routing
   const isFromHorizontal = fromAnchor === "left" || fromAnchor === "right"
   const isToHorizontal   = toAnchor === "left" || toAnchor === "right"
 
   if (isFromHorizontal && isToHorizontal) {
     let defaultSplitX: number
-    if (fromAnchor === "right" && toAnchor === "left") {
-      defaultSplitX = (from.x + to.x) / 2
-    } else if (fromAnchor === "left" && toAnchor === "right") {
-      defaultSplitX = (from.x + to.x) / 2
-    } else if (fromAnchor === "right" && toAnchor === "right") {
+    if (fromAnchor === "right" && toAnchor === "right") {
       defaultSplitX = Math.max(from.x, to.x) + 40
-    } else {
+    } else if (fromAnchor === "left" && toAnchor === "left") {
       defaultSplitX = Math.min(from.x, to.x) - 40
+    } else {
+      defaultSplitX = (from.x + to.x) / 2
     }
-
-    const splitX = Math.round(defaultSplitX + ox)
     const midY = (from.y + to.y) / 2
-
     return {
-      d: `M ${from.x} ${from.y} L ${splitX} ${from.y} L ${splitX} ${to.y} L ${to.x} ${to.y}`,
-      handlePt: { x: splitX, y: midY },
+      d: `M ${from.x} ${from.y} L ${defaultSplitX} ${from.y} L ${defaultSplitX} ${to.y} L ${to.x} ${to.y}`,
+      handlePt: { x: defaultSplitX, y: midY },
       handleType: "vertical-segment",
-      labelPt: { x: splitX, y: midY },
+      labelPt: { x: defaultSplitX, y: midY },
     }
   }
 
   if (!isFromHorizontal && !isToHorizontal) {
     let defaultSplitY: number
-    if (fromAnchor === "bottom" && toAnchor === "top") {
-      defaultSplitY = (from.y + to.y) / 2
-    } else if (fromAnchor === "top" && toAnchor === "bottom") {
-      defaultSplitY = (from.y + to.y) / 2
-    } else if (fromAnchor === "bottom" && toAnchor === "bottom") {
+    if (fromAnchor === "bottom" && toAnchor === "bottom") {
       defaultSplitY = Math.max(from.y, to.y) + 40
-    } else {
+    } else if (fromAnchor === "top" && toAnchor === "top") {
       defaultSplitY = Math.min(from.y, to.y) - 40
+    } else {
+      defaultSplitY = (from.y + to.y) / 2
     }
-
-    const splitY = Math.round(defaultSplitY + oy)
     const midX = (from.x + to.x) / 2
-
     return {
-      d: `M ${from.x} ${from.y} L ${from.x} ${splitY} L ${to.x} ${splitY} L ${to.x} ${to.y}`,
-      handlePt: { x: midX, y: splitY },
+      d: `M ${from.x} ${from.y} L ${from.x} ${defaultSplitY} L ${to.x} ${defaultSplitY} L ${to.x} ${to.y}`,
+      handlePt: { x: midX, y: defaultSplitY },
       handleType: "horizontal-segment",
-      labelPt: { x: midX, y: splitY },
+      labelPt: { x: midX, y: defaultSplitY },
     }
   }
 
-  // Mixed: One horizontal, one vertical
   if (isFromHorizontal && !isToHorizontal) {
-    const defaultCornerX = to.x
-    const splitX = Math.round(defaultCornerX + ox)
-
-    if (Math.abs(ox) < 2) {
-      return {
-        d: `M ${from.x} ${from.y} L ${to.x} ${from.y} L ${to.x} ${to.y}`,
-        handlePt: { x: to.x, y: from.y },
-        handleType: "point",
-        labelPt: { x: (from.x + to.x) / 2, y: from.y },
-      }
-    } else {
-      return {
-        d: `M ${from.x} ${from.y} L ${splitX} ${from.y} L ${splitX} ${to.y} L ${to.x} ${to.y}`,
-        handlePt: { x: splitX, y: (from.y + to.y) / 2 },
-        handleType: "vertical-segment",
-        labelPt: { x: splitX, y: (from.y + to.y) / 2 },
-      }
+    return {
+      d: `M ${from.x} ${from.y} L ${to.x} ${from.y} L ${to.x} ${to.y}`,
+      handlePt: { x: to.x, y: from.y },
+      handleType: "point",
+      labelPt: { x: (from.x + to.x) / 2, y: from.y },
     }
-  } else {
-    const defaultCornerY = to.y
-    const splitY = Math.round(defaultCornerY + oy)
+  }
 
-    if (Math.abs(oy) < 2) {
-      return {
-        d: `M ${from.x} ${from.y} L ${from.x} ${to.y} L ${to.x} ${to.y}`,
-        handlePt: { x: from.x, y: to.y },
-        handleType: "point",
-        labelPt: { x: from.x, y: (from.y + to.y) / 2 },
-      }
-    } else {
-      return {
-        d: `M ${from.x} ${from.y} L ${from.x} ${splitY} L ${to.x} ${splitY} L ${to.x} ${to.y}`,
-        handlePt: { x: (from.x + to.x) / 2, y: splitY },
-        handleType: "horizontal-segment",
-        labelPt: { x: (from.x + to.x) / 2, y: splitY },
-      }
-    }
+  return {
+    d: `M ${from.x} ${from.y} L ${from.x} ${to.y} L ${to.x} ${to.y}`,
+    handlePt: { x: from.x, y: to.y },
+    handleType: "point",
+    labelPt: { x: from.x, y: (from.y + to.y) / 2 },
   }
 }
 
@@ -219,37 +239,74 @@ function bezierMidpoint(p0: Point, p1: Point, p2: Point, p3: Point): Point {
 }
 
 /**
+ * Given a path `d` string and a click position, return a rough parameter t
+ * and the closest point on the path as a canvas-space Point.
+ * Used for inserting new waypoints at click location.
+ */
+function findClosestPointOnPath(
+  pathEl: SVGPathElement,
+  clientX: number,
+  clientY: number,
+  camera: Camera
+): { pt: Point; insertAfterIndex: number } | null {
+  try {
+    const totalLen = pathEl.getTotalLength()
+    let best = Infinity
+    let bestPt: Point = { x: 0, y: 0 }
+    let bestLen = 0
+    const steps = 200
+
+    for (let i = 0; i <= steps; i++) {
+      const len = (i / steps) * totalLen
+      const svgPt = pathEl.getPointAtLength(len)
+      const canvasPt = {
+        x: (clientX - camera.x) / camera.zoom,
+        y: (clientY - camera.y) / camera.zoom,
+      }
+      const dx = svgPt.x - canvasPt.x
+      const dy = svgPt.y - canvasPt.y
+      const dist2 = dx * dx + dy * dy
+      if (dist2 < best) {
+        best = dist2
+        bestPt = { x: Math.round(svgPt.x), y: Math.round(svgPt.y) }
+        bestLen = len
+      }
+    }
+
+    // Determine insert-after index: proportion along full length → waypoint index
+    const t = bestLen / totalLen
+    const insertAfterIndex = Math.floor(t * 1000) // will be resolved in the caller
+    return { pt: bestPt, insertAfterIndex: Math.round(t * 100) }
+  } catch {
+    return null
+  }
+}
+
+/**
  * Computes arrowhead polygon points such that the tip touches the component edge
- * and the wings/base extend BACKWARDS outside the component, preventing any overlap.
  */
 function arrowheadPoints(tip: Point, toAnchor: AnchorSide, size: number = 10): string {
   const half = size * 0.58
-  let p1: Point // tip (at component edge)
-  let p2: Point // wing 1 (outside component)
-  let p3: Point // wing 2 (outside component)
+  let p1: Point, p2: Point, p3: Point
 
   switch (toAnchor) {
     case "left":
-      // Arrow approaches from left -> points right into left edge of component
       p1 = { x: tip.x, y: tip.y }
       p2 = { x: tip.x - size, y: tip.y - half }
       p3 = { x: tip.x - size, y: tip.y + half }
       break
     case "right":
-      // Arrow approaches from right -> points left into right edge of component
       p1 = { x: tip.x, y: tip.y }
       p2 = { x: tip.x + size, y: tip.y - half }
       p3 = { x: tip.x + size, y: tip.y + half }
       break
     case "top":
-      // Arrow approaches from above -> points down into top edge of component
       p1 = { x: tip.x, y: tip.y }
       p2 = { x: tip.x - half, y: tip.y - size }
       p3 = { x: tip.x + half, y: tip.y - size }
       break
     case "bottom":
     default:
-      // Arrow approaches from below -> points up into bottom edge of component
       p1 = { x: tip.x, y: tip.y }
       p2 = { x: tip.x - half, y: tip.y + size }
       p3 = { x: tip.x + half, y: tip.y + size }
@@ -257,6 +314,10 @@ function arrowheadPoints(tip: Point, toAnchor: AnchorSide, size: number = 10): s
   }
   return `${p1.x},${p1.y} ${p2.x},${p2.y} ${p3.x},${p3.y}`
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMPONENT
+// ─────────────────────────────────────────────────────────────────────────────
 
 export const ArrowLayerComponent = memo(function ArrowLayerComponent({
   id,
@@ -271,6 +332,7 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
 
   const [editing, setEditing] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const pathRef = useRef<SVGPathElement>(null)
 
   // Persist label to Liveblocks storage
   const saveLabel = useMutation(({ storage }, value: string) => {
@@ -303,9 +365,10 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
     e.stopPropagation()
   }, [commitEdit])
 
-  // Mutations to edit arrow flow and anchors (declared before any early returns)
-  const updateControlOffset = useMutation(({ storage }, offset: Point) => {
-    ;(storage.get("layers").get(id) as any)?.set("controlOffset", offset)
+  // ── Waypoint mutations ──
+
+  const updateWaypoints = useMutation(({ storage }, pts: Point[]) => {
+    ;(storage.get("layers").get(id) as any)?.set("waypoints", pts)
   }, [id])
 
   const updateFromAnchor = useMutation(({ storage }, anchor: AnchorSide) => {
@@ -318,14 +381,18 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
 
   const [isHovered, setIsHovered] = useState(false)
 
-  // Drag the arrow bend / flow controller handle
-  const handleBendPointerDown = useCallback((e: React.PointerEvent, axis: "x" | "y" | "both" = "both") => {
+  // ── Drag a single waypoint ──
+  const handleWaypointDrag = useCallback((
+    e: React.PointerEvent,
+    index: number,
+    currentWaypoints: Point[]
+  ) => {
     e.stopPropagation()
     e.preventDefault()
 
     const startClientX = e.clientX
     const startClientY = e.clientY
-    const startOffset = layer.controlOffset || { x: 0, y: 0 }
+    const startPt = currentWaypoints[index]
     const zoom = camera?.zoom || 1
 
     const onPointerMove = (ev: PointerEvent) => {
@@ -333,25 +400,61 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
       ev.preventDefault()
       const dx = (ev.clientX - startClientX) / zoom
       const dy = (ev.clientY - startClientY) / zoom
-
-      updateControlOffset({
-        x: axis === "y" ? 0 : Math.round(startOffset.x + dx),
-        y: axis === "x" ? 0 : Math.round(startOffset.y + dy),
-      })
+      const newWps = [...currentWaypoints]
+      newWps[index] = {
+        x: Math.round(startPt.x + dx),
+        y: Math.round(startPt.y + dy),
+      }
+      updateWaypoints(newWps)
     }
 
     const onPointerUp = (ev: PointerEvent) => {
       ev.stopPropagation()
-      ev.preventDefault()
       window.removeEventListener("pointermove", onPointerMove)
       window.removeEventListener("pointerup", onPointerUp)
     }
 
     window.addEventListener("pointermove", onPointerMove)
     window.addEventListener("pointerup", onPointerUp)
-  }, [layer.controlOffset, updateControlOffset, camera?.zoom])
+  }, [camera?.zoom, updateWaypoints])
 
-  // Drag the source or destination endpoint to change the attached component anchor
+  // ── Add waypoint by clicking path ──
+  const handlePathClick = useCallback((e: React.MouseEvent) => {
+    // Only add waypoint when arrow is selected (selectionColor present)
+    if (!selectionColor) return
+    if (!camera) return
+    e.stopPropagation()
+
+    const pathEl = pathRef.current
+    if (!pathEl) return
+
+    const result = findClosestPointOnPath(pathEl, e.clientX, e.clientY, camera)
+    if (!result) return
+
+    const currentWaypoints = layer.waypoints ?? []
+    const totalPts = currentWaypoints.length + 2 // from + waypoints + to
+    // t is 0–100 relative, map to waypoint insertion index
+    const relT = result.insertAfterIndex / 100
+    const rawInsert = Math.round(relT * (totalPts - 1)) - 1 // index in waypoints[]
+    const insertAt = Math.max(0, Math.min(currentWaypoints.length, rawInsert))
+
+    const newWps = [...currentWaypoints]
+    newWps.splice(insertAt, 0, result.pt)
+    updateWaypoints(newWps)
+  }, [selectionColor, camera, layer.waypoints, updateWaypoints])
+
+  // ── Remove waypoint on double-click ──
+  const handleWaypointRemove = useCallback((
+    e: React.MouseEvent,
+    index: number,
+    currentWaypoints: Point[]
+  ) => {
+    e.stopPropagation()
+    const newWps = currentWaypoints.filter((_, i) => i !== index)
+    updateWaypoints(newWps)
+  }, [updateWaypoints])
+
+  // ── Drag endpoint anchors ──
   const handleAnchorDrag = useCallback((e: React.PointerEvent, type: "from" | "to") => {
     e.stopPropagation()
     e.preventDefault()
@@ -367,21 +470,18 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
 
     const onPointerMove = (ev: PointerEvent) => {
       ev.stopPropagation()
-      ev.preventDefault()
       const canvasPt = {
         x: (ev.clientX - camX) / zoom,
         y: (ev.clientY - camY) / zoom,
       }
       const dx = canvasPt.x - centerX
       const dy = canvasPt.y - centerY
-
       let nextAnchor: AnchorSide
       if (Math.abs(dx) >= Math.abs(dy)) {
         nextAnchor = dx >= 0 ? "right" : "left"
       } else {
         nextAnchor = dy >= 0 ? "bottom" : "top"
       }
-
       if (type === "from") {
         if (layer.fromAnchor !== nextAnchor) updateFromAnchor(nextAnchor)
       } else {
@@ -391,7 +491,6 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
 
     const onPointerUp = (ev: PointerEvent) => {
       ev.stopPropagation()
-      ev.preventDefault()
       window.removeEventListener("pointermove", onPointerMove)
       window.removeEventListener("pointerup", onPointerUp)
     }
@@ -400,29 +499,38 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
     window.addEventListener("pointerup", onPointerUp)
   }, [fromLayer, toLayer, layer.fromAnchor, layer.toAnchor, updateFromAnchor, updateToAnchor, camera?.x, camera?.y, camera?.zoom])
 
-  // If either connected layer is gone, don't render (now strictly after ALL hooks)
+  // ── Early return after all hooks ──
   if (!fromLayer || !toLayer) return null
 
   const fromPt = getAnchorPoint(fromLayer.x, fromLayer.y, fromLayer.width, fromLayer.height, layer.fromAnchor)
   const toPt   = getAnchorPoint(toLayer.x,   toLayer.y,   toLayer.width,   toLayer.height,   layer.toAnchor)
 
-  const isSharp = layer.arrowStyle === "sharp" || layer.arrowStyle === "orthogonal"
+  const isSharp    = layer.arrowStyle === "sharp" || layer.arrowStyle === "orthogonal"
   const isStraight = layer.arrowStyle === "straight"
-  const controlOffset = layer.controlOffset
+
+  // Use waypoints; fall back to converting legacy controlOffset → single waypoint
+  let waypoints: Point[] = layer.waypoints ?? []
+  if (waypoints.length === 0 && layer.controlOffset) {
+    const ox = layer.controlOffset.x
+    const oy = layer.controlOffset.y
+    if (Math.abs(ox) > 2 || Math.abs(oy) > 2) {
+      const midX = (fromPt.x + toPt.x) / 2
+      const midY = (fromPt.y + toPt.y) / 2
+      waypoints = [{ x: Math.round(midX + ox), y: Math.round(midY + oy) }]
+    }
+  }
 
   let pathResult: PathResult
   if (isSharp) {
-    pathResult = buildOrthogonalPath(fromPt, toPt, layer.fromAnchor, layer.toAnchor, controlOffset)
+    pathResult = buildOrthogonalPath(fromPt, toPt, layer.fromAnchor, layer.toAnchor, waypoints)
   } else if (isStraight) {
-    pathResult = buildStraightPath(fromPt, toPt, controlOffset)
+    pathResult = buildStraightPath(fromPt, toPt, waypoints)
   } else {
-    pathResult = buildCubicPath(fromPt, toPt, layer.fromAnchor, layer.toAnchor, controlOffset)
+    pathResult = buildCubicPath(fromPt, toPt, layer.fromAnchor, layer.toAnchor, waypoints)
   }
 
-  const pathD = pathResult.d
-  const handlePt = pathResult.handlePt
-  const mid = pathResult.labelPt
-
+  const pathD    = pathResult.d
+  const mid      = pathResult.labelPt
   const arrowPts = arrowheadPoints(toPt, layer.toAnchor)
   const stroke   = selectionColor || (layer.fill ? colorToCss(layer.fill) : "#6366f1")
 
@@ -448,7 +556,6 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
   const arrowStage = simContext?.graph?.arrowStages?.[id] ?? 0
   const totalStages = simContext?.graph?.totalStages || 1
 
-  // Timing for Sequential Causal Request Propagation
   const stageDur = Math.max(0.6, 1.4 / simSpeed)
   const pauseDur = Math.max(0.2, 0.5 / simSpeed)
   const totalDur = totalStages * stageDur + pauseDur
@@ -471,7 +578,6 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
       ? `0;${Math.max(0, pEnd - 0.005).toFixed(4)};${pEnd.toFixed(4)};1`
       : `0;${Math.max(0, pStart - 0.002).toFixed(4)};${Math.min(1, pStart + 0.004).toFixed(4)};${Math.max(0, pEnd - 0.004).toFixed(4)};${Math.min(1, pEnd + 0.002).toFixed(4)};1`
 
-  // Return ACK packet for bidirectional arrows
   const pMid = (pStart + pEnd) / 2
   const ackKeyPoints = "1;1;0;0"
   const ackKeyTimes = `0;${pMid.toFixed(4)};${pEnd.toFixed(4)};1`
@@ -489,7 +595,7 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
       {/* Wide invisible hit area for easy selection */}
       <path d={pathD} fill="none" stroke="transparent" strokeWidth={26} />
 
-      {/* ── SELECTION HIGHLIGHT & INTERACTIVE CONTROLLERS ── */}
+      {/* ── SELECTION HIGHLIGHT ── */}
       {selectionColor && (
         <g>
           {/* Outer glowing aura */}
@@ -515,7 +621,7 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
             className="pointer-events-none"
           />
 
-          {/* Interactive Source Anchor Node Handle */}
+          {/* Source Anchor Handle */}
           <g
             className="cursor-crosshair pointer-events-auto"
             onPointerDown={(e) => handleAnchorDrag(e, "from")}
@@ -530,10 +636,10 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
               strokeWidth={2.5}
               className="drop-shadow-sm hover:scale-125 transition-transform"
             />
-            <title>Drag to change source anchor side (Top / Right / Bottom / Left)</title>
+            <title>Drag to change source anchor side</title>
           </g>
 
-          {/* Interactive Destination Anchor Node Handle */}
+          {/* Destination Anchor Handle */}
           <g
             className="cursor-crosshair pointer-events-auto"
             onPointerDown={(e) => handleAnchorDrag(e, "to")}
@@ -548,14 +654,14 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
               strokeWidth={2.5}
               className="drop-shadow-sm hover:scale-125 transition-transform"
             />
-            <title>Drag to change destination anchor side (Top / Right / Bottom / Left)</title>
+            <title>Drag to change destination anchor side</title>
           </g>
         </g>
       )}
 
-
       {/* Visible line / curve */}
       <path
+        ref={pathRef}
         d={pathD}
         fill="none"
         stroke={stroke}
@@ -569,9 +675,12 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
             ? "7 5"
             : undefined
         }
+        // When selected, clicking on the path line inserts a new waypoint
+        onClick={selectionColor ? handlePathClick : undefined}
+        style={selectionColor ? { cursor: "crosshair" } : undefined}
       />
 
-      {/* Destination Arrowhead (never overlapped: tip is outside on the boundary) */}
+      {/* Destination Arrowhead */}
       {layer.direction !== "none" && (
         <>
           {selectionColor && (
@@ -594,13 +703,10 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
         </>
       )}
 
-      {/* Source Arrowhead for Bidirectional (never overlapped: tip is outside on the boundary) */}
+      {/* Source Arrowhead for Bidirectional */}
       {layer.direction === "bidirectional" && (
         <polygon
-          points={arrowheadPoints(
-            fromPt,
-            layer.fromAnchor
-          )}
+          points={arrowheadPoints(fromPt, layer.fromAnchor)}
           fill={stroke}
           stroke={stroke}
           strokeWidth={1}
@@ -610,7 +716,6 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
       {/* ── Causal Sequential Request Propagation ── */}
       {isSimulating && (
         <g style={{ pointerEvents: "none" }}>
-          {/* Energy trace pulse active only during this arrow's hop stage */}
           <path
             d={pathD}
             fill="none"
@@ -635,7 +740,6 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
             />
           </path>
 
-          {/* Sequential Packet with Synchronized Traveling Window */}
           <g>
             <animate
               attributeName="opacity"
@@ -644,8 +748,6 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
               values={normalOpacityValues}
               keyTimes={normalOpacityKeyTimes}
             />
-
-            {/* Glowing Packet Aura */}
             <circle r={8} fill="none" stroke="#06b6d4" strokeWidth={1.5} opacity={0.5}>
               <animateMotion
                 dur={`${totalDur}s`}
@@ -657,8 +759,6 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
                 calcMode="linear"
               />
             </circle>
-
-            {/* Solid Packet Core */}
             <circle r={4.5} fill="#06b6d4" opacity={0.95}>
               <animateMotion
                 dur={`${totalDur}s`}
@@ -672,7 +772,6 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
             </circle>
           </g>
 
-          {/* Bidirectional Response ACK Traveling Back */}
           {layer.direction === "bidirectional" && (
             <g>
               <animate
@@ -698,11 +797,10 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
         </g>
       )}
 
-      {/* ── Midpoint label pill & Sequence Flow Badge (view mode) ── */}
+      {/* ── Midpoint label pill & Sequence Flow Badge ── */}
       {hasLabel && !editing && (
         <g style={{ pointerEvents: "all" }}>
           {isStepOnly ? (
-            /* Standalone Circular Numbered Sequence Badge */
             <g>
               <circle cx={mid.x} cy={mid.y + 1.5} r={13} fill="rgba(0,0,0,0.15)" />
               <circle
@@ -727,9 +825,7 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
               </text>
             </g>
           ) : (
-            /* Label pill with optional embedded sequence badge */
             <g>
-              {/* Pill drop shadow */}
               <rect
                 x={mid.x - pillW / 2 + 1}
                 y={mid.y - pillH / 2 + 2}
@@ -738,7 +834,6 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
                 rx={pillH / 2}
                 fill="rgba(0,0,0,0.12)"
               />
-              {/* Pill background */}
               <rect
                 x={mid.x - pillW / 2}
                 y={mid.y - pillH / 2}
@@ -749,7 +844,6 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
                 stroke={selectionColor ? "#6366f1" : "#c7d2fe"}
                 strokeWidth={1.5}
               />
-              {/* Embedded step circle if step present */}
               {hasStep && (
                 <g>
                   <circle
@@ -772,7 +866,6 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
                   </text>
                 </g>
               )}
-              {/* Pill text */}
               <text
                 x={hasStep ? mid.x + 8 : mid.x}
                 y={mid.y + 4}
@@ -790,7 +883,7 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
         </g>
       )}
 
-      {/* ── Inline editor (editing mode) ── */}
+      {/* ── Inline editor ── */}
       {editing && (
         <foreignObject
           x={mid.x - 70}
@@ -837,154 +930,120 @@ export const ArrowLayerComponent = memo(function ArrowLayerComponent({
         </foreignObject>
       )}
 
-      {/* ── ARROW PATH EDITING CONTROLLER HANDLE (Visible when selected or hovered) ── */}
+      {/* ── MULTI-WAYPOINT HANDLES (shown when selected or hovered) ── */}
       {(selectionColor || isHovered) && (
         <g className="pointer-events-auto">
-          {pathResult.handleType === "vertical-segment" ? (
+          {/* "+" hint label on path when selected and no waypoints yet */}
+          {selectionColor && waypoints.length === 0 && (
+            <g className="pointer-events-none" opacity={0.55}>
+              <text
+                x={mid.x}
+                y={mid.y - 18}
+                textAnchor="middle"
+                fill={selectionColor}
+                fontSize={10}
+                fontFamily="Inter, system-ui, sans-serif"
+                fontWeight={600}
+              >
+                Click path to add points
+              </text>
+            </g>
+          )}
+
+          {/* Render each waypoint as a draggable diamond handle */}
+          {waypoints.map((wp, i) => (
             <g
-              className="cursor-col-resize group"
-              onPointerDown={(e) => handleBendPointerDown(e, "x")}
-              onDoubleClick={(e) => {
+              key={i}
+              className="cursor-grab active:cursor-grabbing"
+              onPointerDown={(e) => {
                 e.stopPropagation()
-                updateControlOffset({ x: 0, y: 0 })
+                handleWaypointDrag(e, i, waypoints)
               }}
+              onDoubleClick={(e) => handleWaypointRemove(e, i, waypoints)}
             >
-              {/* Wide touch/click target area */}
-              <rect
-                x={handlePt.x - 16}
-                y={handlePt.y - 20}
-                width={32}
-                height={40}
-                fill="transparent"
-              />
+              {/* Large invisible hit area */}
+              <circle cx={wp.x} cy={wp.y} r={18} fill="transparent" />
+
               {/* Glow aura */}
-              <rect
-                x={handlePt.x - 5.5}
-                y={handlePt.y - 14}
-                width={11}
-                height={28}
-                rx={5.5}
-                fill={selectionColor ? `${selectionColor}35` : "rgba(99, 102, 241, 0.25)"}
+              <circle
+                cx={wp.x}
+                cy={wp.y}
+                r={12}
+                fill={selectionColor ? `${selectionColor}28` : "rgba(99,102,241,0.2)"}
                 className="pointer-events-none"
               />
-              {/* Vertical pill bar */}
-              <rect
-                x={handlePt.x - 3.5}
-                y={handlePt.y - 12}
-                width={7}
-                height={24}
-                rx={3.5}
+
+              {/* Diamond shape */}
+              <polygon
+                points={`${wp.x},${wp.y - 9} ${wp.x + 9},${wp.y} ${wp.x},${wp.y + 9} ${wp.x - 9},${wp.y}`}
                 fill="#ffffff"
                 stroke={selectionColor || stroke}
                 strokeWidth={2}
                 style={{ filter: "drop-shadow(0 2px 5px rgba(0,0,0,0.25))" }}
-              />
-              {/* Grip notches inside pill */}
-              <line
-                x1={handlePt.x}
-                y1={handlePt.y - 5}
-                x2={handlePt.x}
-                y2={handlePt.y + 5}
-                stroke={selectionColor || stroke}
-                strokeWidth={1.5}
-                strokeLinecap="round"
-              />
-              <title>Drag left/right to move segment · Double-click to center</title>
-            </g>
-          ) : pathResult.handleType === "horizontal-segment" ? (
-            <g
-              className="cursor-row-resize group"
-              onPointerDown={(e) => handleBendPointerDown(e, "y")}
-              onDoubleClick={(e) => {
-                e.stopPropagation()
-                updateControlOffset({ x: 0, y: 0 })
-              }}
-            >
-              {/* Wide touch/click target area */}
-              <rect
-                x={handlePt.x - 20}
-                y={handlePt.y - 16}
-                width={40}
-                height={32}
-                fill="transparent"
-              />
-              {/* Glow aura */}
-              <rect
-                x={handlePt.x - 14}
-                y={handlePt.y - 5.5}
-                width={28}
-                height={11}
-                rx={5.5}
-                fill={selectionColor ? `${selectionColor}35` : "rgba(99, 102, 241, 0.25)"}
                 className="pointer-events-none"
               />
-              {/* Horizontal pill bar */}
-              <rect
-                x={handlePt.x - 12}
-                y={handlePt.y - 3.5}
-                width={24}
-                height={7}
-                rx={3.5}
-                fill="#ffffff"
-                stroke={selectionColor || stroke}
-                strokeWidth={2}
-                style={{ filter: "drop-shadow(0 2px 5px rgba(0,0,0,0.25))" }}
-              />
-              {/* Grip notches inside pill */}
-              <line
-                x1={handlePt.x - 5}
-                y1={handlePt.y}
-                x2={handlePt.x + 5}
-                y2={handlePt.y}
-                stroke={selectionColor || stroke}
-                strokeWidth={1.5}
-                strokeLinecap="round"
-              />
-              <title>Drag up/down to move segment · Double-click to center</title>
-            </g>
-          ) : (
-            <g
-              className="cursor-grab active:cursor-grabbing group"
-              onPointerDown={(e) => handleBendPointerDown(e, "both")}
-              onDoubleClick={(e) => {
-                e.stopPropagation()
-                updateControlOffset({ x: 0, y: 0 })
-              }}
-            >
-              {/* Wide touch/click target area */}
-              <circle cx={handlePt.x} cy={handlePt.y} r={18} fill="transparent" />
-              {/* Glow aura */}
+
+              {/* Center dot */}
               <circle
-                cx={handlePt.x}
-                cy={handlePt.y}
-                r={11}
-                fill={selectionColor ? `${selectionColor}35` : "rgba(99, 102, 241, 0.25)"}
-                className="pointer-events-none"
-              />
-              {/* Sleek round node badge directly on the curve or joint */}
-              <circle
-                cx={handlePt.x}
-                cy={handlePt.y}
-                r={7.5}
-                fill="#ffffff"
-                stroke={selectionColor || stroke}
-                strokeWidth={2.5}
-                style={{ filter: "drop-shadow(0 2px 5px rgba(0,0,0,0.25))" }}
-              />
-              {/* Center pointer dot */}
-              <circle
-                cx={handlePt.x}
-                cy={handlePt.y}
-                r={3}
+                cx={wp.x}
+                cy={wp.y}
+                r={2.5}
                 fill={selectionColor || stroke}
+                className="pointer-events-none"
               />
-              <title>
-                {isStraight
-                  ? "Drag to bend arrow · Double-click to straighten"
-                  : isSharp
-                  ? "Drag to adjust corner · Double-click to reset"
-                  : "Drag to adjust curve · Double-click to reset"}
-              </title>
+
+              {/* Index badge for multi-waypoint clarity */}
+              {waypoints.length > 1 && (
+                <text
+                  x={wp.x}
+                  y={wp.y + 3.5}
+                  textAnchor="middle"
+                  fill={selectionColor || stroke}
+                  fontSize={8}
+                  fontWeight={700}
+                  fontFamily="JetBrains Mono, monospace"
+                  style={{ userSelect: "none" }}
+                  className="pointer-events-none"
+                >
+                  {i + 1}
+                </text>
+              )}
+
+              <title>Drag to move · Double-click to remove</title>
+            </g>
+          ))}
+
+          {/* "Clear all waypoints" button — shown when 2+ waypoints exist */}
+          {selectionColor && waypoints.length >= 2 && (
+            <g
+              className="cursor-pointer pointer-events-auto"
+              onClick={(e) => {
+                e.stopPropagation()
+                updateWaypoints([])
+              }}
+            >
+              <rect
+                x={mid.x - 36}
+                y={mid.y + 18}
+                width={72}
+                height={18}
+                rx={9}
+                fill="rgba(239,68,68,0.12)"
+                stroke="#ef4444"
+                strokeWidth={1}
+              />
+              <text
+                x={mid.x}
+                y={mid.y + 30}
+                textAnchor="middle"
+                fill="#ef4444"
+                fontSize={9}
+                fontWeight={700}
+                fontFamily="Inter, system-ui, sans-serif"
+                style={{ userSelect: "none" }}
+              >
+                Clear path
+              </text>
             </g>
           )}
         </g>

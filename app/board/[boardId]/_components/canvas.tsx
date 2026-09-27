@@ -727,8 +727,11 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         const layer = liveLayers.get(id)
         if (layer) {
           if (layer.get("type") === LayerType.Arrow) {
-            const cur = (layer as any).get("controlOffset") || { x: 0, y: 0 }
-            ;(layer as any).set("controlOffset", { x: cur.x + dx, y: cur.y + dy })
+            // Shift all waypoints by (dx, dy) — arrows themselves don't have x/y position
+            const wps: Array<{ x: number; y: number }> = (layer as any).get("waypoints") ?? []
+            if (wps.length > 0) {
+              ;(layer as any).set("waypoints", wps.map((wp) => ({ x: wp.x + dx, y: wp.y + dy })))
+            }
           } else {
             layer.update({
               x: layer.get("x") + dx,

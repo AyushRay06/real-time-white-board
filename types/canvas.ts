@@ -311,6 +311,7 @@ export type ArrowLayer = {
   direction?: ArrowDirection
   isAnimated?: boolean
   controlOffset?: Point
+  waypoints?: Point[]
   isLocked?: boolean
 }
 
