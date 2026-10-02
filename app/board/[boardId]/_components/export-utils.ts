@@ -851,6 +851,44 @@ function renderDiagramDirectToCanvas({
         }
         break
       }
+
+      case LayerType.Image:
+      case LayerType.PdfPage: {
+        const imgLayer = layer as any
+        if (imgLayer.src) {
+          ctx.save()
+          if (imgLayer.opacity !== undefined) {
+            ctx.globalAlpha = imgLayer.opacity
+          }
+          const radius = imgLayer.roundness === "sharp" ? 0 : 8
+          ctx.beginPath()
+          ctx.roundRect(imgLayer.x, imgLayer.y, imgLayer.width, imgLayer.height, radius)
+          ctx.clip()
+
+          // Draw white background for PDF page sheets
+          if (layer.type === LayerType.PdfPage) {
+            ctx.fillStyle = "#ffffff"
+            ctx.fillRect(imgLayer.x, imgLayer.y, imgLayer.width, imgLayer.height)
+          }
+
+          const img = new Image()
+          img.src = imgLayer.src
+          if (img.complete) {
+            ctx.drawImage(img, imgLayer.x, imgLayer.y, imgLayer.width, imgLayer.height)
+          }
+          ctx.restore()
+
+          // Draw border
+          if (imgLayer.strokeWidth && imgLayer.strokeWidth > 0) {
+            ctx.strokeStyle = imgLayer.strokeColor || (isDark ? "rgba(255,255,255,0.18)" : "rgba(0,0,0,0.12)")
+            ctx.lineWidth = imgLayer.strokeWidth
+            ctx.beginPath()
+            ctx.roundRect(imgLayer.x, imgLayer.y, imgLayer.width, imgLayer.height, radius)
+            ctx.stroke()
+          }
+        }
+        break
+      }
     }
 
     ctx.restore()

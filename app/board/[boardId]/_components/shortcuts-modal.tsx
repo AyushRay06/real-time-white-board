@@ -37,6 +37,7 @@ const SHORTCUT_GROUPS = [
       { key: "R", desc: "Rectangle shape" },
       { key: "O", desc: "Ellipse / Circle" },
       { key: "S", desc: "Architecture section / zone box" },
+      { key: "U", desc: "Upload Images or multi-page PDF documents" },
     ],
   },
   {

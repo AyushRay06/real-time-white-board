@@ -46,6 +46,10 @@ import { NotesDrawer } from "./notes-drawer"
 import { CheckpointsModal } from "./checkpoints-modal"
 import { computeAutoLayout } from "./auto-layout"
 import { playDropSound, playConnectSound, playDeleteSound, playSnapSound } from "./audio-feedback"
+import { renderPdfPages, RenderedPdfPage } from "@/lib/pdf-utils"
+import { processImageFile, processImageDataUrl } from "@/lib/image-utils"
+import { MediaUploadDialog } from "./media-upload-dialog"
+import { toast } from "sonner"
 
 // ─── Preview line while connecting ──────────────────────────────────────────
 function ConnectingPreviewLine({ fromLayerId, to }: { fromLayerId: string; to: Point }) {
@@ -161,6 +165,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       if (!l) return 2
       if (l.type === LayerType.Section) return 0 // background zones
       if (l.type === LayerType.Rectangle || l.type === LayerType.Ellipse || l.type === LayerType.Path) return 1 // shapes
+      if (l.type === LayerType.Image || l.type === LayerType.PdfPage) return 1.5 // images & PDF sheets
       if (l.type === LayerType.Component || l.type === LayerType.Note || l.type === LayerType.Text) return 2 // components, text, notes
       if (l.type === LayerType.Arrow) return 3 // arrows and arrowheads rendered crisp on top of components!
       return 2
@@ -588,6 +593,179 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
       y: -camera.y / camera.zoom + window.innerHeight / (2 * camera.zoom) + jitterY,
     }
   }, [camera.x, camera.y, camera.zoom])
+
+  // ─── INSERT IMAGE LAYER ──────────────────────────────────────────────────
+  const insertImageLayer = useMutation(
+    (
+      { storage, setMyPresence },
+      info: { src: string; width: number; height: number; fileName?: string },
+      position: Point
+    ) => {
+      const liveLayers = storage.get("layers")
+      if (liveLayers.size >= MAX_LAYERS) {
+        toast.error("Maximum layer limit reached")
+        return
+      }
+      const liveLayerIds = storage.get("layerIds")
+      const layerId = nanoid()
+
+      const layer = new LiveObject({
+        type: LayerType.Image,
+        x: position.x - info.width / 2,
+        y: position.y - info.height / 2,
+        width: info.width,
+        height: info.height,
+        src: info.src,
+        fileName: info.fileName,
+        opacity: 1,
+        roundness: "rounded",
+        strokeWidth: 1,
+      })
+
+      liveLayers.set(layerId, layer as any)
+      liveLayerIds.push(layerId)
+      setMyPresence({ selection: [layerId] }, { addToHistory: true })
+      setCanvasState({ mode: CanvasMode.None })
+      playDropSound()
+      return layerId
+    },
+    []
+  )
+
+  // ─── INSERT MULTI-PAGE PDF PAGES ─────────────────────────────────────────
+  const insertPdfPages = useMutation(
+    (
+      { storage, setMyPresence },
+      pages: RenderedPdfPage[],
+      pdfName: string,
+      startPosition: Point
+    ) => {
+      const liveLayers = storage.get("layers")
+      const liveLayerIds = storage.get("layerIds")
+      const newSelection: string[] = []
+
+      // If up to 4 pages: render horizontally in a row.
+      // If 5+ pages: lay out in a clean responsive grid (max 3 columns)
+      // Every page is an independent layer that can be freely moved, resized, annotated, or deleted!
+      const GAP = 50
+      const maxCols = pages.length > 4 ? 3 : pages.length
+
+      pages.forEach((page, index) => {
+        if (liveLayers.size >= MAX_LAYERS) return
+        const layerId = nanoid()
+
+        const col = index % maxCols
+        const row = Math.floor(index / maxCols)
+
+        const x = startPosition.x + col * (page.width + GAP)
+        const y = startPosition.y + row * (page.height + GAP + 40)
+
+        const layer = new LiveObject({
+          type: LayerType.PdfPage,
+          x,
+          y,
+          width: page.width,
+          height: page.height,
+          src: page.src,
+          pdfName,
+          pageNumber: page.pageNumber,
+          totalPages: page.totalPages,
+          extractedText: page.extractedText,
+          opacity: 1,
+          roundness: "rounded",
+          strokeWidth: 1,
+        })
+
+        liveLayers.set(layerId, layer as any)
+        liveLayerIds.push(layerId)
+        newSelection.push(layerId)
+      })
+
+      if (newSelection.length > 0) {
+        setMyPresence({ selection: newSelection }, { addToHistory: true })
+        setCanvasState({ mode: CanvasMode.None })
+        playDropSound()
+      }
+    },
+    []
+  )
+
+  // Media Upload State
+  const [isMediaUploadOpen, setIsMediaUploadOpen] = useState(false)
+  const [isProcessingMedia, setIsProcessingMedia] = useState(false)
+  const [mediaProgressText, setMediaProgressText] = useState("")
+  const mediaFileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFilesUpload = useCallback(
+    async (files: File[], position?: Point) => {
+      const insertPos = position || getViewportCenterPoint()
+      let currentOffset = 0
+
+      for (const file of files) {
+        const isPdf =
+          file.type === "application/pdf" ||
+          file.name.toLowerCase().endsWith(".pdf")
+        const isImage =
+          file.type.startsWith("image/") ||
+          /\.(png|jpe?g|webp|gif|svg)$/i.test(file.name)
+
+        if (isPdf) {
+          setIsProcessingMedia(true)
+          const toastId = toast.loading(`Processing PDF: ${file.name}...`)
+          try {
+            const pages = await renderPdfPages(file, (current, total) => {
+              setMediaProgressText(`Rendering page ${current} of ${total}...`)
+              toast.loading(`Rendering page ${current} of ${total}...`, { id: toastId })
+            })
+
+            if (pages.length === 0) {
+              toast.error("Could not find any pages in this PDF", { id: toastId })
+              continue
+            }
+
+            const startPt = {
+              x: insertPos.x + currentOffset,
+              y: insertPos.y,
+            }
+
+            insertPdfPages(pages, file.name, startPt)
+            toast.success(`Successfully rendered ${pages.length} PDF pages!`, { id: toastId })
+            currentOffset += (pages[0].width + 50) * Math.min(pages.length, 3) + 80
+          } catch (err) {
+            console.error("Failed to render PDF:", err)
+            toast.error("Failed to render PDF file.", { id: toastId })
+          } finally {
+            setIsProcessingMedia(false)
+            setMediaProgressText("")
+          }
+        } else if (isImage) {
+          setIsProcessingMedia(true)
+          try {
+            const imageInfo = await processImageFile(file)
+            const targetPt = {
+              x: insertPos.x + currentOffset,
+              y: insertPos.y,
+            }
+            insertImageLayer(imageInfo, targetPt)
+            toast.success(`Added image: ${file.name}`)
+            currentOffset += imageInfo.width + 40
+          } catch (err) {
+            console.error("Failed to load image:", err)
+            toast.error(`Failed to load image: ${file.name}`)
+          } finally {
+            setIsProcessingMedia(false)
+          }
+        } else {
+          toast.error(`Unsupported file: ${file.name}. Please upload an image or PDF.`)
+        }
+      }
+    },
+    [getViewportCenterPoint, insertImageLayer, insertPdfPages]
+  )
+
+  const triggerMediaUpload = useCallback(() => {
+    mediaFileInputRef.current?.click()
+  }, [])
 
   const handleInsertLayerDirectly = useCallback((layerType: LayerType) => {
     const center = getViewportCenterPoint()
@@ -1859,6 +2037,11 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         case "M":
           setIsMinimapOpen((v) => !v)
           break
+        case "u":
+        case "U":
+          e.preventDefault()
+          setIsMediaUploadOpen(true)
+          break
         // When no layer is selected or holding Alt: Arrow keys pan the canvas!
         case "ArrowLeft":
           e.preventDefault()
@@ -1919,6 +2102,46 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
     window.addEventListener("pointerup", handleWindowPointerUp)
     return () => window.removeEventListener("pointerup", handleWindowPointerUp)
   }, [])
+
+  // Global paste listener for images and files (e.g. screenshots, pasted images, PDFs)
+  useEffect(() => {
+    const handlePaste = async (e: ClipboardEvent) => {
+      const target = e.target as HTMLElement
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return
+      }
+
+      if (e.clipboardData?.files && e.clipboardData.files.length > 0) {
+        e.preventDefault()
+        const files = Array.from(e.clipboardData.files)
+        const center = getViewportCenterPoint()
+        await handleFilesUpload(files, center)
+        return
+      }
+
+      if (e.clipboardData?.items) {
+        const items = Array.from(e.clipboardData.items)
+        const imageItem = items.find((item) => item.type.startsWith("image/"))
+        if (imageItem) {
+          const file = imageItem.getAsFile()
+          if (file) {
+            e.preventDefault()
+            const center = getViewportCenterPoint()
+            await handleFilesUpload([file], center)
+            return
+          }
+        }
+      }
+    }
+
+    window.addEventListener("paste", handlePaste)
+    return () => window.removeEventListener("paste", handlePaste)
+  }, [getViewportCenterPoint, handleFilesUpload])
 
   // Ensure magnetic reference guide lines strictly disappear whenever an element is done moving or unselected
   useEffect(() => {
@@ -2077,6 +2300,31 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         onToggleArrowStyle={toggleDefaultArrowStyle}
         onSelectAllArchitecture={selectAllLayers}
         onInsertLayerDirectly={handleInsertLayerDirectly}
+        onOpenMediaUpload={() => setIsMediaUploadOpen(true)}
+      />
+
+      <MediaUploadDialog
+        isOpen={isMediaUploadOpen}
+        onClose={() => setIsMediaUploadOpen(false)}
+        onUploadFiles={handleFilesUpload}
+        isProcessing={isProcessingMedia}
+        progressText={mediaProgressText}
+      />
+
+      {/* Hidden file input for fast 1-click uploads from shortcuts or buttons */}
+      <input
+        type="file"
+        ref={mediaFileInputRef}
+        accept="image/*,application/pdf"
+        multiple
+        className="hidden"
+        onChange={async (e) => {
+          if (e.target.files && e.target.files.length > 0) {
+            const files = Array.from(e.target.files)
+            await handleFilesUpload(files)
+            if (e.target) e.target.value = ""
+          }
+        }}
       />
 
       <RightToolbar
@@ -2247,6 +2495,7 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
         onFitToScreen={fitToScreen}
         onToggleGrid={toggleGrid}
         onToggleNotes={() => setIsNotesOpen((v) => !v)}
+        onOpenMediaUpload={() => setIsMediaUploadOpen(true)}
       />
 
       {/* Architecture Decision Records & Markdown Scratchpad Drawer */}
@@ -2281,13 +2530,22 @@ const CanvasInner = ({ boardId }: CanvasProps) => {
           e.preventDefault()
           e.dataTransfer.dropEffect = "copy"
         }}
-        onDrop={(e) => {
+        onDrop={async (e) => {
           e.preventDefault()
+          const point = pointerEventToCanvasPoint(e as any, camera)
+
+          // 1. Files dropped directly on canvas (Images or PDFs)
+          if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+            const files = Array.from(e.dataTransfer.files)
+            await handleFilesUpload(files, point)
+            return
+          }
+
+          // 2. Component or doc template dropped from sidebar
           try {
             const rawData = e.dataTransfer.getData("application/json")
             if (!rawData) return
             const data = JSON.parse(rawData)
-            const point = pointerEventToCanvasPoint(e as any, camera)
 
             if (data.type === "sys-component" && data.componentType) {
               insertComponent(data.componentType, point, data.customLabel, data.iconSvg, data.width, data.height)

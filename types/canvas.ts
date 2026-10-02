@@ -93,6 +93,8 @@ export enum LayerType {
   Arrow,
   Section,
   Doc,
+  Image,
+  PdfPage,
 }
 
 export type DocType = "requirements" | "functional-requirements" | "non-functional-requirements" | "api" | "estimation" | "bottlenecks" | "schema" | "nosql-schema" | "flow"
@@ -418,6 +420,48 @@ export enum CanvasMode {
   Eraser,
 }
 
+export type ImageLayer = {
+  type: LayerType.Image
+  x: number
+  y: number
+  width: number
+  height: number
+  fill?: Color
+  value?: string
+  src: string
+  fileName?: string
+  alt?: string
+  opacity?: number
+  roundness?: Roundness
+  strokeWidth?: number
+  strokeColor?: string
+  strokePattern?: StrokePattern
+  isLocked?: boolean
+  aspectRatio?: number
+}
+
+export type PdfPageLayer = {
+  type: LayerType.PdfPage
+  x: number
+  y: number
+  width: number
+  height: number
+  fill?: Color
+  value?: string
+  src: string
+  pdfName: string
+  pageNumber: number
+  totalPages: number
+  extractedText?: string
+  opacity?: number
+  roundness?: Roundness
+  strokeWidth?: number
+  strokeColor?: string
+  strokePattern?: StrokePattern
+  isLocked?: boolean
+  aspectRatio?: number
+}
+
 export type Layer =
   | RectangleLayer
   | EllipseLayer
@@ -428,4 +472,6 @@ export type Layer =
   | ArrowLayer
   | SectionLayer
   | DocLayer
+  | ImageLayer
+  | PdfPageLayer
 

@@ -16,6 +16,7 @@ import {
   Eraser,
   Play,
   Pause,
+  FileUp,
 } from "lucide-react"
 import { ToolButton } from "./tool-button"
 import { CanvasMode, CanvasState, LayerType } from "@/types/canvas"
@@ -34,6 +35,7 @@ interface ToolbarProps {
   onToggleArrowStyle?: () => void
   onSelectAllArchitecture?: () => void
   onInsertLayerDirectly?: (layerType: LayerType) => void
+  onOpenMediaUpload?: () => void
 }
 
 export const Toolbar = ({
@@ -47,6 +49,7 @@ export const Toolbar = ({
   onToggleArrowStyle,
   onSelectAllArchitecture,
   onInsertLayerDirectly,
+  onOpenMediaUpload,
 }: ToolbarProps) => {
   const { isSimulating, toggleSimulate } = useSimulation()
   const { theme } = useCanvasTheme()
@@ -153,6 +156,12 @@ export const Toolbar = ({
           icon={Pencil}
           onClick={() => setCanvasState({ mode: CanvasMode.Pencil })}
           isActive={canvasState.mode === CanvasMode.Pencil}
+        />
+        <ToolButton
+          label="Add Image / PDF (U)"
+          shortcut="U"
+          icon={FileUp}
+          onClick={() => onOpenMediaUpload?.()}
         />
       </div>
 

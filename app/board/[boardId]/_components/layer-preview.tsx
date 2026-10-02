@@ -13,6 +13,8 @@ import { SysComponentLayer } from "./sys-component-layer"
 import { ArrowLayerComponent } from "./arrow-layer"
 import { SectionLayerComponent } from "./section-layer"
 import { SysDocLayer } from "./sys-doc-layer"
+import { ImageLayerComponent } from "./image-layer"
+import { PdfPageLayerComponent } from "./pdf-page-layer"
 
 interface LayerPreviewProps {
   id: string
@@ -99,6 +101,32 @@ export const LayerPreview = memo(
             layer={layer}
             onPointerDown={onLayerPointerDown}
             selectionColor={selectionColor}
+            onDoubleClick={onLayerDoubleClick}
+          />
+        )
+      case LayerType.Image:
+        return (
+          <ImageLayerComponent
+            id={id}
+            layer={layer as any}
+            onPointerDown={onLayerPointerDown}
+            selectionColor={selectionColor}
+            isConnecting={isConnecting}
+            isConnectingFrom={connectingFromId === id}
+            onConnectClick={onConnectClick}
+            onDoubleClick={onLayerDoubleClick}
+          />
+        )
+      case LayerType.PdfPage:
+        return (
+          <PdfPageLayerComponent
+            id={id}
+            layer={layer as any}
+            onPointerDown={onLayerPointerDown}
+            selectionColor={selectionColor}
+            isConnecting={isConnecting}
+            isConnectingFrom={connectingFromId === id}
+            onConnectClick={onConnectClick}
             onDoubleClick={onLayerDoubleClick}
           />
         )

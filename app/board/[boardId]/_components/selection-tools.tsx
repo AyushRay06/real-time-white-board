@@ -22,11 +22,15 @@ import { useSelectionBounds } from "@/hooks/use-selection-bound"
 import { useMutation, useSelf, useStorage } from "@liveblocks/react/suspense"
 import { useDeleteLayers } from "@/hooks/use-delete-layers"
 import { Hint } from "@/components/hint"
+import { toast } from "sonner"
 import {
   BringToFront,
   SendToBack,
   Trash2,
   Copy,
+  FileText,
+  Image as ImageIcon,
+  Download,
   Network,
   Spline,
   CornerDownRight,
@@ -253,6 +257,14 @@ export const SelectionTools = memo(
       selection.forEach((id) => {
         const l = liveLayers.get(id)
         if (l) (l as any).set("roundness", roundness)
+      })
+    }, [selection])
+
+    const setOpacity = useMutation(({ storage }, opacity: number) => {
+      const liveLayers = storage.get("layers")
+      selection.forEach((id) => {
+        const l = liveLayers.get(id)
+        if (l) (l as any).set("opacity", opacity)
       })
     }, [selection])
 
@@ -563,6 +575,8 @@ export const SelectionTools = memo(
     const isShape = isRect || isEllipse
     const isNote = layerType === LayerType.Note
     const isDoc = layerType === LayerType.Doc
+    const isImage = layerType === LayerType.Image
+    const isPdfPage = layerType === LayerType.PdfPage
     const docType: DocType | null = isDoc && soleLayer && "docType" in soleLayer ? (soleLayer.docType as DocType) : null
 
     const currentArrowStyle = isArrow && soleLayer && "arrowStyle" in soleLayer ? (soleLayer.arrowStyle || "curvy") : "curvy"
@@ -839,6 +853,33 @@ export const SelectionTools = memo(
               }}
               className={`outline-none rounded-lg px-2 py-0.5 text-xs font-semibold w-32 sm:w-40 transition border ${inputClassComp}`}
             />
+          </div>
+        )}
+
+        {isImage && (
+          <div className={`flex items-center gap-1.5 border-r pr-2 ${dividerClass}`}>
+            <div className={`p-1 rounded-md ${isLight ? "bg-sky-50 text-sky-600" : "bg-sky-500/20 text-sky-400"}`}>
+              <ImageIcon className="w-3.5 h-3.5" />
+            </div>
+            <span className="font-semibold text-xs truncate max-w-[130px]">
+              {(soleLayer as any)?.fileName || "Image"}
+            </span>
+          </div>
+        )}
+
+        {isPdfPage && (
+          <div className={`flex items-center gap-1.5 border-r pr-2 ${dividerClass}`}>
+            <div className={`p-1 rounded-md ${isLight ? "bg-rose-50 text-rose-600" : "bg-rose-500/20 text-rose-400"}`}>
+              <FileText className="w-3.5 h-3.5" />
+            </div>
+            <div className="flex flex-col text-left">
+              <span className="font-bold text-[11px] truncate max-w-[140px]" title={(soleLayer as any)?.pdfName}>
+                {(soleLayer as any)?.pdfName}
+              </span>
+              <span className="text-[10px] text-muted-foreground font-semibold">
+                Page {(soleLayer as any)?.pageNumber} / {(soleLayer as any)?.totalPages}
+              </span>
+            </div>
           </div>
         )}
 
@@ -1533,8 +1574,146 @@ export const SelectionTools = memo(
           </div>
         )}
 
+        {/* ─── IMAGE CONTROLS ─── */}
+        {isImage && (
+          <div className={`flex items-center gap-1.5 border-r pr-2 ${dividerClass}`}>
+            {/* Opacity */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium transition ${buttonPillClass}`}>
+                  <span>{Math.round(((soleLayer as any)?.opacity ?? 1) * 100)}%</span>
+                  <ChevronDown className="w-2.5 h-2.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" side={shouldFlipBelow ? "bottom" : "top"} className={`rounded-xl p-1 z-50 min-w-[90px] border ${dropdownMenuContentClass}`}>
+                {[1, 0.75, 0.5, 0.25].map((op) => (
+                  <DropdownMenuItem
+                    key={op}
+                    onClick={() => setOpacity(op)}
+                    className={`flex items-center justify-between text-xs py-1 ${dropdownMenuItemClass}`}
+                  >
+                    <span>{Math.round(op * 100)}%</span>
+                    {((soleLayer as any)?.opacity ?? 1) === op && <Check className="w-3 h-3 text-sky-500" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Roundness */}
+            <div className={`flex items-center p-0.5 rounded-lg border ${buttonPillClass}`}>
+              <Hint label="Sharp Corners">
+                <button
+                  onClick={() => setRoundness("sharp")}
+                  className={`px-1.5 py-0.5 rounded text-[11px] font-mono ${
+                    currentRoundness === "sharp" ? "bg-sky-500 text-white" : buttonPillInactive
+                  }`}
+                >
+                  Sharp
+                </button>
+              </Hint>
+              <Hint label="Rounded Corners">
+                <button
+                  onClick={() => setRoundness("rounded")}
+                  className={`px-1.5 py-0.5 rounded text-[11px] font-mono ${
+                    currentRoundness === "rounded" ? "bg-sky-500 text-white" : buttonPillInactive
+                  }`}
+                >
+                  Round
+                </button>
+              </Hint>
+            </div>
+
+            {/* Download Image */}
+            <Hint label="Download Image">
+              <button
+                onClick={() => {
+                  const src = (soleLayer as any)?.src
+                  if (!src) return
+                  const a = document.createElement("a")
+                  a.href = src
+                  a.download = (soleLayer as any)?.fileName || "canvas-image.png"
+                  document.body.appendChild(a)
+                  a.click()
+                  document.body.removeChild(a)
+                  toast.success("Downloaded image")
+                }}
+                className={`p-1 rounded-lg transition ${actionButtonClass}`}
+              >
+                <Download className="w-3.5 h-3.5" />
+              </button>
+            </Hint>
+          </div>
+        )}
+
+        {/* ─── PDF PAGE CONTROLS ─── */}
+        {isPdfPage && (
+          <div className={`flex items-center gap-1.5 border-r pr-2 ${dividerClass}`}>
+            {/* Copy Page Text */}
+            <Hint label="Copy extracted text from this page">
+              <button
+                onClick={() => {
+                  const text = (soleLayer as any)?.extractedText
+                  if (!text) {
+                    toast.info("No text content found on this page")
+                    return
+                  }
+                  navigator.clipboard.writeText(text)
+                  toast.success(`Copied text from Page ${(soleLayer as any)?.pageNumber}`)
+                }}
+                className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-medium border bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30 hover:bg-rose-500/20 transition`}
+              >
+                <Copy className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Copy Text</span>
+              </button>
+            </Hint>
+
+            {/* Opacity */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className={`flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium transition ${buttonPillClass}`}>
+                  <span>{Math.round(((soleLayer as any)?.opacity ?? 1) * 100)}%</span>
+                  <ChevronDown className="w-2.5 h-2.5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" side={shouldFlipBelow ? "bottom" : "top"} className={`rounded-xl p-1 z-50 min-w-[90px] border ${dropdownMenuContentClass}`}>
+                {[1, 0.75, 0.5, 0.25].map((op) => (
+                  <DropdownMenuItem
+                    key={op}
+                    onClick={() => setOpacity(op)}
+                    className={`flex items-center justify-between text-xs py-1 ${dropdownMenuItemClass}`}
+                  >
+                    <span>{Math.round(op * 100)}%</span>
+                    {((soleLayer as any)?.opacity ?? 1) === op && <Check className="w-3 h-3 text-rose-500" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Download Page Image */}
+            <Hint label="Download page as image">
+              <button
+                onClick={() => {
+                  const src = (soleLayer as any)?.src
+                  if (!src) return
+                  const a = document.createElement("a")
+                  a.href = src
+                  a.download = `${((soleLayer as any)?.pdfName || "document").replace(/\.pdf$/i, "")}-page-${(soleLayer as any)?.pageNumber}.jpg`
+                  document.body.appendChild(a)
+                  a.click()
+                  document.body.removeChild(a)
+                  toast.success(`Downloaded Page ${(soleLayer as any)?.pageNumber}`)
+                }}
+                className={`p-1 rounded-lg transition ${actionButtonClass}`}
+              >
+                <Download className="w-3.5 h-3.5" />
+              </button>
+            </Hint>
+          </div>
+        )}
+
         {/* ── SECTION 3: COMPACT COLOR DROPDOWN ── */}
-        <div className={`flex items-center border-r pr-2 ${dividerClass}`}>
+        {!isImage && !isPdfPage && (
+          <div className={`flex items-center border-r pr-2 ${dividerClass}`}>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
@@ -1594,6 +1773,7 @@ export const SelectionTools = memo(
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
+        )}
 
         {/* ── SECTION 4: ACTIONS (DUPLICATE, ORDER, DELETE) ── */}
         <div className="flex items-center gap-0.5">

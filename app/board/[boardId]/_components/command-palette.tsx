@@ -14,6 +14,7 @@ import {
   VolumeX,
   Sparkles,
   ArrowRight,
+  UploadCloud,
 } from "lucide-react"
 import { SysComponent, DocType } from "@/types/canvas"
 import { COMPONENT_LABELS, ComponentIcon } from "./sys-component-layer"
@@ -31,6 +32,7 @@ interface CommandPaletteProps {
   onFitToScreen: () => void
   onToggleGrid: () => void
   onToggleNotes: () => void
+  onOpenMediaUpload?: () => void
 }
 
 interface CommandItem {
@@ -52,6 +54,7 @@ export function CommandPalette({
   onFitToScreen,
   onToggleGrid,
   onToggleNotes,
+  onOpenMediaUpload,
 }: CommandPaletteProps) {
   const [query, setQuery] = useState("")
   const [selectedIndex, setSelectedIndex] = useState(0)
@@ -127,6 +130,13 @@ export function CommandPalette({
         category: "Actions",
         icon: isSoundEnabled() ? VolumeX : Volume2,
         action: () => setSoundEnabled(!isSoundEnabled()),
+      },
+      {
+        id: "action-upload-media",
+        title: "Add Images or Multi-Page PDF Document to Canvas (U)",
+        category: "Actions",
+        icon: UploadCloud,
+        action: () => onOpenMediaUpload?.(),
       }
     )
 
@@ -223,6 +233,7 @@ export function CommandPalette({
     onInsertDoc,
     onInsertTemplate,
     onInsertComponent,
+    onOpenMediaUpload,
   ])
 
   const filtered = useMemo(() => {
