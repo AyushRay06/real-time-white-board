@@ -8,6 +8,9 @@
     "start": "next start",
     "lint": "next lint"
   },
+  "engines": {
+    "node": "22.x"
+  },
   "dependencies": {
     "@clerk/nextjs": "^5.3.1",
     "@liveblocks/client": "^2.6.0",
